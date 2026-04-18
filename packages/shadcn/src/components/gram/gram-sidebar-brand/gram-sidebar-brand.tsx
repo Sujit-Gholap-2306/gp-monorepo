@@ -10,17 +10,39 @@ export { sidebarBrandCardVariants, sidebarBrandIconWrapVariants } from './varian
 
 export function GramSidebarBrand({ title, subtitle, icon: Icon, className }: GramSidebarBrandProps) {
   return (
-    <SidebarHeader className={cn('border-b border-sidebar-border px-3 py-4', className)}>
-      <div className={sidebarBrandCardVariants()}>
+    <SidebarHeader
+      className={cn(
+        'border-b border-sidebar-border px-3 py-4',
+        /* Icon rail is 3rem wide — drop horizontal padding so the logo isn’t clipped */
+        'group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-2',
+        className,
+      )}
+    >
+      <div
+        className={cn(
+          sidebarBrandCardVariants(),
+          'group-data-[collapsible=icon]:border-0 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-0',
+        )}
+      >
         <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/[0.07] via-transparent to-accent/[0.06]"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/[0.07] via-transparent to-cta/6 group-data-[collapsible=icon]:hidden"
           aria-hidden
         />
-        <div className="relative flex items-center gap-3">
-          <div className={sidebarBrandIconWrapVariants()}>
-            <Icon className="size-[18px]" strokeWidth={2.5} aria-hidden />
+        <div
+          className={cn(
+            'relative flex items-center gap-3',
+            'group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0',
+          )}
+        >
+          <div
+            className={cn(
+              sidebarBrandIconWrapVariants(),
+              'group-data-[collapsible=icon]:size-8 group-data-[collapsible=icon]:shadow-none',
+            )}
+          >
+            <Icon className="size-[18px] group-data-[collapsible=icon]:size-4" strokeWidth={2.5} aria-hidden />
           </div>
-          <div className="flex min-w-0 flex-1 flex-col gap-1 leading-tight">
+          <div className="flex min-w-0 flex-1 flex-col gap-1 leading-tight group-data-[collapsible=icon]:hidden">
             <p className="truncate text-sm font-bold tracking-tight text-sidebar-foreground">{title}</p>
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               {subtitle}

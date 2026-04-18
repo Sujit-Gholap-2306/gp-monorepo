@@ -23,11 +23,11 @@ export default function DashboardPage() {
   const recent = utaras.slice(0, 5)
 
   return (
-    <div className="animate-fade-in p-5 md:p-7 space-y-6 max-w-5xl">
+    <div className="animate-fade-in max-w-5xl space-y-6 p-5 md:p-7">
       {/* Page heading */}
       <div>
-        <h1 className="text-xl font-bold text-slate-800">मुख्यपृष्ठ</h1>
-        <p className="mt-0.5 text-sm text-slate-500">उतारा नोंदींचा आढावा</p>
+        <h1 className="text-xl font-bold text-foreground">मुख्यपृष्ठ</h1>
+        <p className="mt-0.5 text-sm text-muted-foreground">उतारा नोंदींचा आढावा</p>
       </div>
 
       {/* Stat cards */}
@@ -35,41 +35,41 @@ export default function DashboardPage() {
         <StatCard
           label="एकूण उतारे"
           value={isLoading ? '—' : stats.total}
-          icon={<ScrollText className="size-5 text-blue-600" />}
-          bg="bg-blue-50 border-blue-100"
+          icon={<ScrollText className="size-5 text-primary" />}
+          tone="primary"
         />
         <StatCard
           label="चालू"
           value={isLoading ? '—' : stats.active}
-          icon={<CheckCircle className="size-5 text-green-600" />}
-          bg="bg-green-50 border-green-100"
+          icon={<CheckCircle className="size-5 text-success" />}
+          tone="success"
         />
         <StatCard
           label="प्रलंबित"
           value={isLoading ? '—' : stats.pending}
-          icon={<Clock className="size-5 text-amber-600" />}
-          bg="bg-amber-50 border-amber-100"
+          icon={<Clock className="size-5 text-warning" />}
+          tone="warning"
         />
         <StatCard
           label="वादग्रस्त"
           value={isLoading ? '—' : stats.disputed}
-          icon={<AlertTriangle className="size-5 text-red-600" />}
-          bg="bg-red-50 border-red-100"
+          icon={<AlertTriangle className="size-5 text-destructive" />}
+          tone="destructive"
         />
       </div>
 
       {/* Quick actions */}
-      <div className="flex gap-3 flex-wrap">
+      <div className="flex flex-wrap gap-3">
         <Link
           href="/utaras/new"
-          className="inline-flex items-center gap-2 rounded-lg bg-green-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-green-800 transition-colors"
+          className="inline-flex items-center gap-2 rounded-lg bg-primary px-4 py-2.5 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
         >
           <FilePlus className="size-4" />
           नवीन उतारा नोंद
         </Link>
         <Link
           href="/utaras"
-          className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors"
+          className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground shadow-sm transition-colors hover:bg-muted"
         >
           <ScrollText className="size-4" />
           सर्व उतारे पाहा
@@ -79,54 +79,54 @@ export default function DashboardPage() {
       {/* Recent records */}
       <div>
         <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-slate-700">अलीकडील नोंदी</h2>
-          <Link href="/utaras" className="flex items-center gap-1 text-xs text-green-700 hover:underline">
+          <h2 className="text-sm font-semibold text-foreground">अलीकडील नोंदी</h2>
+          <Link href="/utaras" className="flex items-center gap-1 text-xs text-primary hover:underline">
             सर्व पाहा <ArrowRight className="size-3" />
           </Link>
         </div>
 
         {isLoading ? (
-          <div className="text-sm text-slate-400 py-6 text-center">लोड होत आहे...</div>
+          <div className="py-6 text-center text-sm text-muted-foreground">लोड होत आहे...</div>
         ) : recent.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-slate-200 py-12 text-center">
-            <ScrollText className="mx-auto size-8 text-slate-300 mb-2" />
-            <p className="text-sm text-slate-400">अद्याप कोणतीही नोंद नाही</p>
+          <div className="rounded-xl border border-dashed border-border bg-card/50 py-12 text-center">
+            <ScrollText className="mx-auto mb-2 size-8 text-muted-foreground/60" />
+            <p className="text-sm text-muted-foreground">अद्याप कोणतीही नोंद नाही</p>
             <Link
               href="/utaras/new"
-              className="mt-3 inline-flex items-center gap-1.5 text-sm text-green-700 hover:underline"
+              className="mt-3 inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
             >
               <FilePlus className="size-3.5" />
               पहिली नोंद जोडा
             </Link>
           </div>
         ) : (
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div className="overflow-hidden rounded-xl border border-border bg-card">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-slate-100 bg-slate-50 text-left">
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500">गट नंबर</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500">मालक</th>
-                  <th className="hidden px-4 py-2.5 text-xs font-semibold text-slate-500 sm:table-cell">गाव</th>
-                  <th className="px-4 py-2.5 text-xs font-semibold text-slate-500">स्थिती</th>
-                  <th className="hidden px-4 py-2.5 text-xs font-semibold text-slate-500 md:table-cell">दिनांक</th>
+                <tr className="border-b border-border bg-muted/60 text-left">
+                  <th className="px-4 py-2.5 text-xs font-semibold text-muted-foreground">गट नंबर</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-muted-foreground">मालक</th>
+                  <th className="hidden px-4 py-2.5 text-xs font-semibold text-muted-foreground sm:table-cell">गाव</th>
+                  <th className="px-4 py-2.5 text-xs font-semibold text-muted-foreground">स्थिती</th>
+                  <th className="hidden px-4 py-2.5 text-xs font-semibold text-muted-foreground md:table-cell">दिनांक</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-border">
                 {recent.map(u => (
-                  <tr key={u.id} className="hover:bg-slate-50 transition-colors">
-                    <td className="px-4 py-3 font-mono text-xs text-slate-700">{u.surveyNumber}</td>
+                  <tr key={u.id} className="transition-colors hover:bg-muted/40">
+                    <td className="px-4 py-3 font-mono text-xs text-foreground">{u.surveyNumber}</td>
                     <td className="px-4 py-3">
-                      <Link href={`/utaras/${u.id}`} className="font-medium text-slate-800 hover:text-green-700">
+                      <Link href={`/utaras/${u.id}`} className="font-medium text-foreground hover:text-primary">
                         {u.ownerName}
                       </Link>
                     </td>
-                    <td className="hidden px-4 py-3 text-slate-500 sm:table-cell">{u.village}</td>
+                    <td className="hidden px-4 py-3 text-muted-foreground sm:table-cell">{u.village}</td>
                     <td className="px-4 py-3">
                       <span className={`rounded-full border px-2 py-0.5 text-[11px] font-medium ${STATUS_COLORS[u.status]}`}>
                         {STATUS_LABELS[u.status]}
                       </span>
                     </td>
-                    <td className="hidden px-4 py-3 text-xs text-slate-400 md:table-cell">
+                    <td className="hidden px-4 py-3 text-xs text-muted-foreground md:table-cell">
                       {formatDate(u.createdAt)}
                     </td>
                   </tr>
@@ -140,24 +140,31 @@ export default function DashboardPage() {
   )
 }
 
+const statToneClasses = {
+  primary: 'border-primary/20 bg-primary-light/80',
+  success: 'border-success/25 bg-success-bg',
+  warning: 'border-warning/25 bg-warning-bg',
+  destructive: 'border-destructive/25 bg-destructive-bg',
+} as const
+
 function StatCard({
   label,
   value,
   icon,
-  bg,
+  tone,
 }: {
   label: string
   value: number | string
   icon: React.ReactNode
-  bg: string
+  tone: keyof typeof statToneClasses
 }) {
   return (
-    <div className={`rounded-xl border p-4 ${bg}`}>
+    <div className={`rounded-xl border p-4 shadow-xs ${statToneClasses[tone]}`}>
       <div className="flex items-center justify-between">
         {icon}
-        <span className="text-2xl font-bold text-slate-800">{value}</span>
+        <span className="text-2xl font-bold text-card-foreground">{value}</span>
       </div>
-      <div className="mt-2 text-xs font-medium text-slate-600">{label}</div>
+      <div className="mt-2 text-xs font-medium text-muted-foreground">{label}</div>
     </div>
   )
 }

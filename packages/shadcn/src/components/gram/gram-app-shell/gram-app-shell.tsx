@@ -30,7 +30,8 @@ export function GramAppShell({
   contextBadgeEn = 'Sakri \u00b7 Dhule',
   sidebarVariant = 'sidebar',
   sidebarCollapsible = 'icon',
-  showSidebarRail = true,
+  /** Off by default: the rail also toggles the sidebar and reads as a second control beside {@link SidebarTrigger}. */
+  showSidebarRail = false,
   navGroupLabel = '\u092e\u0941\u0916\u094d\u092f \u092e\u0947\u0928\u0942',
   brandIcon = Leaf,
   headerExtra,
@@ -48,12 +49,12 @@ export function GramAppShell({
       <Sidebar
         collapsible={sidebarCollapsible}
         variant={sidebarVariant}
-        className="border-sidebar-border md:border-r"
+        className="border-sidebar-border md:border-r "
       >
         <GramSidebarBrand title={brandTitleMr} subtitle={brandSubtitleMr} icon={brandIcon} />
         <GramSidebarNav items={navItems} pathname={pathname} groupLabel={navGroupLabel} />
-        <SidebarSeparator />
-        <SidebarFooter className="gap-1 px-4 py-4">
+        <SidebarSeparator className="group-data-[collapsible=icon]:mx-1" />
+        <SidebarFooter className="gap-1 px-4 py-4 group-data-[collapsible=icon]:hidden">
           <p className="text-[11px] font-semibold text-muted-foreground">{footerTitleMr}</p>
           <p className="text-[10px] leading-snug text-muted-foreground/85">{footerSubtitleMr}</p>
         </SidebarFooter>
