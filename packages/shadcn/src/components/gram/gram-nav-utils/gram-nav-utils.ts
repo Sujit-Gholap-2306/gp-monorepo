@@ -1,4 +1,4 @@
-import type { GramNavItem } from './gram-types'
+import type { GramNavItem } from '../gram-types'
 
 /** Longest href wins so `/utaras/new` matches before `/utaras`. */
 export function resolveActiveNavItem(

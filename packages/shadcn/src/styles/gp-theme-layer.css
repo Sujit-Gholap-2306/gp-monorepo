@@ -1,0 +1,67 @@
+/**
+ * GP demo theme — shared tokens + Devanagari font.
+ * Imported by the app Tailwind entry and by @gp/shadcn/globals.css.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap');
+
+:root {
+  /* GP brand (HSL triplets for hsl(var(--token))) */
+  --gp-primary: 231 48% 38%;
+  --gp-primary-fg: 0 0% 100%;
+  --gp-primary-hover: 231 48% 32%;
+
+  --gp-status-unpaid: 0 72% 51%;
+  --gp-status-unpaid-bg: 0 72% 97%;
+  --gp-status-partial: 38 92% 50%;
+  --gp-status-partial-bg: 38 92% 97%;
+  --gp-status-paid: 142 71% 45%;
+  --gp-status-paid-bg: 142 71% 97%;
+
+  --gp-surface: 220 14% 96%;
+  --gp-border: 220 13% 88%;
+  --gp-muted: 220 9% 46%;
+
+  /* Sidebar — light; primary uses GP indigo */
+  --sidebar: 0 0% 100%;
+  --sidebar-foreground: 222 47% 11%;
+  --sidebar-primary: var(--gp-primary);
+  --sidebar-primary-foreground: var(--gp-primary-fg);
+  --sidebar-accent: 220 14% 96%;
+  --sidebar-accent-foreground: 222 47% 11%;
+  --sidebar-border: 214 32% 91%;
+  --sidebar-ring: var(--gp-primary);
+}
+
+.dark {
+  --sidebar: 240 5.9% 10%;
+  --sidebar-foreground: 240 4.8% 95.9%;
+  --sidebar-primary: 231 48% 55%;
+  --sidebar-primary-foreground: 0 0% 100%;
+  --sidebar-accent: 240 3.7% 15.9%;
+  --sidebar-accent-foreground: 240 4.8% 95.9%;
+  --sidebar-border: 240 3.7% 15.9%;
+  --sidebar-ring: 231 48% 55%;
+}
+
+/* Marathi UI — consistent Devanagari (esp. Windows GP offices) */
+[lang='mr'] body {
+  font-family: var(--font-devanagari);
+}
+
+@theme inline {
+  --font-devanagari: 'Noto Sans Devanagari', ui-sans-serif, system-ui, sans-serif;
+
+  --color-gp-primary: hsl(var(--gp-primary));
+  --color-gp-primary-fg: hsl(var(--gp-primary-fg));
+  --color-gp-primary-hover: hsl(var(--gp-primary-hover));
+  --color-gp-status-unpaid: hsl(var(--gp-status-unpaid));
+  --color-gp-status-unpaid-bg: hsl(var(--gp-status-unpaid-bg));
+  --color-gp-status-partial: hsl(var(--gp-status-partial));
+  --color-gp-status-partial-bg: hsl(var(--gp-status-partial-bg));
+  --color-gp-status-paid: hsl(var(--gp-status-paid));
+  --color-gp-status-paid-bg: hsl(var(--gp-status-paid-bg));
+  --color-gp-surface: hsl(var(--gp-surface));
+  --color-gp-border: hsl(var(--gp-border));
+  --color-gp-muted: hsl(var(--gp-muted));
+}

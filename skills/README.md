@@ -9,9 +9,10 @@ Each skill is one folder with a `SKILL.md` file. Pure markdown, no tool-specific
 ```
 skills/
   GP-Specific (own and maintain):
-  gp-persona/         ← Project-wide persona + domain context (apply to all GP work)
-  gp-dev/             ← Dev standards: @gp/shadcn, Next.js 16, Tailwind v4, lib rules
-  gp-review/          ← Code review checklist for PRs and audits
+  gp-persona/             ← Project-wide persona + domain context (apply to all GP work)
+  gp-dev/                 ← Dev standards: @gp/shadcn, Next.js 16, Tailwind v4, lib rules
+  gp-review/              ← Code review checklist for PRs and audits
+  gp-component-variants/  ← CVA variant system, folder structure, server/client split for gram/ components
 
   General (copied from shared library, update when upstream changes):
   shadcn/             ← shadcn/ui component management

@@ -13,6 +13,7 @@ export interface NavItem {
   labelMr: string
   desc: string
   icon: LucideIcon
+  badge?: string
   exact?: boolean
 }
 
@@ -31,6 +32,7 @@ export const APP_NAV: NavItem[] = [
     labelMr: 'नमुना ८ — घरपट्टी',
     desc: 'Property tax register',
     icon: ClipboardList,
+    badge: 'N08',
     exact: false,
   },
   {

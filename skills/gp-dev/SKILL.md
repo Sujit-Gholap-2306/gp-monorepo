@@ -49,9 +49,11 @@ When adding new shared components, add them to `packages/shadcn/src/components/g
 
 ## Tailwind CSS v4
 
-- Config is in `app/globals.css` via `@import "tailwindcss"` — no `tailwind.config.js`
+- Tailwind is initialized from `packages/shadcn/src/styles/globals.css` (`@gp/shadcn/globals.css`) — no `tailwind.config.js`
+- **`@gp/shadcn` must not `@source` app paths** — the app depends on the package, not the reverse
+- `app/globals.css` adds `@source` for `apps/grampanchayat` **and** `packages/shadcn/src` so class scans cover both trees
 - CSS variables for design tokens — never hardcode colours
-- `@gp/shadcn/globals.css` must be imported first in the root layout
+- Root layout: import **`@gp/shadcn/globals.css` first**, then `app/globals.css` (`@theme` extensions + base/print)
 
 ## Next.js 16 Specifics
 

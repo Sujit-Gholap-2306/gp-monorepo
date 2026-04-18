@@ -5,6 +5,8 @@ export type GramNavItem = {
   label: string
   labelMr: string
   icon: LucideIcon
+  /** Namuna reference, e.g. N08 — shown as a muted chip in the sidebar */
+  badge?: string
   exact?: boolean
 }
 

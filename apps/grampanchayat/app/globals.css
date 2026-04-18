@@ -1,19 +1,5 @@
-@import "tailwindcss";
-
-@custom-variant dark (&:is(.dark *));
-
-/* HSL triplets for shadcn Sidebar (used as hsl(var(--sidebar-*))) */
-:root {
-  --sidebar: 0 0% 100%;
-  --sidebar-foreground: 222 47% 11%;
-  --sidebar-primary: 142 71% 36%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 138 62% 96%;
-  --sidebar-accent-foreground: 142 72% 28%;
-  --sidebar-border: 214 32% 91%;
-  --sidebar-ring: 142 71% 36%;
-}
-
+/* App theme + base — @gp/shadcn/globals.css is imported first in layout (Tailwind + package @source). */
+/* App depends on package; package must not @source the app (dependency direction). */
 @source "../**/*.{ts,tsx}";
 @source "../../../packages/shadcn/src/**/*.{ts,tsx}";
 
@@ -29,55 +15,38 @@
 }
 
 @theme {
-  /* Backgrounds */
-  --color-background: #f5f7fa;
+  --color-background: hsl(var(--gp-surface));
   --color-foreground: #0f172a;
-
-  /* Card / Surface */
   --color-card: #ffffff;
   --color-card-foreground: #0f172a;
-
-  /* Primary — deep green (Maharashtra sarkari) */
-  --color-primary: #15803d;
-  --color-primary-foreground: #ffffff;
-  --color-primary-light: #dcfce7;
-
-  /* Secondary */
-  --color-secondary: #f1f5f9;
+  --color-primary: hsl(var(--gp-primary));
+  --color-primary-foreground: hsl(var(--gp-primary-fg));
+  --color-primary-light: hsl(231 48% 95%);
+  --color-secondary: hsl(var(--gp-surface));
   --color-secondary-foreground: #334155;
-
-  /* Muted */
-  --color-muted: #f1f5f9;
-  --color-muted-foreground: #64748b;
-
-  /* Accent — saffron */
+  --color-muted: hsl(var(--gp-surface));
+  --color-muted-foreground: hsl(var(--gp-muted));
   --color-accent: #ea580c;
   --color-accent-foreground: #ffffff;
-
-  /* Status */
-  --color-success: #16a34a;
-  --color-success-bg: #f0fdf4;
-  --color-warning: #d97706;
-  --color-warning-bg: #fffbeb;
-  --color-destructive: #dc2626;
-  --color-destructive-bg: #fef2f2;
-
-  /* Borders & inputs */
-  --color-border: #e2e8f0;
+  --color-success: hsl(var(--gp-status-paid));
+  --color-success-bg: hsl(var(--gp-status-paid-bg));
+  --color-warning: hsl(var(--gp-status-partial));
+  --color-warning-bg: hsl(var(--gp-status-partial-bg));
+  --color-destructive: hsl(var(--gp-status-unpaid));
+  --color-destructive-bg: hsl(var(--gp-status-unpaid-bg));
+  --color-border: hsl(var(--gp-border));
   --color-input: #ffffff;
-  --color-ring: #15803d;
-
-  /* Legacy / extra sidebar chrome (optional utilities) */
-  --color-sidebar-active-bg: #f0fdf4;
-  --color-sidebar-active-text: #15803d;
-  --color-sidebar-idle-text: #475569;
-
-  /* shadcn-style tokens (consumed by @repo/shadcn primitives) */
+  --color-ring: hsl(var(--gp-primary));
+  --color-sidebar-active-bg: hsl(var(--gp-surface));
+  --color-sidebar-active-text: hsl(var(--gp-primary));
+  --color-sidebar-idle-text: hsl(var(--gp-muted));
   --color-popover: #ffffff;
   --color-popover-foreground: #0f172a;
 }
 
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -99,16 +68,26 @@ input:-webkit-autofill:focus {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in {
   animation: fadeIn 0.2s ease-out both;
 }
 
-/* Print */
 @media print {
-  aside, header { display: none !important; }
-  main { padding: 0 !important; }
+  aside,
+  header {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+  }
 }
