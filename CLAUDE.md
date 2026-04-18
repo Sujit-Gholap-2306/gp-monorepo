@@ -19,7 +19,7 @@ GP-Monorepo/
 ├── apps/
 │   └── grampanchayat/     ← Next.js 16, port 3004
 ├── packages/
-│   └── shadcn/            ← @gp/shadcn — shared UI (gram-specific components)
+│   └── shadcn/            ← @gp/shadcn — `gram/*` (Gram* shell/nav) + `ui/*` (generic primitives)
 └── docs/
     ├── namune-vault/      ← Obsidian vault — all 33 namune notes + MOCs
     └── specs/             ← Machine-readable requirements + reconciled spec

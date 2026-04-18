@@ -1,0 +1,17 @@
+# compiled output
+dist/
+src/**/*.js
+src/**/*.js.map
+src/**/*.d.ts
+drizzle.config.js
+
+# env
+.env
+.env.*
+!.env.example
+
+# deps
+node_modules/
+
+# misc
+*.log

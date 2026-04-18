@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 
 export type GramAppNavbarProps = {
   /** Primary page title (English or short label) */
-  pageTitle: string
+  pageTitle?: string
   /** Secondary line — Marathi subtitle */
   pageSubtitleMr?: string
   /** Location / district badges (existing shell behaviour) */

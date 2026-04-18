@@ -8,5 +8,6 @@
     "module": "ESNext",
     "moduleResolution": "bundler",
     "lib": ["ES2017", "DOM", "DOM.Iterable"]
-  }
+  },
+  "exclude": ["apps", "packages", "node_modules"]
 }

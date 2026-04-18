@@ -1,14 +1,10 @@
 import {
   LayoutDashboard,
-  Users,
-  Building2,
   ClipboardList,
   FileText,
   Banknote,
-  BookOpen,
-  Table2,
   ScrollText,
-  Search,
+  Database,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -22,7 +18,10 @@ export interface NavItem {
   exact?: boolean
 }
 
-/** Primary demo IA — English paths, Marathi labels (next-intl later). */
+/**
+ * Sidebar — demo-only: wired UI + IndexedDB persistence.
+ * Placeholder pages (citizens, properties, cashbook, classified, search) are hidden until F3.
+ */
 export const APP_NAV: NavItem[] = [
   {
     href: '/',
@@ -33,20 +32,12 @@ export const APP_NAV: NavItem[] = [
     exact: true,
   },
   {
-    href: '/citizens',
-    label: 'Citizens',
-    labelMr: 'नागरिक',
-    desc: 'Citizen register',
-    icon: Users,
-    exact: false,
-  },
-  {
-    href: '/properties',
-    label: 'Properties',
-    labelMr: 'मालमत्ता',
-    desc: 'Property register',
-    icon: Building2,
-    exact: false,
+    href: '/masters',
+    label: 'Master data',
+    labelMr: 'मास्टर डेटा',
+    desc: 'GP profile, FY, heads — demo seed',
+    icon: Database,
+    exact: true,
   },
   {
     href: '/assessment',
@@ -76,37 +67,16 @@ export const APP_NAV: NavItem[] = [
     exact: false,
   },
   {
-    href: '/cashbook',
-    label: 'Cash book',
-    labelMr: 'रोख खातेवही',
-    desc: 'Namuna 5',
-    icon: BookOpen,
-    badge: 'N05',
-    exact: false,
-  },
-  {
-    href: '/classified',
-    label: 'Classified register',
-    labelMr: 'वर्गीकृत नोंदवही',
-    desc: 'Namuna 6',
-    icon: Table2,
-    badge: 'N06',
-    exact: false,
-  },
-  {
     href: '/utaras',
     label: 'Utara list',
     labelMr: 'उतारे',
-    desc: 'Legacy utara records',
+    desc: 'Persisted utara records',
     icon: ScrollText,
     exact: false,
   },
-  {
-    href: '/search',
-    label: 'Search',
-    labelMr: 'शोध',
-    desc: 'Find records',
-    icon: Search,
-    exact: true,
-  },
 ]
+
+/*
+Full IA (unhide when pages are ready):
+  /citizens, /properties, /cashbook, /classified, /search
+*/

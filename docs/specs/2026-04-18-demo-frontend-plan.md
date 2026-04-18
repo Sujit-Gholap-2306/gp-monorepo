@@ -13,6 +13,69 @@ theme → components → static pages → incremental DB connection.
 Work through these phases **in parallel with or before** the main impl plan phases.
 The goal: every page is visually complete with mock data before a single Server Action is wired.
 
+## Phase progress
+
+| Phase | Status |
+|-------|--------|
+| F0 — Theme | Done |
+| F1 — App shell + navigation | Done |
+| F2 — Shared UI primitives (6) | Done |
+| F3 — Static demo pages (11 in plan) | In progress — see F3 task table |
+| F4 — Incremental data wiring (per plan) | Not started |
+
+### Status grid (at a glance)
+
+| Task | Page | Status |
+|------|------|--------|
+| F3.1 | Dashboard | Done |
+| F3.2 | Tax demand (N09) | Done |
+| F3.3 | Collect payment | Partial |
+| F3.4 | Receipt view | Todo |
+| F3.5 | Citizens list | Todo |
+| F3.6 | Properties list | Todo |
+| F3.7 | Assessment (N08) | Done |
+| F3.8 | Cash book (N05) | Todo |
+| F3.9 | Classified register (N06) | Todo |
+| F3.10 | Citizen detail | Todo |
+| F3.11 | Property detail | Todo |
+
+**F3 rollup:** 3 done · 1 partial · 7 todo.
+
+| F2 primitive | Export | Status |
+|--------------|--------|--------|
+| `SearchInput` | `@gp/shadcn/ui/search-input` | Done |
+| `StatusBadge` | `@gp/shadcn/ui/status-badge` | Done |
+| `Amount` | `@gp/shadcn/ui/amount` | Done |
+| `StatCard` | `@gp/shadcn/ui/stat-card` | Done |
+| `DataTable` | `@gp/shadcn/ui/data-table` | Done |
+| `HalfYearTabs` | `@gp/shadcn/ui/half-year-tabs` | Done |
+
+### Backend / master data (current repo)
+
+There is **no server-side RDBMS/API** for masters yet. **Client persistence** today:
+
+| Area | Persistence |
+|------|-------------|
+| **Tier-1 masters** (GP profile, FY, AY, heads, banks, citizens, elected) | Browser **IndexedDB** store `masters` — seeded from `lib/masters/demo-seed.ts`, read via `lib/masters/repository.ts`; UI at `/masters` |
+| Utaras (demo register) | Browser **IndexedDB** `utaras` (`lib/db.ts`) |
+| Namuna 8 assessment demo | **TypeScript seed** (`lib/data/namuna8-seed`) |
+| Tax demand demo | **In-page mocks** |
+| Other screens (F3 placeholders) | **None / placeholder copy** |
+
+Full production **master modules** remain defined in `docs/specs/2026-04-18-maharashtra-gp-master-modules.md`; replace seeds with **F4 Server Actions + real DB** when the backend is chosen.
+
+---
+
+## Naming — `gram/*` vs `ui/*`
+
+| Location | Prefix / names | Purpose |
+|----------|----------------|---------|
+| `packages/shadcn/src/components/gram/` | **`Gram*`** (`GramAppShell`, `GramSidebarNav`, …) | GP **application chrome**: shell, sidebar, navbar, context strip — tied to this product’s layout IA. |
+| `packages/shadcn/src/components/ui/` | **Generic** (`SearchInput`, `Button`, `Amount`, …) | **Reusable primitives** usable in any screen; no `Gram` in the component name. |
+| `gp-theme-layer.css` / Tailwind | **`gp-*`, `sidebar-*`** | **Design tokens** (not components) — keep the `gp-` token prefix for brand/status. |
+
+Do **not** prefix every component with `Gram` or `GP`. Only the gram-folder layout family uses `Gram*`.
+
 ---
 
 ## What Already Exists in `@gp/shadcn`
@@ -21,8 +84,8 @@ The goal: every page is visually complete with mock data before a single Server 
 - `gram-sidebar-nav.tsx` — nav item renderer
 - `gram-sidebar-brand.tsx` — top branding area in sidebar
 - `gram-types.ts` — nav item type definitions
-- shadcn/ui: `button`, `input`, `sidebar`, `skeleton`, `tooltip`, `sheet`, `scroll-area`
-- `globals.css` — sidebar CSS tokens only, no GP brand tokens yet
+- shadcn/ui: `button`, `input`, `search-input`, `sidebar`, `skeleton`, `tooltip`, `sheet`, `scroll-area`
+- `gp-theme-layer.css` — GP brand + semantic Tailwind tokens (imported via `@gp/shadcn/globals.css`)
 
 Start from these. Do not rebuild what exists.
 
@@ -142,15 +205,26 @@ Use `sheet` (existing) for mobile drawer. Sidebar is always visible at ≥1024px
 
 ---
 
-## Phase F2 — GP-Specific Components
+## Phase F2 — Shared UI primitives
 
-**Package:** `packages/shadcn/src/components/gram/`
+**Package:** `packages/shadcn/src/components/ui/` (generic names; export map `@gp/shadcn/ui/*`)
 
-Build these before touching any page. Each is independently testable.
+Build these before touching any page. Each is independently testable. RHF: parents use `useController` / `register` and pass **controlled props** into primitives — no `FormProvider` requirement in `@gp/shadcn`.
+
+### F2 progress
+
+| Task | Component | Path / export | Status |
+|------|-----------|----------------|--------|
+| F2.5 | `SearchInput` | `@gp/shadcn/ui/search-input` | Done |
+| F2.1 | `StatusBadge` (demand: UNPAID / PARTIAL / PAID) | `@gp/shadcn/ui/status-badge` | Done |
+| F2.2 | `Amount` (INR formatter) | `@gp/shadcn/ui/amount` | Done |
+| F2.3 | `StatCard` | `@gp/shadcn/ui/stat-card` | Done |
+| F2.4 | `DataTable` | `@gp/shadcn/ui/data-table` | Done |
+| F2.6 | `HalfYearTabs` | `@gp/shadcn/ui/half-year-tabs` | Done |
 
 ---
 
-### F2.1 — `gram-status-badge.tsx`
+### F2.1 — `status-badge.tsx` → **`StatusBadge`**
 
 ```tsx
 type DemandStatus = 'UNPAID' | 'PARTIAL' | 'PAID'
@@ -161,32 +235,32 @@ const CONFIG = {
   PAID:    { label: { mr: 'भरलेले',   en: 'Paid'    }, color: 'gp-status-paid'    },
 }
 
-export function GramStatusBadge({ status, locale }: { status: DemandStatus; locale: 'mr'|'en' })
+export function StatusBadge({ status, locale }: { status: DemandStatus; locale: 'mr'|'en' })
 ```
 
 Used on: demand register, property detail, citizen detail.
 
 ---
 
-### F2.2 — `gram-amount.tsx`
+### F2.2 — `amount.tsx` → **`Amount`**
 
 Formats monetary amounts consistently across the app.
 
 ```tsx
 // ₹1,200.00 — always INR, always 2 decimal places, right-aligned in tables
-export function GramAmount({ value, className }: { value: number | Decimal; className?: string })
+export function Amount({ value, className }: { value: number; className?: string })
 ```
 
 Used on: every table with a money column.
 
 ---
 
-### F2.3 — `gram-stat-card.tsx`
+### F2.3 — `stat-card.tsx` → **`StatCard`**
 
 Dashboard stat card with label, value, and optional trend/delta.
 
 ```tsx
-export function GramStatCard({
+export function StatCard({
   label: string,      // Marathi label
   value: string,      // formatted value e.g. "₹1,24,500"
   sub?: string,       // e.g. "या महिन्यात" (this month)
@@ -197,20 +271,22 @@ export function GramStatCard({
 
 ---
 
-### F2.4 — `gram-data-table.tsx`
+### F2.4 — `data-table.tsx` → **`DataTable`**
 
-Thin wrapper around an HTML `<table>` with GP-consistent styling:
-- Sticky header
-- Row hover highlight
-- Right-aligned amount columns (pass `align="right"` on column def)
-- Empty state slot (pass `emptyState` prop with Marathi message)
-- Loading skeleton (pass `isLoading` prop)
+**Stack:** [TanStack Table v8](https://tanstack.com/table/v8) (headless) — `createColumnHelper` + typed `ColumnDef`, stable `data`/`columns` refs from the app, `getCoreRowModel` / `getSortedRowModel`. **API calls stay in the app** (e.g. React Query); the table only renders props.
 
-This is not a full headless table lib — just consistent styling for the 6–7 tables in this app.
+**Package layout** (`packages/shadcn/src/components/ui/data-table/`):
+- `types.ts` — props + `ColumnMeta` typing
+- `table-augmentation.ts` — `ColumnMeta` merge (`align`, header/cell class names)
+- `data-table-utils.ts` — header/cell alignment class helpers
+- `use-data-table.ts` — `useReactTable` wiring
+- `data-table.tsx` — GP-styled `<table>` shell
+
+**UX:** Sticky header row, row hover, `meta.align: 'right'` for amounts, optional `isLoading` skeleton rows, `emptyState`, header sort indicators (where sorting enabled).
 
 ---
 
-### F2.5 — `gram-search-input.tsx`
+### F2.5 — `search-input.tsx` → **`SearchInput`** (done)
 
 Search input with:
 - Magnifying glass icon prefix
@@ -218,23 +294,27 @@ Search input with:
 - Debounce built in (300ms default, configurable)
 - Marathi placeholder passed as prop
 
-Used on: citizens list, properties list, collection citizen search.
+**Implemented:** `packages/shadcn/src/components/ui/search-input/`, import `@gp/shadcn/ui/search-input`.
+
+Used on: citizens list, properties list, search page, collection citizen search.
 
 ---
 
-### F2.6 — `gram-half-year-tabs.tsx`
+### F2.6 — `half-year-tabs.tsx` → **`HalfYearTabs`**
 
 Reusable tab set for half-year selection. Used on demand register page.
 
 ```tsx
 // Tab 1: सहामाही १  (एप्रिल - सप्टेंबर)
 // Tab 2: सहामाही २  (ऑक्टोबर - मार्च)
-export function GramHalfYearTabs({ value, onChange })
+export function HalfYearTabs({ value, onChange })
 ```
+
+**Package layout:** `half-year-utils.ts` (pure `HalfYearIndex`, labels, calendar-month → half, guards), `types.ts` (props), `half-year-tabs.tsx` (client, roving tabindex, Arrow/Home/End keys). Optional `HalfYearTabPanel` for `role="tabpanel"` wiring. Locale-specific option tuples cached at module scope.
 
 ---
 
-**Acceptance for F2:** All 6 components render in isolation with props. No DB dependency. Export from `packages/shadcn/src/components/gram/index.ts`.
+**Acceptance for F2:** All six primitives render in isolation with props only. No DB dependency. Each exported in `packages/shadcn/package.json` under `./ui/<name>` (and existing `./gram-*` entries stay for layout chrome only).
 
 ---
 
@@ -244,19 +324,19 @@ Build every page with hardcoded mock data arrays. One task per page. Do **not** 
 
 Order: highest demo-impact pages first.
 
-| Task | Page | Mock data shape |
-|------|------|----------------|
-| F3.1 | Dashboard | 4 stat numbers, 5 receipt rows |
-| F3.2 | Tax Demand (N09) | 10 demand rows, half-year tabs |
-| F3.3 | Collect Payment | Citizen search result + 4 demand rows |
-| F3.4 | Receipt View | 1 receipt with demand breakdown |
-| F3.5 | Citizens List | 20 citizen rows |
-| F3.6 | Properties List | 20 property rows |
-| F3.7 | Assessment (N08) | 10 properties × 4 tax rows, grouped |
-| F3.8 | Cash Book (N05) | 10 entries with running balance |
-| F3.9 | Classified Register (N06) | 4 heads × 6 months |
-| F3.10 | Citizen Detail | 1 citizen, 2 properties, 3 receipts |
-| F3.11 | Property Detail | 1 property, assessment + demand history |
+| Task | Page | Mock data shape | Status |
+|------|------|-----------------|--------|
+| F3.1 | Dashboard | 4 stat numbers, 5 receipt rows | Done |
+| F3.2 | Tax Demand (N09) | 10 demand rows, half-year tabs | Done |
+| F3.3 | Collect Payment | Citizen search result + 4 demand rows | Partial |
+| F3.4 | Receipt View | 1 receipt with demand breakdown | Todo |
+| F3.5 | Citizens List | 20 citizen rows | Todo |
+| F3.6 | Properties List | 20 property rows | Todo |
+| F3.7 | Assessment (N08) | 10 properties × 4 tax rows, grouped | Done |
+| F3.8 | Cash Book (N05) | 10 entries with running balance | Todo |
+| F3.9 | Classified Register (N06) | 4 heads × 6 months | Todo |
+| F3.10 | Citizen Detail | 1 citizen, 2 properties, 3 receipts | Todo |
+| F3.11 | Property Detail | 1 property, assessment + demand history | Todo |
 
 **Mock data conventions:**
 - Use realistic Marathi names and amounts
@@ -264,7 +344,7 @@ Order: highest demo-impact pages first.
 - Include one property with arrear_bf > 0 in demand mocks
 - All amounts in realistic GP range: ₹200–₹5,000 per tax per half-year
 
-**Acceptance for F3:** Every page renders without errors. GramStatCard, GramStatusBadge, GramAmount, GramDataTable components visible and styled correctly across all pages. Zero DB calls.
+**Acceptance for F3:** Every page renders without errors. `StatCard`, `StatusBadge`, `Amount`, `DataTable` (and other F2 primitives) visible and styled correctly across all pages. Zero DB calls.
 
 ---
 
@@ -294,12 +374,12 @@ Each task: delete the `MOCK_*` constant, import the Server Action, pass real dat
 ## Build Sequence Summary
 
 ```
-F0  Theme + font setup                    ← 1 day
-F1  App shell + nav wiring                ← 0.5 day
-F2  GP components (6 components)          ← 1.5 days
-F3  All pages static (11 pages)           ← 3 days
+F0  Theme + font setup                    ← done
+F1  App shell + nav wiring                ← done
+F2  UI primitives (6)                     ← done
+F3  All pages static (11 pages)           ← in progress (3 done, 1 partial, 7 todo)
     ── demo-ready UI checkpoint ──
-F4  Incremental data wiring               ← runs alongside main impl plan phases 2–6
+F4  Incremental data wiring               ← not started; runs alongside main impl plan
     (one F4 task per main impl task)
 ```
 
@@ -307,18 +387,21 @@ After F3 is complete, the demo is **visually presentable** to a Gram Sevak even 
 
 ---
 
-## Component Export Checklist
+## Component export checklist
 
-Add to `packages/shadcn/src/components/gram/index.ts`:
+**GP chrome (existing pattern):** one export per folder under `./gram-*` in `packages/shadcn/package.json` (e.g. `GramAppShell`, `GramSidebarNav`, `GramSidebarBrand`).
 
-```ts
-export { GramAppShell }      from './gram-app-shell'
-export { GramSidebarNav }    from './gram-sidebar-nav'
-export { GramSidebarBrand }  from './gram-sidebar-brand'
-export { GramStatusBadge }   from './gram-status-badge'   // F2.1
-export { GramAmount }        from './gram-amount'          // F2.2
-export { GramStatCard }      from './gram-stat-card'       // F2.3
-export { GramDataTable }     from './gram-data-table'      // F2.4
-export { GramSearchInput }   from './gram-search-input'    // F2.5
-export { GramHalfYearTabs }  from './gram-half-year-tabs'  // F2.6
+**Generic primitives:** one export per `./ui/*` entry — no central `gram/index.ts` barrel required.
+
+```text
+@gp/shadcn/gram-app-shell
+@gp/shadcn/gram-sidebar-nav
+@gp/shadcn/gram-sidebar-brand
+…
+@gp/shadcn/ui/search-input     ✅ F2.5
+@gp/shadcn/ui/status-badge     ✅ F2.1
+@gp/shadcn/ui/amount           ✅ F2.2
+@gp/shadcn/ui/stat-card        ✅ F2.3
+@gp/shadcn/ui/data-table       ✅ F2.4
+@gp/shadcn/ui/half-year-tabs   ✅ F2.6
 ```

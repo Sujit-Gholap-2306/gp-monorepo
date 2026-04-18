@@ -2,6 +2,7 @@
 
 import { openDB, type DBSchema, type IDBPDatabase } from 'idb'
 import type { Utara } from '@/types'
+import type { MasterSnapshotEnvelope } from '@/lib/masters/types'
 
 interface GramDB extends DBSchema {
   utaras: {
@@ -13,21 +14,30 @@ interface GramDB extends DBSchema {
       by_owner: string
     }
   }
+  masters: {
+    key: string
+    value: MasterSnapshotEnvelope
+  }
 }
 
 const DB_NAME = 'grampanchayat-db'
-const DB_VERSION = 1
+const DB_VERSION = 2
 
 let dbPromise: Promise<IDBPDatabase<GramDB>> | null = null
 
-function getDB(): Promise<IDBPDatabase<GramDB>> {
+export function getGramDB(): Promise<IDBPDatabase<GramDB>> {
   if (!dbPromise) {
     dbPromise = openDB<GramDB>(DB_NAME, DB_VERSION, {
-      upgrade(db) {
-        const store = db.createObjectStore('utaras', { keyPath: 'id' })
-        store.createIndex('by_village', 'village')
-        store.createIndex('by_status', 'status')
-        store.createIndex('by_owner', 'ownerName')
+      upgrade(db, oldVersion) {
+        if (oldVersion < 1) {
+          const store = db.createObjectStore('utaras', { keyPath: 'id' })
+          store.createIndex('by_village', 'village')
+          store.createIndex('by_status', 'status')
+          store.createIndex('by_owner', 'ownerName')
+        }
+        if (oldVersion < 2) {
+          db.createObjectStore('masters', { keyPath: 'id' })
+        }
       },
     })
   }
@@ -35,23 +45,23 @@ function getDB(): Promise<IDBPDatabase<GramDB>> {
 }
 
 export async function getAllUtaras(): Promise<Utara[]> {
-  const db = await getDB()
+  const db = await getGramDB()
   const all = await db.getAll('utaras')
   return all.sort((a, b) => b.createdAt.localeCompare(a.createdAt))
 }
 
 export async function getUtara(id: string): Promise<Utara | undefined> {
-  const db = await getDB()
+  const db = await getGramDB()
   return db.get('utaras', id)
 }
 
 export async function saveUtara(utara: Utara): Promise<void> {
-  const db = await getDB()
+  const db = await getGramDB()
   await db.put('utaras', utara)
 }
 
 export async function deleteUtara(id: string): Promise<void> {
-  const db = await getDB()
+  const db = await getGramDB()
   await db.delete('utaras', id)
 }
 

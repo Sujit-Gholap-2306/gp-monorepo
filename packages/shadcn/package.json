@@ -8,6 +8,7 @@
     "lint": "echo \"lint not configured yet\""
   },
   "dependencies": {
+    "@tanstack/react-table": "^8.21.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "lucide-react": "^1.7.0",
@@ -40,6 +41,14 @@
     "./gram-sidebar-nav": "./src/components/gram/gram-sidebar-nav/index.ts",
     "./gram-types": "./src/components/gram/gram-types/index.ts",
     "./gram-nav-utils": "./src/components/gram/gram-nav-utils/index.ts",
-    "./ui/badge": "./src/components/ui/badge.tsx"
+    "./ui/badge": "./src/components/ui/badge.tsx",
+    "./ui/button": "./src/components/ui/button.tsx",
+    "./ui/input": "./src/components/ui/input.tsx",
+    "./ui/search-input": "./src/components/ui/search-input/index.ts",
+    "./ui/amount": "./src/components/ui/amount/index.ts",
+    "./ui/status-badge": "./src/components/ui/status-badge/index.ts",
+    "./ui/stat-card": "./src/components/ui/stat-card/index.ts",
+    "./ui/data-table": "./src/components/ui/data-table/index.ts",
+    "./ui/half-year-tabs": "./src/components/ui/half-year-tabs/index.ts"
   }
 }
