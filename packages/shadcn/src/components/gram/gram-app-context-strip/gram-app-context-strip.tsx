@@ -23,7 +23,7 @@ export function GramAppContextStrip({
   return (
     <div className={cn(contextStripRootVariants(), className)}>
       <div className={contextStripInnerVariants()}>
-        <div className={cn('min-w-0', hasText && 'flex flex-col gap-1')}>
+        <div className={cn('min-w-0', hasText && 'flex flex-col gap-0.5')}>
           {gpNameMr ? (
             <p className="truncate text-base font-semibold leading-tight text-foreground md:text-lg">{gpNameMr}</p>
           ) : null}
@@ -31,7 +31,7 @@ export function GramAppContextStrip({
             <p className="truncate text-xs font-medium text-muted-foreground md:text-sm">{financialYearMr}</p>
           ) : null}
         </div>
-        {trailing ? <div className="flex shrink-0 items-center gap-2">{trailing}</div> : null}
+        {trailing ? <div className="flex shrink-0 items-center gap-1.5">{trailing}</div> : null}
       </div>
     </div>
   )

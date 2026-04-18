@@ -1,7 +1,7 @@
 import { cva } from 'class-variance-authority'
 
 export const sidebarBrandCardVariants = cva(
-  'relative overflow-hidden rounded-xl border border-sidebar-border/80 bg-sidebar-accent/40 px-3 py-3',
+  'relative overflow-hidden rounded-xl border border-sidebar-border/80 bg-sidebar-accent/40 px-2.5 py-2.5',
 )
 
 export const sidebarBrandIconWrapVariants = cva(

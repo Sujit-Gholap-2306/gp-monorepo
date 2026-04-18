@@ -12,9 +12,9 @@ export function GramSidebarBrand({ title, subtitle, icon: Icon, className }: Gra
   return (
     <SidebarHeader
       className={cn(
-        'border-b border-sidebar-border px-3 py-4',
+        'border-b border-sidebar-border px-2.5 py-3',
         /* Icon rail is 3rem wide — drop horizontal padding so the logo isn’t clipped */
-        'group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-2',
+        'group-data-[collapsible=icon]:px-0 group-data-[collapsible=icon]:py-1.5',
         className,
       )}
     >
@@ -25,12 +25,12 @@ export function GramSidebarBrand({ title, subtitle, icon: Icon, className }: Gra
         )}
       >
         <div
-          className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/[0.07] via-transparent to-cta/6 group-data-[collapsible=icon]:hidden"
+          className="pointer-events-none absolute inset-0 bg-linear-to-br from-primary/[0.07] via-transparent to-accent/6 group-data-[collapsible=icon]:hidden"
           aria-hidden
         />
         <div
           className={cn(
-            'relative flex items-center gap-3',
+            'relative flex items-center gap-2.5',
             'group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0',
           )}
         >
@@ -42,7 +42,7 @@ export function GramSidebarBrand({ title, subtitle, icon: Icon, className }: Gra
           >
             <Icon className="size-[18px] group-data-[collapsible=icon]:size-4" strokeWidth={2.5} aria-hidden />
           </div>
-          <div className="flex min-w-0 flex-1 flex-col gap-1 leading-tight group-data-[collapsible=icon]:hidden">
+          <div className="flex min-w-0 flex-1 flex-col gap-0.5 leading-tight group-data-[collapsible=icon]:hidden">
             <p className="truncate text-sm font-bold tracking-tight text-sidebar-foreground">{title}</p>
             <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
               {subtitle}

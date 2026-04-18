@@ -24,10 +24,13 @@ export function GramAppNavbar({
 }: GramAppNavbarProps) {
   return (
     <header className={cn(appNavbarVariants(), className)}>
-      <SidebarTrigger className="shrink-0" aria-label={menuTriggerAriaLabel} />
+      <SidebarTrigger
+        className="shrink-0 transition-colors duration-200"
+        aria-label={menuTriggerAriaLabel}
+      />
       <Separator orientation="vertical" className="hidden h-6 md:block" />
 
-      <div className="flex min-w-0 flex-1 flex-col gap-1">
+      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
         <div className="flex items-center gap-2">
           <span className="hidden h-6 w-1 shrink-0 rounded-full bg-primary md:block" aria-hidden />
           <h1 className="truncate text-[13px] font-semibold text-foreground md:text-sm">{pageTitle}</h1>

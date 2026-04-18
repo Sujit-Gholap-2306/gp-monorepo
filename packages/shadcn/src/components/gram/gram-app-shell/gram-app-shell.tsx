@@ -54,7 +54,7 @@ export function GramAppShell({
         <GramSidebarBrand title={brandTitleMr} subtitle={brandSubtitleMr} icon={brandIcon} />
         <GramSidebarNav items={navItems} pathname={pathname} groupLabel={navGroupLabel} />
         <SidebarSeparator className="group-data-[collapsible=icon]:mx-1" />
-        <SidebarFooter className="gap-1 px-4 py-4 group-data-[collapsible=icon]:hidden">
+        <SidebarFooter className="gap-0.5 px-3 py-3 group-data-[collapsible=icon]:hidden">
           <p className="text-[11px] font-semibold text-muted-foreground">{footerTitleMr}</p>
           <p className="text-[10px] leading-snug text-muted-foreground/85">{footerSubtitleMr}</p>
         </SidebarFooter>
