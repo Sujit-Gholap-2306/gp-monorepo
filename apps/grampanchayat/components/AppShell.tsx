@@ -1,6 +1,6 @@
 'use client'
 
-import { GramAppShell } from '@repo/shadcn/gram-app-shell'
+import { GramAppShell } from '@gp/shadcn/gram-app-shell'
 import { APP_NAV } from '@/lib/nav'
 
 export default function AppShell({ children }: { children: React.ReactNode }) {

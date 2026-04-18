@@ -3,7 +3,7 @@ import path from 'path'
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
-  transpilePackages: ['@repo/shadcn'],
+  transpilePackages: ['@gp/shadcn'],
   turbopack: {
     root: path.join(__dirname, '..', '..'),
   },
