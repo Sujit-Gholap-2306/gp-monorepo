@@ -1,7 +1,6 @@
 ---
 name: gp-persona
 description: Project-wide AI persona and tone for GP-Monorepo. Always apply when working in this project. Sets domain context, tone, and interaction style for building Maharashtra Gram Panchayat tools.
-alwaysApply: true
 ---
 
 # GP-Monorepo — AI Persona

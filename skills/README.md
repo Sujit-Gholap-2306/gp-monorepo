@@ -1,64 +1,67 @@
 # GP-Monorepo Skills
 
-Versioned skill definitions for AI assistants (Claude Code, Cursor, Codex).
+Versioned skill definitions for any AI assistant — Claude Code, Cursor, Copilot, or any future tool.
+
+Each skill is one folder with a `SKILL.md` file. Pure markdown, no tool-specific format.
 
 ## Layout
 
 ```
 skills/
-  README.md                       ← this file
-  sync-cursor-rules.sh            ← generate .cursor/rules/*.mdc from SKILL.md files
+  GP-Specific (own and maintain):
+  gp-persona/         ← Project-wide persona + domain context (apply to all GP work)
+  gp-dev/             ← Dev standards: @gp/shadcn, Next.js 16, Tailwind v4, lib rules
+  gp-review/          ← Code review checklist for PRs and audits
 
-  GP-Specific (maintain these):
-  gp-persona/SKILL.md             ← Project-wide persona + domain context (alwaysApply)
-  gp-dev/SKILL.md                 ← Dev standards: @gp/shadcn, Next.js 16, Tailwind v4, lib rules
-  gp-review/SKILL.md              ← Code review checklist for PRs and audits
-
-  General (copied from global, update when upstream changes):
-  shadcn/SKILL.md                 ← shadcn/ui component management
-  vercel-react-best-practices/    ← React + Next.js performance patterns
-  web-design-guidelines/          ← UI/UX and accessibility audit
-  architecture-patterns/          ← Clean Architecture, DDD for backend
-  mongodb/SKILL.md                ← MongoDB schema design and queries
-  langchain-architecture/         ← LangChain + LangGraph for AI features
-  native-data-fetching/           ← React Query, fetch, error handling patterns
-  brainstorming/SKILL.md          ← Design-before-code process
+  General (copied from shared library, update when upstream changes):
+  shadcn/             ← shadcn/ui component management
+  vercel-react-best-practices/  ← React + Next.js performance patterns
+  web-design-guidelines/        ← UI/UX and accessibility audit
+  architecture-patterns/        ← Clean Architecture, DDD
+  mongodb/            ← MongoDB schema design and queries
+  langchain-architecture/       ← LangChain + LangGraph for AI features
+  native-data-fetching/         ← React Query, fetch, error handling
+  brainstorming/      ← Design-before-code process
 ```
 
-## Canonical Source
+## Skill File Format
 
-**Edit `skills/<name>/SKILL.md` first.**
+Each `SKILL.md` has a YAML frontmatter block followed by the skill body:
 
-Each skill is one folder with a `SKILL.md` file and optional YAML frontmatter:
-- `name` — skill identifier
-- `description` — when to apply (Claude uses this to decide)
-- `alwaysApply: true` — auto-apply without being explicitly invoked (Cursor only)
+```markdown
+---
+name: skill-name
+description: When to apply this skill. AI assistants use this to decide relevance.
+---
 
-## Claude Code
-
-### Global symlinks (one-time setup per machine)
-
-```bash
-ln -sf /Users/mac1/Workspace/Projects/GP-Monorepo/skills/gp-persona ~/.claude/skills/gp-persona
-ln -sf /Users/mac1/Workspace/Projects/GP-Monorepo/skills/gp-dev ~/.claude/skills/gp-dev
-ln -sf /Users/mac1/Workspace/Projects/GP-Monorepo/skills/gp-review ~/.claude/skills/gp-review
+# Skill Title
+...
 ```
 
-This makes the same `SKILL.md` files available globally without duplication.
+The `description` field is the key — write it so any AI can match it to the right context.
 
-### Reference in CLAUDE.md
+## How Each Tool Uses These
 
-Skills are referenced in `CLAUDE.md` at the repo root. Claude Code reads `CLAUDE.md` automatically on every session.
+**Claude Code**
+- Global symlinks (one-time per machine):
+  ```bash
+  ln -sf $(pwd)/skills/gp-persona ~/.claude/skills/gp-persona
+  ln -sf $(pwd)/skills/gp-dev ~/.claude/skills/gp-dev
+  ln -sf $(pwd)/skills/gp-review ~/.claude/skills/gp-review
+  ```
+- Or reference in `CLAUDE.md` (already done at repo root)
 
-## Cursor
+**Cursor**
+- Add to `.cursor/rules/` as `.mdc` files
+- Cursor frontmatter: `description`, `globs`, `alwaysApply`
+- Body: paste the SKILL.md content after the frontmatter
 
-Cursor reads `.cursor/rules/*.mdc`. Each `.mdc` file mirrors a `SKILL.md` with Cursor-specific YAML frontmatter (`globs`, `alwaysApply`).
-
-Run `bash skills/sync-cursor-rules.sh` from the repo root to regenerate after editing a SKILL.md.
+**Copilot / other tools**
+- Copy the SKILL.md body into the tool's context/instruction file
+- The content is plain markdown — paste anywhere
 
 ## Adding a New Skill
 
-1. Create `skills/<name>/SKILL.md` with YAML frontmatter
+1. Create `skills/<name>/SKILL.md` with name + description frontmatter
 2. Add it to the layout table above
-3. Add a symlink if you want it globally available in Claude Code
-4. Run `sync-cursor-rules.sh` if you want it in Cursor
+3. Wire it up in your tool of choice
