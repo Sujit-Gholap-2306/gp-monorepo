@@ -1,24 +1,20 @@
 {
   "main": {
-    "id": "00bf16081f0aa2e2",
+    "id": "4d0d9463ed51977a",
     "type": "split",
     "children": [
       {
-        "id": "63bf31b083df1ee1",
+        "id": "a26c2c0999955d9e",
         "type": "tabs",
         "children": [
           {
-            "id": "716abafe3f65a10c",
+            "id": "40400a0a289af3ef",
             "type": "leaf",
             "state": {
-              "type": "markdown",
-              "state": {
-                "file": "MOC-Master.md",
-                "mode": "source",
-                "source": false
-              },
+              "type": "empty",
+              "state": {},
               "icon": "lucide-file",
-              "title": "MOC-Master"
+              "title": "New tab"
             }
           }
         ]
@@ -27,15 +23,15 @@
     "direction": "vertical"
   },
   "left": {
-    "id": "c2f4b080d0728baa",
+    "id": "02e70bcf1633c3b1",
     "type": "split",
     "children": [
       {
-        "id": "2893bf876770deb7",
+        "id": "ccd76e0349b8c14f",
         "type": "tabs",
         "children": [
           {
-            "id": "dab46aff99947ed1",
+            "id": "9b30f7db5d2b9c8f",
             "type": "leaf",
             "state": {
               "type": "file-explorer",
@@ -48,7 +44,7 @@
             }
           },
           {
-            "id": "33eaf1150ad92f56",
+            "id": "c4927cc9fac8cac1",
             "type": "leaf",
             "state": {
               "type": "search",
@@ -65,7 +61,7 @@
             }
           },
           {
-            "id": "725d264c66d45c10",
+            "id": "c12368e3a211e9c0",
             "type": "leaf",
             "state": {
               "type": "bookmarks",
@@ -81,15 +77,15 @@
     "width": 300
   },
   "right": {
-    "id": "e384bd94ad65f1d1",
+    "id": "d00fe9bdcc80a879",
     "type": "split",
     "children": [
       {
-        "id": "5eda9dcb38f7736b",
+        "id": "c64c6c2157616728",
         "type": "tabs",
         "children": [
           {
-            "id": "824842362f800ea9",
+            "id": "1c00a249b3a2a91e",
             "type": "leaf",
             "state": {
               "type": "backlink",
@@ -107,7 +103,7 @@
             }
           },
           {
-            "id": "e2a3b0090917b5c9",
+            "id": "b41b801e24af10f3",
             "type": "leaf",
             "state": {
               "type": "outgoing-link",
@@ -120,7 +116,7 @@
             }
           },
           {
-            "id": "e2fb85a86b727a4c",
+            "id": "8fcf20d824e6f6d7",
             "type": "leaf",
             "state": {
               "type": "tag",
@@ -135,7 +131,7 @@
             }
           },
           {
-            "id": "408b481d830a7bef",
+            "id": "f92de53c704e9682",
             "type": "leaf",
             "state": {
               "type": "all-properties",
@@ -149,7 +145,7 @@
             }
           },
           {
-            "id": "77050b234e8c9302",
+            "id": "c5e77020bfe10c97",
             "type": "leaf",
             "state": {
               "type": "outline",
@@ -180,34 +176,6 @@
       "bases:Create new base": false
     }
   },
-  "active": "716abafe3f65a10c",
-  "lastOpenFiles": [
-    "Master-Flow.md",
-    "MOC-Master.md",
-    "Namune/Audit/Audit-Flow.md",
-    "Namune/Advances/Advances-Flow.md",
-    "Namune/Reporting/Reporting-Flow.md",
-    "Namune/Property/Property-Flow.md",
-    "Namune/Staff/Staff-Flow.md",
-    "Namune/Works/Works-Flow.md",
-    "Namune/Expenditure/Expenditure-Flow.md",
-    "Namune/Receipt/Receipt-Flow.md",
-    "Namune/Tax/Tax-Flow.md",
-    "Namune/Cash/Cash-Flow.md",
-    "Namune/Budget/Budget-Flow.md",
-    "diagrams/Works-Flow.md",
-    "diagrams/Audit-Flow.md",
-    "diagrams/Advances-Flow.md",
-    "diagrams/Reporting-Flow.md",
-    "diagrams/Property-Flow.md",
-    "diagrams/Staff-Flow.md",
-    "diagrams/Expenditure-Flow.md",
-    "diagrams/Receipt-Flow.md",
-    "diagrams/Tax-Flow.md",
-    "diagrams/Cash-Flow.md",
-    "diagrams/Budget-Flow.md",
-    "diagrams/Master-Flow.md",
-    "diagrams",
-    "Namune/Receipt/Namuna-06.md"
-  ]
+  "active": "40400a0a289af3ef",
+  "lastOpenFiles": []
 }
