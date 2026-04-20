@@ -18,7 +18,71 @@ importers:
         specifier: ^5.4.2
         version: 5.9.3
 
-  apps/api:
+  apps/grampanchayat:
+    dependencies:
+      '@gp/shadcn':
+        specifier: workspace:*
+        version: link:../../packages/shadcn
+      '@hookform/resolvers':
+        specifier: ^5.2.2
+        version: 5.2.2(react-hook-form@7.72.1(react@19.2.3))
+      '@supabase/ssr':
+        specifier: ^0.10.2
+        version: 0.10.2(@supabase/supabase-js@2.103.3)
+      '@supabase/supabase-js':
+        specifier: ^2.49.4
+        version: 2.103.3
+      '@tanstack/react-query':
+        specifier: ^5.99.2
+        version: 5.99.2(react@19.2.3)
+      '@tanstack/react-query-devtools':
+        specifier: ^5.99.1
+        version: 5.99.1(@tanstack/react-query@5.99.2(react@19.2.3))(react@19.2.3)
+      idb:
+        specifier: ^8.0.3
+        version: 8.0.3
+      lucide-react:
+        specifier: ^1.7.0
+        version: 1.8.0(react@19.2.3)
+      next:
+        specifier: 16.1.6
+        version: 16.1.6(@babel/core@7.29.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
+      react:
+        specifier: 19.2.3
+        version: 19.2.3
+      react-dom:
+        specifier: 19.2.3
+        version: 19.2.3(react@19.2.3)
+      react-hook-form:
+        specifier: ^7.54.0
+        version: 7.72.1(react@19.2.3)
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@tailwindcss/postcss':
+        specifier: ^4
+        version: 4.2.2
+      '@types/node':
+        specifier: ^20
+        version: 20.19.39
+      '@types/react':
+        specifier: ^19
+        version: 19.2.14
+      '@types/react-dom':
+        specifier: ^19
+        version: 19.2.3(@types/react@19.2.14)
+      babel-plugin-react-compiler:
+        specifier: ^1.0.0
+        version: 1.0.0
+      tailwindcss:
+        specifier: ^4
+        version: 4.2.2
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+
+  apps/grampanchayat-api:
     dependencies:
       '@supabase/supabase-js':
         specifier: ^2.49.2
@@ -98,61 +162,6 @@ importers:
         version: 4.21.0
       typescript:
         specifier: ^5.7.3
-        version: 5.9.3
-
-  apps/grampanchayat:
-    dependencies:
-      '@gp/shadcn':
-        specifier: workspace:*
-        version: link:../../packages/shadcn
-      '@hookform/resolvers':
-        specifier: ^5.2.2
-        version: 5.2.2(react-hook-form@7.72.1(react@19.2.3))
-      '@tanstack/react-query':
-        specifier: ^5.96.2
-        version: 5.99.0(react@19.2.3)
-      idb:
-        specifier: ^8.0.3
-        version: 8.0.3
-      lucide-react:
-        specifier: ^1.7.0
-        version: 1.8.0(react@19.2.3)
-      next:
-        specifier: 16.1.6
-        version: 16.1.6(@babel/core@7.29.0)(babel-plugin-react-compiler@1.0.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      react:
-        specifier: 19.2.3
-        version: 19.2.3
-      react-dom:
-        specifier: 19.2.3
-        version: 19.2.3(react@19.2.3)
-      react-hook-form:
-        specifier: ^7.54.0
-        version: 7.72.1(react@19.2.3)
-      zod:
-        specifier: ^3.24.1
-        version: 3.25.76
-    devDependencies:
-      '@tailwindcss/postcss':
-        specifier: ^4
-        version: 4.2.2
-      '@types/node':
-        specifier: ^20
-        version: 20.19.39
-      '@types/react':
-        specifier: ^19
-        version: 19.2.14
-      '@types/react-dom':
-        specifier: ^19
-        version: 19.2.3(@types/react@19.2.14)
-      babel-plugin-react-compiler:
-        specifier: ^1.0.0
-        version: 1.0.0
-      tailwindcss:
-        specifier: ^4
-        version: 4.2.2
-      typescript:
-        specifier: ^5
         version: 5.9.3
 
   packages/shadcn:
@@ -1832,6 +1841,11 @@ packages:
     resolution: {integrity: sha512-fUvKtSXMUk1BkApVwAurWtHF4Vzbb0UB9aC/fQXrRBek7Ta3Kaora+wHf/fGwFNQs7uRz+mvjIVpzLfpR32VXA==}
     engines: {node: '>=20.0.0'}
 
+  '@supabase/ssr@0.10.2':
+    resolution: {integrity: sha512-JFbchN63CXLFHJRNT7udec4/RoD9PmXkSGko3QSO6vUuqGBtSzdmxR7FPfQNr7SuFd65I7Xv46q66ALjEN1cgQ==}
+    peerDependencies:
+      '@supabase/supabase-js': ^2.102.1
+
   '@supabase/storage-js@2.103.3':
     resolution: {integrity: sha512-5bAIEubrw5keHcdKR2RTois0O1M2Ilx4UYuzOzc07G6mLGCPS/8t1nbC6Vq451pnxR3sK+rmtFHWb9CY/OPjAw==}
     engines: {node: '>=20.0.0'}
@@ -1931,11 +1945,20 @@ packages:
   '@tailwindcss/postcss@4.2.2':
     resolution: {integrity: sha512-n4goKQbW8RVXIbNKRB/45LzyUqN451deQK0nzIeauVEqjlI49slUlgKYJM2QyUzap/PcpnS7kzSUmPb1sCRvYQ==}
 
-  '@tanstack/query-core@5.99.0':
-    resolution: {integrity: sha512-3Jv3WQG0BCcH7G+7lf/bP8QyBfJOXeY+T08Rin3GZ1bshvwlbPt7NrDHMEzGdKIOmOzvIQmxjk28YEQX60k7pQ==}
+  '@tanstack/query-core@5.99.2':
+    resolution: {integrity: sha512-1HunU0bXVsR1ZJMZbcOPE6VtaBJxsW809RE9xPe4Gz7MlB0GWwQvuTPhMoEmQ/hIzFKJ/DWAuttIe7BOaWx0tA==}
 
-  '@tanstack/react-query@5.99.0':
-    resolution: {integrity: sha512-OY2bCqPemT1LlqJ8Y2CUau4KELnIhhG9Ol3ZndPbdnB095pRbPo1cHuXTndg8iIwtoHTgwZjyaDnQ0xD0mYwAw==}
+  '@tanstack/query-devtools@5.99.1':
+    resolution: {integrity: sha512-6BcpadvDYgJ578xWdqoxORcGd2wgRdEll/EkCjCb4Mge04kGUVqpES+wh04s/VgBVFuGSe4ab+AwmnfDWBmNZg==}
+
+  '@tanstack/react-query-devtools@5.99.1':
+    resolution: {integrity: sha512-9HuN9qWAn8kseiFZNpGYKik0ozff5yBv2t6D6wZvKV6qncH7BAtf0N2myxioZXpOVfCVmpOtgRfNvMHH22CHgQ==}
+    peerDependencies:
+      '@tanstack/react-query': ^5.99.1
+      react: ^18 || ^19
+
+  '@tanstack/react-query@5.99.2':
+    resolution: {integrity: sha512-vM91UEe45QUS9ED6OklsVL15i8qKcRqNwpWzPTVWvRPRSEgDudDgHpvyTjcdlwHcrKNa80T+xXYcchT2noPnZA==}
     peerDependencies:
       react: ^18 || ^19
 
@@ -5342,6 +5365,11 @@ snapshots:
       - bufferutil
       - utf-8-validate
 
+  '@supabase/ssr@0.10.2(@supabase/supabase-js@2.103.3)':
+    dependencies:
+      '@supabase/supabase-js': 2.103.3
+      cookie: 1.1.1
+
   '@supabase/storage-js@2.103.3':
     dependencies:
       iceberg-js: 0.8.1
@@ -5431,11 +5459,19 @@ snapshots:
       postcss: 8.5.10
       tailwindcss: 4.2.2
 
-  '@tanstack/query-core@5.99.0': {}
+  '@tanstack/query-core@5.99.2': {}
 
-  '@tanstack/react-query@5.99.0(react@19.2.3)':
+  '@tanstack/query-devtools@5.99.1': {}
+
+  '@tanstack/react-query-devtools@5.99.1(@tanstack/react-query@5.99.2(react@19.2.3))(react@19.2.3)':
     dependencies:
-      '@tanstack/query-core': 5.99.0
+      '@tanstack/query-devtools': 5.99.1
+      '@tanstack/react-query': 5.99.2(react@19.2.3)
+      react: 19.2.3
+
+  '@tanstack/react-query@5.99.2(react@19.2.3)':
+    dependencies:
+      '@tanstack/query-core': 5.99.2
       react: 19.2.3
 
   '@tanstack/react-table@8.21.3(react-dom@19.2.3(react@19.2.3))(react@19.2.3)':
@@ -5558,7 +5594,7 @@ snapshots:
 
   '@types/set-cookie-parser@2.4.10':
     dependencies:
-      '@types/node': 20.19.39
+      '@types/node': 22.19.17
 
   '@types/statuses@2.0.6': {}
 
