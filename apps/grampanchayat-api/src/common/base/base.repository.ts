@@ -1,6 +1,6 @@
 import { eq } from 'drizzle-orm'
 import type { PgTable, PgColumn } from 'drizzle-orm/pg-core'
-import { db } from '../../db/index.js'
+import { db } from '../../db/index.ts'
 
 export abstract class BaseRepository<TSelect, TInsert> {
   protected abstract readonly table: PgTable

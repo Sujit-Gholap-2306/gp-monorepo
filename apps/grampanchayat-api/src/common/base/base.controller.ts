@@ -1,6 +1,6 @@
 import type { Response } from 'express'
-import { ApiResponse } from '../interceptors/response.interceptor.js'
-import { ApiError } from '../exceptions/http.exception.js'
+import { ApiResponse } from '../interceptors/response.interceptor.ts'
+import { ApiError } from '../exceptions/http.exception.ts'
 
 export abstract class BaseController {
   protected ok<T>(res: Response, data: T, message = 'Success'): Response {

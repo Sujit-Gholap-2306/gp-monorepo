@@ -54,6 +54,20 @@ export default async function AdminSettingsPage({
           </div>
         </Section>
 
+        {/* Portal Configuration */}
+        <Section title="पोर्टल कॉन्फिगरेशन">
+          <Field 
+            label="Portal Theme" 
+            name="portal_theme" 
+            defaultValue={tenant.portalTheme ?? 'civic-elegant'} 
+            as="select"
+          >
+            <option value="civic-elegant">Civic Elegant</option>
+            <option value="sahyadri-pine">Sahyadri Pine</option>
+            <option value="koyna-saffron">Koyna Saffron</option>
+          </Field>
+        </Section>
+
         {/* Contact */}
         <Section title="संपर्क">
           <div className="grid grid-cols-2 gap-3">
@@ -85,18 +99,37 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function Field({
-  label, name, defaultValue = '', required = false, type = 'text',
+  label, name, defaultValue = '', required = false, type = 'text', children, as = 'input',
 }: {
-  label: string; name: string; defaultValue?: string; required?: boolean; type?: string
+  label: string; 
+  name: string; 
+  defaultValue?: string; 
+  required?: boolean; 
+  type?: string;
+  children?: React.ReactNode;
+  as?: 'input' | 'select';
 }) {
+  const commonProps = {
+    id: name, 
+    name: name, 
+    defaultValue: defaultValue, 
+    required: required,
+    className: "rounded-md border border-gp-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gp-primary bg-background"
+  }
+
   return (
     <div className="grid gap-1">
       <label htmlFor={name} className="text-xs font-medium text-gp-muted">{label}</label>
-      <input
-        id={name} name={name} type={type}
-        defaultValue={defaultValue} required={required}
-        className="rounded-md border border-gp-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gp-primary"
-      />
+      {as === 'select' ? (
+        <select {...commonProps as any}>
+          {children}
+        </select>
+      ) : (
+        <input
+          {...commonProps}
+          type={type}
+        />
+      )}
     </div>
   )
 }

@@ -1,7 +1,7 @@
 import { drizzle } from 'drizzle-orm/postgres-js'
 import postgres from 'postgres'
-import * as schema from './schema/index.js'
-import { env } from '../config/index.js'
+import * as schema from './schema/index.ts'
+import { env } from '../config/index.ts'
 
 // prepare: false is required for Supabase Transaction Mode pooler (port 6543)
 // For direct connection (port 5432), prepare can be omitted

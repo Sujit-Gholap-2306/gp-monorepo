@@ -5,10 +5,10 @@ import helmet from 'helmet'
 import compression from 'compression'
 import rateLimit from 'express-rate-limit'
 import pinoHttp from 'pino-http'
-import routes from './routes/index.js'
-import { exceptionFilter } from './common/exceptions/exception.filter.js'
-import { requestIdMiddleware } from './common/middleware/request-id.js'
-import { env } from './config/index.js'
+import routes from './routes/index.ts'
+import { exceptionFilter } from './common/exceptions/exception.filter.ts'
+import { requestIdMiddleware } from './common/middleware/request-id.ts'
+import { env } from './config/index.ts'
 
 const app = express()
 

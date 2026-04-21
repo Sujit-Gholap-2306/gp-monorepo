@@ -43,6 +43,7 @@ export async function updateGpSettings(subdomain: string, formData: FormData) {
       established: (formData.get('established') as string) || null,
       village,
       contact,
+      portal_theme: formData.get('portal_theme') as string || 'civic-elegant',
       ...(logo_url ? { logo_url } : {}),
     })
     .eq('id', tenant.id)

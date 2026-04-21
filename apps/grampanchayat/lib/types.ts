@@ -24,6 +24,11 @@ export type ContactInfo = {
 export type GpTenant = Omit<Tables<'gp_tenants'>, 'village' | 'contact'> & {
   village: VillageInfo | null
   contact: ContactInfo | null
+  // New multi-tenant portal configuration fields from Drizzle schema
+  portalTheme?: string
+  portalConfig?: Record<string, any>
+  featureFlags?: Record<string, any>
+  tier?: 'free' | 'pro' | 'enterprise'
 }
 
 export type PostHolder = Tables<'post_holders'>
