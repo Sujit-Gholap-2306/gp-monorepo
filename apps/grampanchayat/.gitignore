@@ -1,0 +1,19 @@
+# compiled output (Next.js compiles to .next, not src dir — these are tsc artifacts)
+**/*.js
+**/*.jsx
+**/*.js.map
+
+# Next.js
+.next/
+out/
+
+# env
+.env
+.env.*
+!.env.example
+
+# deps
+node_modules/
+
+# misc
+*.log

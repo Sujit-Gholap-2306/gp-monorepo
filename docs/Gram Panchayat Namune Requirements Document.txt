@@ -1,0 +1,1030 @@
+﻿Maharashtra Gram Panchayat Financial and Administrative Register Architecture: A System Requirements Document
+The 73rd Constitutional Amendment fundamentally restructured the Panchayati Raj Institutions (PRIs) in India, establishing the Gram Panchayat (GP) as the foundational unit of local self-government.1 Within the State of Maharashtra, this decentralization is governed by the Maharashtra Village Panchayats (MVP) Act, 1958, which operationalizes the three-tier system comprising Zilla Parishads at the district level, Panchayat Samitis at the block level, and Gram Panchayats at the village level. The demographic scale of this governance structure is vast; Maharashtra operates 27,906 Gram Panchayats serving 43,663 villages and managing the administrative needs of over 55% of the state's population.1
+To ensure financial propriety, systemic accountability, and standardized record-keeping across this expansive network, the state mandates the maintenance of highly structured accounting and administrative ledgers. These ledgers, universally referred to as the 33 Namune (Registers), form the backbone of rural financial governance and are strictly regulated by the Maharashtra Gram Panchayat Lekha Sanhita (Accounting Code) 2011. As rural administrative architectures rapidly transition toward digital compliance frameworks—evidenced by systems such as e-GramSwaraj, the PRIAsoft accounting framework, and the state-specific Maha e-Gram platform—translating the physical 33 Namune into a machine-readable, strictly interdependent relational schema becomes an imperative engineering requirement.7
+This document serves as an exhaustive architectural blueprint of all 33 Namune. It explicitly maps field-level requirements, systemic triggers, legal mandates under the MVP Act 1958, and bidirectional interdependencies. The primary objective is to provide the foundational logic required to build a directed dependency graph in Obsidian, enabling multi-agent AI systems (such as Claude, Gemini, and Cursor) to cross-validate outputs and construct automated audit and compliance tools.10
+The Statutory and Administrative Framework
+The executive authority within a Gram Panchayat is vested in the Sarpanch, an elected representative, while the administrative and financial responsibilities are executed by the Gram Sevak (Village Development Officer), a state-appointed official.3 The Gram Sevak functions as the Secretary to the GP and is solely responsible for the physical and digital maintenance of the accounts and records. However, systemic challenges heavily impact this architecture; audit reports routinely highlight a severe shortage of personnel. For instance, out of a sanctioned strength of 22,684 Gram Sevaks, only 21,091 positions are filled, leaving 1,593 vacancies and forcing many Gram Sevaks to manage multiple Gram Panchayats simultaneously.1 This personnel deficit necessitates robust, automated software systems to prevent the degradation of financial records.
+The MVP Act 1958 outlines specific legal mandates that correspond directly to the 33 Namune. Section 5 establishes the Gram Panchayat based on population criteria, while Section 8 mandates the Gram Sabha—the assembly of all registered voters—to function as the ultimate supervisory body.4 The Gram Sabha must review the annual statement of accounts, the audit reports, and the administration reports, directly implicating Namuna 1, Namuna 30, and Namuna 31.2 Section 62 dictates the rigorous preparation of the annual budget, which forms the genesis of Namuna 1.
+Taxation, a critical independent revenue stream for the Gram Panchayat, is governed by Section 124. This section empowers the GP to levy taxes on buildings and lands, octroi, betterment charges, water taxes, and lighting taxes, providing the legal basis for Namuna 8 (Tax Assessment). The State Government retains the right to exempt specific demographics, such as areas predominantly populated by Scheduled Castes or Scheduled Tribes, from certain property taxes. Furthermore, Section 129 details the strict enforcement mechanisms for tax recovery. If a taxpayer defaults, the Gram Sevak must issue a Notice of Demand (Namuna 11). If the notice is ignored, the Sarpanch is authorized to issue a Warrant of Attachment (Namuna 12), leading to the inventorying (Namuna 13) and subsequent public auction (Namuna 14) of the defaulter's movable property.7
+The scale of financial transactions flowing through these registers is substantial. The Gram Panchayats handle extensive expenditures across multiple functional sectors. To provide context to the data classification occurring within Namuna 6 (Receipts) and Namuna 7 (Expenditure), the following table illustrates the historical expenditure distribution across key development sectors by PRIs in Maharashtra.
+Expenditure Sector
+	Gram Panchayat Expenditure Scope
+	Associated Major Ledger Heads (Namuna 7)
+	Public Works
+	Construction of village roads, culverts, and civic buildings.
+	Infrastructure, Contractual Payments (Namuna 20B)
+	Health and Sanitation
+	Village drainage, solid waste management, and local dispensaries.
+	Public Health, Consumables (Namuna 24)
+	Water Supply
+	Maintenance of handpumps, piped water schemes, and open wells.
+	Water Supply, Maintenance & Repairs
+	Education
+	Upkeep of Zilla Parishad primary school infrastructure in the village.
+	Education, Infrastructure
+	Administration
+	Salaries of non-state GP staff, office expenses, and audit fees.
+	Establishment, Salaries (Namuna 21)
+	Public Lighting
+	Electricity bills for streetlights and procurement of fixtures.
+	Utilities, Consumables (Namuna 24)
+	Digital Transformation: Maha e-Gram and SVAMITVA
+The modernization of the 33 Namune is currently driven by state and central digitization initiatives. The Aaple Sarkar Seva Kendra (ASSK) project utilizes Common Service Centers (CSCs) to digitize physical registers through the e-Gramsoft application. The software enforces the rules of the Maharashtra Gram Panchayat Lekha Sanhita 2011, shifting the ecosystem from manual, error-prone ledgers to an integrated relational database.10
+Simultaneously, the SVAMITVA (Survey of Villages Abadi and Mapping with Improvised Technology in Village Areas) scheme is revolutionizing the data fidelity of Namuna 8 (Tax Assessment). SVAMITVA deploys drones to conduct geo-referenced mapping of rural properties with a 5-centimeter accuracy threshold. This creates an immutable, scientifically accurate base for determining property ownership and calculating the capital value or annual letting value for taxation, effectively eliminating the historic discrepancies found in manually maintained Namuna 8 registers. After the drone surveys, the State Revenue Department and the Gram Panchayat conduct joint ground verifications, resolving ownership disputes through the Gram Sabha before issuing digitized property cards.
+Architectural Schema and Relational Interdependencies
+The data ecosystem within a Gram Panchayat represents a closed-loop, double-entry accounting and administrative system where local taxation, state grants, infrastructural expenditure, and asset management are dynamically linked. If this 33-node schema is mapped into a software architecture or an AI-driven auditing tool, the dependency graph reveals three primary operational pipelines:
+The first is the Revenue and Taxation Pipeline. The baseline assessment of properties established by drone surveys and physical inspections is logged in Namuna 8. This assessment directly dictates the financial demand raised against citizens in Namuna 9. When a citizen fulfills their tax obligation, a formal receipt is generated in Namuna 10. The issuance of this receipt acts as a system trigger, causing an immediate cash inflow to be recorded in the General Cash Book (Namuna 5). To ensure budgets can be tracked accurately, Namuna 5 splits this inflow, routing it into the Classified Receipts ledger (Namuna 6), which then aggregates into the Monthly Income and Expenditure Statement (Namuna 3). In a software environment, a broken graph edge anywhere in this pipeline indicates either un-reconciled suspense accounts or potential misappropriation.
+The second is the Expenditure and Infrastructure Pipeline. Public works represent the highest risk vector for financial irregularities. The pipeline begins with administrative approval recorded in Namuna 17. This permits the creation of a technical estimate in Namuna 20. As physical work is executed on the ground, the dimensions and quantities are legally recorded in the Measurement Book (Namuna 20A). Only after these measurements are verified can a Work Bill (Namuna 20B) be generated. The payment of this bill results in a financial outflow from the Cash Book (Namuna 5), which is subsequently categorized in the Classified Expenditure ledger (Namuna 7) and reported in the Monthly Statement (Namuna 3). An AI audit tool traversing this graph must immediately flag any Namuna 20B bill that exists without a chronologically prior and mathematically consistent Namuna 20A measurement.
+The third is the Compliance and Audit Pipeline. The financial year culminates in the generation of the Annual Administration Report (Namuna 31). Statutory auditors from the Local Fund Audit Office or the Accountant General evaluate this report alongside the base ledgers to identify anomalies, resulting in official Audit Objections (Namuna 30). The Gram Panchayat is legally bound to rectify these issues and record the resolutions in the Compliance Register (Namuna 27). The persistence of an unlinked Namuna 30 node—meaning an objection without a corresponding Namuna 27 compliance edge—acts as a critical red flag for systemic governance failure.5
+The 33 Namune Requirements Specification
+The following structured blocks represent the exact architectural requirements for the complete suite of Maharashtra Gram Panchayat registers. To accommodate real-world field practices where sub-registers are legally mandated (such as the Daily Cash Book and the Measurement Book), these have been modeled as 5A, 20A, and 20B to ensure strict alignment with the 1 to 33 numbering convention defined by the Lekha Sanhita 2011.16 Every DEPENDS_ON and FEEDS_INTO entity is mapped with strict bidirectional consistency.
+________________
+NAMUNA: 1
+NAME_EN: Budget
+NAME_MR: अर्थसंकल्प
+CATEGORY: Budget
+LEGAL_REF: MVP Act 1958 Sec 62, Lekha Sanhita 2011
+PURPOSE: Defines the primary financial plan outlining estimated receipts and proposed expenditures for the upcoming financial year, serving as the legal basis for all GP spending.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Gram Sabha
+FREQUENCY: Annual
+SUBMISSION_DEADLINE:
+SUBMITTED_TO: Panchayat Samiti
+FIELDS_IN_REGISTER:
+* Major Head of Account (Receipts & Expenditure)
+* Minor Head of Account
+* Actuals of the previous financial year
+* Revised Estimates of the current financial year
+* Budget Estimates for the upcoming financial year
+* Explanation for significant variations
+* Gram Sevak Signature
+* Sarpanch Signature
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: Annual statutory mandate to forecast revenues and expenditures prior to the commencement of the new financial year.
+VALIDATION_RULES:
+* Opening balance must match the closing balance of the previous year's Namuna 3.
+* Proposed expenditure cannot exceed estimated receipts plus the verified opening balance.
+* Must contain explicit approval resolution number from the Gram Sabha.
+OBSIDIAN_TAGS: #namuna #budget #planning
+OBSIDIAN_LINKS: [[Namuna-3]][[Namuna-2]]
+________________
+________________
+NAMUNA: 2
+NAME_EN: Revised Budget
+NAME_MR: सुधारित अर्थसंकल्प
+CATEGORY: Budget
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: Re-appropriates funds and revises original budget estimates based on mid-year financial realities, unforeseen expenditures, and new grant inflows.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Gram Sabha
+FREQUENCY: Annual
+SUBMISSION_DEADLINE:
+SUBMITTED_TO: Panchayat Samiti
+FIELDS_IN_REGISTER:
+   * Head of Account
+   * Original Budget Estimate (from Namuna 1)
+   * Actual Receipts/Expenditure to date
+   * Revised Estimate proposed
+   * Justification for revision
+   * Gram Sabha Resolution Number
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: Receipt of unplanned state/central grants or unavoidable deviations from the original Namuna 1 estimates requiring legal re-appropriation.
+VALIDATION_RULES:
+   * Original Estimate column must strictly match the approved Namuna 1 figures.
+   * Deficit budgets are strictly prohibited; any new expenditure must be backed by newly validated receipts.
+OBSIDIAN_TAGS: #namuna #budget #reappropriation
+OBSIDIAN_LINKS: [[Namuna-1]][[Namuna-3]]
+________________
+________________
+NAMUNA: 3
+NAME_EN: Statement of Income and Expenditure
+NAME_MR: जमा-खर्च विवरण
+CATEGORY: Reporting
+LEGAL_REF: MVP Act 1958 Sec 8, Lekha Sanhita 2011
+PURPOSE: Aggregates classified financial data to present the actual income and expenditure against the approved budget, acting as the primary monthly reporting tool.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Sarpanch
+FREQUENCY: Monthly
+SUBMISSION_DEADLINE: 5th of every subsequent month
+SUBMITTED_TO: Internal
+FIELDS_IN_REGISTER:
+      * Month and Year
+      * Budget Head (Receipts & Payments)
+      * Budgeted Amount (from Namuna 1/2)
+      * Actual Receipts/Expenditure for the month
+      * Progressive Total (Year-to-date)
+      * Variance (Budget vs. Progressive Total)
+      * Signatures of Gram Sevak and Sarpanch
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: End of the financial month requiring reconciliation of all classified receipts and expenditures for administrative review.
+VALIDATION_RULES:
+      * Monthly totals must match exactly with the sum of entries in Namuna 6 (Receipts) and Namuna 7 (Expenditure).
+      * Progressive expenditure cannot exceed the allotted budget without a valid Namuna 2 entry.
+      * Serves as the foundational dataset for the Annual Administration Report (Namuna 31).
+OBSIDIAN_TAGS: #namuna #reporting #financial_statement
+OBSIDIAN_LINKS: [[Namuna-1]][[Namuna-2]][[Namuna-6]][[Namuna-7]][[Namuna-31]]
+________________
+________________
+NAMUNA: 4
+NAME_EN: Register of Assets and Liabilities
+NAME_MR: मालमत्ता व दायित्वे
+CATEGORY: Property
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: Maintains an ongoing inventory of all movable and immovable assets owned by the GP, alongside a strict accounting of all outstanding debts and liabilities.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Sarpanch
+FREQUENCY: Annual
+SUBMISSION_DEADLINE: End of Financial Year
+SUBMITTED_TO: Auditor / Internal
+FIELDS_IN_REGISTER:
+         * Asset/Liability ID
+         * Description of Asset/Liability
+         * Date of Acquisition / Creation of Liability
+         * Original Value
+         * Depreciation / Amortization parameters
+         * Current Book Value
+         * Location of Asset
+         * Creditor Details (for liabilities)
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: Year-end capitalization of completed public works, purchase of dead stock, or the assumption of a new institutional loan.
+VALIDATION_RULES:
+         * New capital assets must have a corresponding expenditure entry tracing back to Namuna 5 and Namuna 22.
+         * Current liabilities must seamlessly reconcile with the Loan Register (Namuna 26) and Deposit Register (Namuna 29).
+OBSIDIAN_TAGS: #namuna #property #balancesheet
+OBSIDIAN_LINKS: [[Namuna-5]][[Namuna-22]][[Namuna-26]][[Namuna-28]][[Namuna-29]][[Namuna-31]]
+________________
+________________
+NAMUNA: 5
+NAME_EN: General Cash Book
+NAME_MR: सामान्य रोकड वही
+CATEGORY: Cash
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: The absolute financial core of the GP, recording every single cash, bank, and digital transaction chronologically to maintain the official balance.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Sarpanch
+FREQUENCY: Daily
+SUBMISSION_DEADLINE: N/A
+SUBMITTED_TO: Internal
+FIELDS_IN_REGISTER:
+            * Date
+            * Receipt/Voucher Number
+            * Particulars (Source/Payee details)
+            * Ledger Folio (L.F.) cross-reference
+            * Cash Receipt Amount
+            * Bank Receipt Amount
+            * Cash Payment Amount
+            * Bank Payment Amount
+            * Daily Closing Balance (Cash & Bank)
+            * Signatures (Gram Sevak & Sarpanch)
+DEPENDS_ON:
+FEEDS_INTO: [4, 5A, 6, 7, 18, 22, 23, 24, 26, 28, 29]
+TRIGGER: Any physical transfer of currency or electronic transfer of funds into or out of the official GP accounts.
+VALIDATION_RULES:
+            * Daily closing balance = (Opening Balance + Receipts) - Payments.
+            * No receipt entry is legally valid without a corresponding Namuna 10, 16, or 25 reference number.
+            * No payment entry is legally valid without an authorized voucher (Namuna 20B, 21, 32, etc.).
+            * Physical cash-in-hand limits must not exceed the maximum threshold established by the Zilla Parishad CEO.
+OBSIDIAN_TAGS: #namuna #cash #core_ledger
+OBSIDIAN_LINKS: [[Namuna-5A]][[Namuna-10]][[Namuna-14]][[Namuna-16]][[Namuna-18]]][[Namuna-21]][[Namuna-25]][[Namuna-26]][[Namuna-28]][[Namuna-29]][[Namuna-32]][[Namuna-4]][[Namuna-6]][[Namuna-7]][[Namuna-22]][[Namuna-23]][[Namuna-24]]
+________________
+________________
+NAMUNA: 5A
+NAME_EN: Daily Cash Book
+NAME_MR: दैनिक रोकड वही (5क)
+CATEGORY: Cash
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: A subsidiary day-book used in high-transaction Gram Panchayats to log minute-by-minute petty cash flows before aggregating them into the General Cash Book.
+WHO_MAINTAINS: Gram Panchayat Clerk / Gram Sevak
+WHO_APPROVES: Gram Sevak
+FREQUENCY: Daily
+SUBMISSION_DEADLINE: End of business day
+SUBMITTED_TO: Internal
+FIELDS_IN_REGISTER:
+               * Date and Time
+               * Payer/Payee Name
+               * Receipt/Voucher Number
+               * Amount Received
+               * Amount Paid
+               * Running Cash Balance
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: Execution of minor cash transactions, such as issuing daily tax receipts or paying daily wages.
+VALIDATION_RULES:
+               * End-of-day balance must be physically verified and transferred to Namuna 5.
+               * Discrepancies between physical cash in the GP safe and the 5A balance must be reported immediately.
+OBSIDIAN_TAGS: #namuna #cash #subsidiary_ledger
+OBSIDIAN_LINKS: [[Namuna-5]]
+________________
+________________
+NAMUNA: 6
+NAME_EN: Classified Register of Receipts
+NAME_MR: जमा वर्गीकरण वही
+CATEGORY: Receipt
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: Segregates the chronological receipt entries from the Cash Book (Namuna 5) into specific statutory accounting heads for programmatic reporting.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Internal
+FREQUENCY: Daily
+SUBMISSION_DEADLINE: N/A
+SUBMITTED_TO: N/A
+FIELDS_IN_REGISTER:
+                  * Date
+                  * Namuna 5 Page/Entry Number
+                  * Receipt Number
+                  * Major/Minor Head of Account (e.g., Property Taxes, Water Charges, SFC Grants)
+                  * Amount Apportioned
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: The posting of a verified receipt transaction in Namuna 5.
+VALIDATION_RULES:
+                  * The sum total of all classified receipts for a given accounting period must exactly equal the total receipts in Namuna 5 for the same period.
+                  * Government grant receipts must map directly to the specific scheme in the Grant Register (Namuna 25).
+OBSIDIAN_TAGS: #namuna #receipt #classification
+OBSIDIAN_LINKS: [[Namuna-5]][[Namuna-25]][[Namuna-3]]
+________________
+________________
+NAMUNA: 7
+NAME_EN: Classified Register of Expenditure
+NAME_MR: खर्च वर्गीकरण वही
+CATEGORY: Expenditure
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: Segregates the chronological payment entries from the Cash Book (Namuna 5) into specific accounting heads to monitor budget utilization against Namuna 1.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Internal
+FREQUENCY: Daily
+SUBMISSION_DEADLINE: N/A
+SUBMITTED_TO: N/A
+FIELDS_IN_REGISTER:
+                     * Date
+                     * Namuna 5 Page/Entry Number
+                     * Voucher Number
+                     * Major/Minor Head of Account (e.g., Public Works, Salaries, Admin, Sanitation)
+                     * Amount Apportioned
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: The posting of a verified expenditure transaction in Namuna 5.
+VALIDATION_RULES:
+                     * The sum total of all classified expenditures for a given period must exactly equal the total payments in Namuna 5 for the same period.
+                     * Capital work expenditures must reference specific Namuna 20B entries, preventing generalized bulk expenses.
+OBSIDIAN_TAGS: #namuna #expenditure #classification
+OBSIDIAN_LINKS: [[Namuna-5]][[Namuna-18]]][[Namuna-21]][[Namuna-3]]
+________________
+________________
+NAMUNA: 8 NAME_EN: Tax Assessment Register NAME_MR: कर आकारणी नोंदवही CATEGORY: Tax LEGAL_REF: MVP Act 1958 Sec 124, Lekha Sanhita 2011 PURPOSE: The master demographic and property database of all structures, trades, and water connections liable for Gram Panchayat taxation, increasingly informed by SVAMITVA drone data.12 WHO_MAINTAINS: Gram Sevak WHO_APPROVES: Gram Sabha / Sarpanch FREQUENCY: Annual SUBMISSION_DEADLINE: Prior to April 1st of the Financial Year SUBMITTED_TO: Internal FIELDS_IN_REGISTER:
+                        * Property/Assessment Number (Geo-tagged ID if SVAMITVA mapped)
+                        * Name of Owner/Occupier
+                        * Type of Property (Residential/Commercial/Open Plot)
+                        * Capital Value / Annual Letting Value
+                        * Rate of Tax applied
+                        * Total Assessed General Tax
+                        * Total Assessed Special Taxes (Water, Light, Health)
+                        * Exemptions applied
+DEPENDS_ON: [None]
+FEEDS_INTO:
+TRIGGER: Periodical (quadrennial or annual) survey and assessment of village properties by the administration.
+VALIDATION_RULES:
+                        * Assessed value and tax rates must strictly conform to the bylaws approved by the Zilla Parishad or State Government.
+                        * Must not assess properties specifically exempted under MVP Act Sec 124 (e.g., certain SC/ST habitations or religious structures).
+OBSIDIAN_TAGS: #namuna #tax #assessment #master_data
+OBSIDIAN_LINKS: [[Namuna-9]]
+________________
+________________
+NAMUNA: 9
+NAME_EN: Tax Demand and Collection Register
+NAME_MR: कर मागणी व वसुली नोंदवही
+CATEGORY: Tax
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: Tracks the real-time financial demand (current and arrears) for each taxpayer, alongside the collections made during the year, highlighting defaulters.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Sarpanch
+FREQUENCY: Daily / As transactions occur
+SUBMISSION_DEADLINE: N/A
+SUBMITTED_TO: Internal
+FIELDS_IN_REGISTER:
+                           * Property/Assessment Number
+                           * Name of Assessee
+                           * Arrears Demand (carried forward)
+                           * Current Year Demand (from Namuna 8)
+                           * Total Demand
+                           * Collection (Segmented by Current vs Arrears)
+                           * Receipt Number (Namuna 10 reference)
+                           * Date of Payment
+                           * Outstanding Balance
+                           * Remission/Write-off authorized by Gram Sabha
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: Financial year rollover (triggering demand generation) and taxpayer payments (triggering collection entries).
+VALIDATION_RULES:
+                           * Current demand must equal the total assessed tax calculated in Namuna 8.
+                           * Every collection entry must map to a unique and valid Namuna 10 receipt number.
+                           * Equation: Total Collection + Outstanding Balance + Remission must perfectly equal Total Demand.
+OBSIDIAN_TAGS: #namuna #tax #collection #ledger
+OBSIDIAN_LINKS: [[Namuna-8]][[Namuna-10]][[Namuna-11]][[Namuna-31]][[Namuna-32]]
+________________
+________________
+NAMUNA: 10
+NAME_EN: Tax and Fee Receipt Book
+NAME_MR: कर व फी पावती
+CATEGORY: Receipt
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: The official, legally binding counterfoil receipt issued to citizens upon their payment of property taxes, water charges, or administrative service fees.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: N/A (Issued directly to citizen)
+FREQUENCY: As needed
+SUBMISSION_DEADLINE: N/A
+SUBMITTED_TO: Citizen (Original) / Internal (Counterfoil)
+FIELDS_IN_REGISTER:
+                              * Receipt Number (Pre-printed and sequentially numbered)
+                              * Date of Issue
+                              * Name of Payer
+                              * Property/Assessment Number
+                              * Amount Paid (Figures and Words)
+                              * Particulars of Payment (Tax type, Arrears vs Current split)
+                              * Signature of Receiver (Gram Sevak)
+DEPENDS_ON: [None]
+FEEDS_INTO:
+TRIGGER: Physical cash, cheque, or digital payment received from a citizen.
+VALIDATION_RULES:
+                              * Receipt numbers must be strictly sequential; any canceled or missing numbers must be documented, preserved, and audited.
+                              * The amount on the receipt must be posted identically to Namuna 5 (Cash Book) and Namuna 9 (Tax Collection) on the very same day.
+OBSIDIAN_TAGS: #namuna #receipt #citizen_facing
+OBSIDIAN_LINKS: [[Namuna-5]][[Namuna-9]]
+________________
+________________
+NAMUNA: 11
+NAME_EN: Notice of Demand
+NAME_MR: मागणी नोटीस
+CATEGORY: Tax
+LEGAL_REF: MVP Act 1958 Sec 129
+PURPOSE: The first stage of coercive tax recovery; a formal legal notice served to defaulters who have failed to pay Gram Panchayat taxes within the stipulated time.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Sarpanch
+FREQUENCY: As needed
+SUBMISSION_DEADLINE: Legally required to be served 15 days before any attachment proceedings can begin.
+SUBMITTED_TO: Tax Defaulter
+FIELDS_IN_REGISTER:
+                                 * Notice Number
+                                 * Date of Issue
+                                 * Name and Address of Defaulter
+                                 * Assessment Number
+                                 * Details of Arrears (Amount due)
+                                 * Notice Fee levied on the defaulter
+                                 * Deadline for payment
+                                 * Signature of Sarpanch/Gram Sevak
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: A taxpayer's outstanding balance in Namuna 9 remains unpaid past the statutory due date.
+VALIDATION_RULES:
+                                 * Must only be issued if Namuna 9 shows a positive outstanding balance beyond the statutory grace period.
+                                 * The amount demanded in the notice must equal the outstanding balance in Namuna 9 plus legally applicable notice fees.
+OBSIDIAN_TAGS: #namuna #tax #enforcement
+OBSIDIAN_LINKS: [[Namuna-9]][[Namuna-12]]
+________________
+________________
+NAMUNA: 12
+NAME_EN: Warrant of Attachment
+NAME_MR: जप्ती वॉरंट
+CATEGORY: Tax
+LEGAL_REF: MVP Act 1958 Sec 129
+PURPOSE: A severe legal warrant authorizing the physical attachment (seizure) of a defaulter's movable property if the Notice of Demand (Namuna 11) is ignored.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Sarpanch
+FREQUENCY: As needed
+SUBMISSION_DEADLINE: N/A
+SUBMITTED_TO: Executing Officer / Gram Panchayat Staff
+FIELDS_IN_REGISTER:
+                                    * Warrant Number
+                                    * Date of Issue
+                                    * Reference Notice Number (from Namuna 11)
+                                    * Name of Defaulter
+                                    * Total Amount Due (including warrant execution fees)
+                                    * Authorization text for attachment of movable goods
+                                    * Signature of Sarpanch
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: Expiry of the 15-day grace period specified in the Namuna 11 Notice of Demand without full payment.
+VALIDATION_RULES:
+                                    * Strictly cannot be issued unless a valid Namuna 11 was previously served and documented with proof of service.
+                                    * Must be signed strictly by the Sarpanch or authorized executive to be legally binding.
+OBSIDIAN_TAGS: #namuna #tax #enforcement #legal
+OBSIDIAN_LINKS: [[Namuna-11]][[Namuna-13]]
+________________
+________________
+NAMUNA: 13
+NAME_EN: Inventory of Attached Property
+NAME_MR: जप्त केलेल्या मालमत्तेची यादी
+CATEGORY: Tax
+LEGAL_REF: MVP Act 1958 Sec 129
+PURPOSE: A detailed, witnessed log of physical items seized from a defaulter's premises during the execution of a Warrant of Attachment (Namuna 12).
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Sarpanch
+FREQUENCY: As needed
+SUBMISSION_DEADLINE: N/A
+SUBMITTED_TO: Internal
+FIELDS_IN_REGISTER:
+                                       * Inventory Date and Time
+                                       * Reference Warrant Number (Namuna 12)
+                                       * Name of Defaulter
+                                       * Itemized list of seized movable property
+                                       * Estimated market value of seized property
+                                       * Signature of Executing Officer
+                                       * Signatures of independent civilian witnesses (Panchas)
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: Physical execution of property attachment by GP staff.
+VALIDATION_RULES:
+                                       * To prevent legal disputes, the inventory must contain the signatures of at least two independent civilian witnesses (Panchas).
+                                       * The estimated value of the attached property should be reasonably proportionate to the total tax arrears.
+OBSIDIAN_TAGS: #namuna #tax #enforcement #inventory
+OBSIDIAN_LINKS: [[Namuna-12]][[Namuna-14]]
+________________
+________________
+NAMUNA: 14
+NAME_EN: Register of Sale of Attached Property
+NAME_MR: विक्री नोंदवही
+CATEGORY: Tax
+LEGAL_REF: MVP Act 1958 Sec 129
+PURPOSE: Records the administrative details and financial proceeds from the public auction of properties seized under Namuna 13.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Sarpanch
+FREQUENCY: As needed
+SUBMISSION_DEADLINE: N/A
+SUBMITTED_TO: Internal
+FIELDS_IN_REGISTER:
+                                          * Date of Auction
+                                          * Inventory Reference (Namuna 13)
+                                          * Description of Item Sold
+                                          * Name of Purchaser
+                                          * Sale Amount Realized
+                                          * Auctioneer Signature
+                                          * Adjustment against Tax Arrears and Fees
+                                          * Surplus Amount (if any, marked for refund)
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: Public auction of attached goods after the final statutory waiting period expires.
+VALIDATION_RULES:
+                                          * Sale proceeds must be posted directly to the Cash Book (Namuna 5) on the day of the auction.
+                                          * Tax arrears must be marked as paid up to the amount realized, adjusting the balance in Namuna 9, with any surplus handled via Namuna 32 (Refund Order).
+OBSIDIAN_TAGS: #namuna #tax #enforcement #auction
+OBSIDIAN_LINKS: [[Namuna-13]][[Namuna-5]]
+________________
+________________
+NAMUNA: 15
+NAME_EN: Cattle Pound Register
+NAME_MR: कोंडवाडा नोंदवही
+CATEGORY: Property
+LEGAL_REF: Cattle Trespass Act / Lekha Sanhita 2011
+PURPOSE: Documents stray, trespassing, or abandoned cattle impounded by the Gram Panchayat, including daily feeding costs and ownership claims.
+WHO_MAINTAINS: Gram Sevak / Designated Pound Keeper
+WHO_APPROVES: Sarpanch
+FREQUENCY: Daily / As needed
+SUBMISSION_DEADLINE: N/A
+SUBMITTED_TO: Internal
+FIELDS_IN_REGISTER:
+                                             * Date and Time of Impounding
+                                             * Description of Animal (Type, Color, Distinguishing Marks)
+                                             * Name of Person bringing the animal
+                                             * Name of Owner (if claimed)
+                                             * Number of Days Impounded
+                                             * Fines and Feeding Charges Assessed
+                                             * Date of Release or Auction
+DEPENDS_ON: [None]
+FEEDS_INTO:
+TRIGGER: A stray animal is physically brought to the GP cattle pound.
+VALIDATION_RULES:
+                                             * Animals unreleased after the statutory waiting period must be officially marked for public auction.
+                                             * Fees and fines calculated must conform exactly to the standard rates set by the GP or Zilla Parishad.
+OBSIDIAN_TAGS: #namuna #property #livestock
+OBSIDIAN_LINKS: [[Namuna-16]]
+________________
+________________
+NAMUNA: 16
+NAME_EN: Cattle Pound Receipt
+NAME_MR: कोंडवाडा पावती
+CATEGORY: Receipt
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: The counterfoil receipt issued to an owner paying fines and fees to release their impounded animal, or to a purchaser at a cattle auction.
+WHO_MAINTAINS: Pound Keeper / Gram Sevak
+WHO_APPROVES: N/A (Issued directly)
+FREQUENCY: As needed
+SUBMISSION_DEADLINE: N/A
+SUBMITTED_TO: Citizen (Original) / Internal (Counterfoil)
+FIELDS_IN_REGISTER:
+                                                * Receipt Number
+                                                * Date of Issue
+                                                * Reference Number from Namuna 15
+                                                * Name of Payer
+                                                * Amount Paid (Split into Fine + Feeding charges)
+                                                * Signature of Receiver
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: Payment received for the release or auction of an impounded animal.
+VALIDATION_RULES:
+                                                * Must directly cross-reference an active, unresolved entry in Namuna 15.
+                                                * Collected funds must be deposited and logged into the General Cash Book (Namuna 5) immediately.
+OBSIDIAN_TAGS: #namuna #receipt #livestock
+OBSIDIAN_LINKS: [[Namuna-15]][[Namuna-5]]
+________________
+________________
+NAMUNA: 17
+NAME_EN: Works / Tender Register
+NAME_MR: कामांची नोंदवही / निविदा
+CATEGORY: Works
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: The central tracking ledger for all infrastructure and public works undertaken by the GP, chronicling the lifecycle from administrative approval to tender allocation.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Sarpanch / Panchayat Samiti
+FREQUENCY: As needed
+SUBMISSION_DEADLINE: N/A
+SUBMITTED_TO: Internal
+FIELDS_IN_REGISTER:
+                                                   * Serial Number
+                                                   * Name and Description of Work
+                                                   * Resolution Date of Gram Sabha / GP approving the work
+                                                   * Administrative Approval Details (Authority, Date, Sanctioned Amount)
+                                                   * Technical Sanction Details (Authority, Date)
+                                                   * Tender Notice Date and Publication Details
+                                                   * Name of Contractor Awarded
+                                                   * Work Order Date
+DEPENDS_ON: [None]
+FEEDS_INTO:
+TRIGGER: Administrative and technical sanction of a new public infrastructure project.
+VALIDATION_RULES:
+                                                   * A work order cannot be recorded without a valid Gram Sabha/GP resolution and verified Technical Sanction.
+                                                   * Estimated administrative cost must not exceed the approved budget provision from Namuna 1 / 2.
+OBSIDIAN_TAGS: #namuna #works #tendering
+OBSIDIAN_LINKS: [[Namuna-20]][[Namuna-29]]
+________________
+________________
+NAMUNA: 18
+NAME_EN: Advance Register
+NAME_MR: आगाऊ रक्कम नोंदवही
+CATEGORY: Advances
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: Tracks all temporary cash advances paid to staff, contractors, or elected representatives for official purposes, ensuring timely adjustment or recovery.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Sarpanch
+FREQUENCY: As needed
+SUBMISSION_DEADLINE: Advances must typically be adjusted within one month.
+SUBMITTED_TO: Internal
+FIELDS_IN_REGISTER:
+                                                      * Date of Advance
+                                                      * Name and Designation of Recipient
+                                                      * Purpose of Advance
+                                                      * Amount of Advance
+                                                      * GP Resolution Number approving the advance
+                                                      * Date of Adjustment / Recovery
+                                                      * Cash Book (Namuna 5) Reference for adjustment
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: GP resolution approving a temporary cash advance for official procurement or travel.
+VALIDATION_RULES:
+                                                      * A new advance cannot legally be issued to an individual who possesses a prior unadjusted advance.
+                                                      * The initial payout must be perfectly linked to a Namuna 5 payment entry.
+                                                      * Adjustment requires the submission of physical bills, linking the final expenditure to Namuna 7 and refunding any unspent balance to Namuna 5.
+OBSIDIAN_TAGS: #namuna #advances #financial_control
+OBSIDIAN_LINKS: [[Namuna-5]][[Namuna-7]]
+________________
+________________
+NAMUNA: 19
+NAME_EN: Muster Roll
+NAME_MR: हजेरीपट
+CATEGORY: Staff
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: The daily attendance and wage record for daily-wage laborers employed by the GP for public works, sanitation, or emergency relief.
+WHO_MAINTAINS: Mukadam (Foreman) / Gram Sevak
+WHO_APPROVES: Gram Sevak / Inspecting Engineer
+FREQUENCY: Daily
+SUBMISSION_DEADLINE: End of the billing week/cycle
+SUBMITTED_TO: Internal
+FIELDS_IN_REGISTER:
+                                                         * Name of Work / Project
+                                                         * Month and Specific Dates
+                                                         * Name of Laborer
+                                                         * Father's/Husband's Name
+                                                         * Daily Attendance Status (Present/Absent)
+                                                         * Total Days Worked
+                                                         * Daily Wage Rate
+                                                         * Total Amount Payable
+                                                         * Signature/Thumb Impression of Laborer
+DEPENDS_ON: [None]
+FEEDS_INTO:
+TRIGGER: Engagement of daily wage labor on GP sanctioned works.
+VALIDATION_RULES:
+                                                         * Total days worked cannot mathematically exceed the days in the specified billing cycle.
+                                                         * Must be physically verified and signed by the overseeing authority before processing the Namuna 21 Salary Bill or Namuna 20B Work Bill.
+OBSIDIAN_TAGS: #namuna #staff #labor #works
+OBSIDIAN_LINKS:][[Namuna-21]]
+________________
+________________
+NAMUNA: 20 NAME_EN: Estimate of Work NAME_MR: कामाचा अंदाज CATEGORY: Works LEGAL_REF: Lekha Sanhita 2011 PURPOSE: Contains the detailed, itemized technical estimation of materials, labor, and costs for an approved public work, preventing arbitrary cost inflations.16 WHO_MAINTAINS: Technical Officer / Junior Engineer WHO_APPROVES: Block Development Officer / Executive Engineer FREQUENCY: Per Project SUBMISSION_DEADLINE: Prior to Work Order issuance SUBMITTED_TO: Panchayat Samiti (for technical sanction) FIELDS_IN_REGISTER:
+                                                            * Name of Work
+                                                            * Reference to Namuna 17 (Administrative Approval)
+                                                            * Item Description (Earthwork, Concrete, Steel, etc.)
+                                                            * Quantity Estimated
+                                                            * Unit Rate (As per current District Schedule of Rates - DSR)
+                                                            * Total Estimated Cost per item
+                                                            * Contingencies and Overheads (Percentage)
+                                                            * Total Estimated Cost
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: Request for technical sanction to initiate a project.
+VALIDATION_RULES:
+                                                            * Unit rates must not exceed the current year's approved DSR without written, special justification from a higher engineering authority.
+                                                            * Total estimated cost must align with the administrative approval limits recorded in Namuna 17.
+OBSIDIAN_TAGS: #namuna #works #estimation
+OBSIDIAN_LINKS: [[Namuna-17]][[Namuna-20A]]][[Namuna-31]]
+________________
+________________
+NAMUNA: 20A NAME_EN: Measurement Book (MB) NAME_MR: मोजमाप वही (20क) CATEGORY: Works LEGAL_REF: Lekha Sanhita 2011 PURPOSE: The critical legal and financial record of physical measurements of work actually completed on the ground by the contractor, forming the sole basis for payment.16 WHO_MAINTAINS: Junior Engineer / Technical Officer WHO_APPROVES: Deputy Engineer (for check measurement) FREQUENCY: As work progresses SUBMISSION_DEADLINE: Prior to generation of Running/Final Bills SUBMITTED_TO: Internal FIELDS_IN_REGISTER:
+                                                               * Date of Measurement
+                                                               * Name of Work
+                                                               * Name of Contractor
+                                                               * Item Description (mapped directly from Namuna 20)
+                                                               * Dimensions (Length, Breadth, Depth/Height)
+                                                               * Total Quantity Executed
+                                                               * Signature of Measuring Officer
+                                                               * Signature of Contractor (accepting measurements)
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: Completion of a phase of work requiring payment (Running Account Bill or Final Bill).
+VALIDATION_RULES:
+                                                               * Executed quantities cannot arbitrarily exceed the estimated quantities in Namuna 20. Significant deviations require a formally revised estimate.
+                                                               * High-value works must be physically cross-verified (Check Measurement) by a superior technical officer before payment.
+OBSIDIAN_TAGS: #namuna #works #measurement
+OBSIDIAN_LINKS: [[Namuna-20]]]
+________________
+________________
+NAMUNA: 20B NAME_EN: Work Bill NAME_MR: कामाचे देयक (20ख) CATEGORY: Works LEGAL_REF: Lekha Sanhita 2011 PURPOSE: The financial voucher authorizing payment to a contractor or supplier based exclusively on measured works and pre-approved rates.16 WHO_MAINTAINS: Gram Sevak WHO_APPROVES: Sarpanch FREQUENCY: Upon bill submission SUBMISSION_DEADLINE: N/A SUBMITTED_TO: Internal FIELDS_IN_REGISTER:
+                                                                  * Bill Number and Date
+                                                                  * Name of Contractor
+                                                                  * Name of Work
+                                                                  * Value of Work Executed (derived from 20A)
+                                                                  * Deductions (Security Deposit, Income Tax, Royalty, Penalties)
+                                                                  * Net Amount Payable
+                                                                  * Signature of Payee
+                                                                  * Passing Order signed by Sarpanch
+DEPENDS_ON: [19, 20, 20A]
+FEEDS_INTO:
+TRIGGER: Contractor submits a claim for completed work based on the Measurement Book.
+VALIDATION_RULES:
+                                                                  * Value of work must strictly map mathematically to Quantity (from 20A) × Approved Rate (from 20).
+                                                                  * Statutory deductions must be calculated and retained before passing the bill.
+                                                                  * Once passed, the net amount must be logged immediately into the Cash Book (Namuna 5) and Expenditure Register (Namuna 7).
+OBSIDIAN_TAGS: #namuna #works #billing
+OBSIDIAN_LINKS: [[Namuna-19]][[Namuna-20]][[Namuna-20A]][[Namuna-5]][[Namuna-7]]
+________________
+________________
+NAMUNA: 21
+NAME_EN: Salary Bill
+NAME_MR: वेतन देयक
+CATEGORY: Staff
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: Monthly payroll register for all GP employees (excluding state-paid Gram Sevaks), calculating gross pay and executing statutory deductions.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Sarpanch
+FREQUENCY: Monthly
+SUBMISSION_DEADLINE: 1st week of the subsequent month
+SUBMITTED_TO: Internal
+FIELDS_IN_REGISTER:
+                                                                     * Month and Year
+                                                                     * Name of Employee
+                                                                     * Designation
+                                                                     * Basic Pay
+                                                                     * Allowances
+                                                                     * Gross Salary
+                                                                     * Deductions (Provident Fund, Professional Tax, Advances)
+                                                                     * Net Amount Payable
+                                                                     * Signature/Thumb Impression of Employee
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: End of the calendar month.
+VALIDATION_RULES:
+                                                                     * Daily wagers' pay must be verified against the days marked present in the Muster Roll (Namuna 19).
+                                                                     * Advance deductions must reconcile with the outstanding balances in the Advance Register (Namuna 18).
+                                                                     * Net pay must be logged as an outflow in Namuna 5 (Cash Book) and Namuna 7 (Classified Expenditure).
+OBSIDIAN_TAGS: #namuna #staff #payroll
+OBSIDIAN_LINKS: [[Namuna-19]][[Namuna-5]][[Namuna-7]]
+________________
+________________
+NAMUNA: 22 NAME_EN: Dead Stock Register NAME_MR: जड वस्तू नोंदवही CATEGORY: Property LEGAL_REF: Lekha Sanhita 2011 PURPOSE: Inventory log for all non-consumable, permanent assets purchased for GP administration, such as furniture, computers, and heavy machinery.18 WHO_MAINTAINS: Gram Sevak WHO_APPROVES: Sarpanch FREQUENCY: Upon purchase or disposal SUBMISSION_DEADLINE: N/A SUBMITTED_TO: Internal FIELDS_IN_REGISTER:
+                                                                        * Serial Number
+                                                                        * Date of Purchase
+                                                                        * Description of Article
+                                                                        * Quantity
+                                                                        * Rate and Total Cost
+                                                                        * Bill Number and Vendor Name
+                                                                        * Location of Item
+                                                                        * Final Disposal/Write-off details (with GP resolution)
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: Delivery, verification, and acceptance of a permanent administrative asset.
+VALIDATION_RULES:
+                                                                        * Every purchase logged here must have a corresponding payment entry authorized in the Cash Book (Namuna 5).
+                                                                        * Feeds aggregated asset data into the Annual Assets & Liabilities statement (Namuna 4).
+                                                                        * Items cannot be written off without a formal Gram Sabha resolution.
+OBSIDIAN_TAGS: #namuna #property #inventory
+OBSIDIAN_LINKS: [[Namuna-5]][[Namuna-4]]
+________________
+________________
+NAMUNA: 23 NAME_EN: Stamp Register NAME_MR: मुद्रांक नोंदवही CATEGORY: Cash LEGAL_REF: Lekha Sanhita 2011 PURPOSE: Tracks the purchase, usage, and exact balance of postage and revenue stamps used for official GP correspondence and legal documents.18 WHO_MAINTAINS: Gram Sevak / Clerk WHO_APPROVES: Internal FREQUENCY: Daily / Upon usage SUBMISSION_DEADLINE: N/A SUBMITTED_TO: Internal FIELDS_IN_REGISTER:
+                                                                           * Date
+                                                                           * Opening Balance of Stamps (Financial Value)
+                                                                           * Stamps Purchased (Value)
+                                                                           * Reference to Namuna 5 (for purchase)
+                                                                           * Stamps Consumed (Value)
+                                                                           * Details of Dispatch/Usage (Addressee)
+                                                                           * Closing Balance
+DEPENDS_ON:
+FEEDS_INTO: [None]
+TRIGGER: Purchase of stamps from the post office or dispatch of official physical mail.
+VALIDATION_RULES:
+                                                                           * Equation: Closing Balance = Opening Balance + Purchases - Consumption.
+                                                                           * Stamp purchases must perfectly map to petty cash or main cash payments in Namuna 5.
+OBSIDIAN_TAGS: #namuna #cash #administrative
+OBSIDIAN_LINKS: [[Namuna-5]]
+________________
+________________
+NAMUNA: 24
+NAME_EN: Stock Register for Consumables
+NAME_MR: सामग्री नोंदवही
+CATEGORY: Property
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: Manages the inventory of consumable items (e.g., stationery, cleaning supplies, bleaching powder, street light bulbs) purchased by the GP.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Sarpanch
+FREQUENCY: Upon purchase or issuance
+SUBMISSION_DEADLINE: N/A
+SUBMITTED_TO: Internal
+FIELDS_IN_REGISTER:
+                                                                              * Date
+                                                                              * Description of Item
+                                                                              * Opening Balance
+                                                                              * Quantity Received
+                                                                              * Reference to Vendor Bill / Namuna 5
+                                                                              * Quantity Issued
+                                                                              * Name of Receiver/Location (e.g., Ward 3 Streetlights)
+                                                                              * Closing Balance
+DEPENDS_ON:
+FEEDS_INTO: [None]
+TRIGGER: Procurement or utilization of consumable stores.
+VALIDATION_RULES:
+                                                                              * Stock received must map to a financial payment recorded in Namuna 5.
+                                                                              * Stock cannot be issued in excess of the available physical balance.
+OBSIDIAN_TAGS: #namuna #property #consumables
+OBSIDIAN_LINKS: [[Namuna-5]]
+________________
+________________
+NAMUNA: 25
+NAME_EN: Grant-in-aid Register
+NAME_MR: अनुदान नोंदवही
+CATEGORY: Receipt
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: A detailed ledger tracking scheme-specific grants received from State and Central governments (e.g., Finance Commission grants, Jal Jeevan Mission funds).
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Sarpanch
+FREQUENCY: Upon grant receipt
+SUBMISSION_DEADLINE: N/A
+SUBMITTED_TO: Internal
+FIELDS_IN_REGISTER:
+                                                                                 * Date of Receipt
+                                                                                 * Name of Grant / Scheme
+                                                                                 * Sanction Order Number and Date
+                                                                                 * Amount Received
+                                                                                 * Credited to Bank Account Details (PFMS/SNA mapping)
+                                                                                 * Progressive Total of Grant
+DEPENDS_ON: [None]
+FEEDS_INTO:
+TRIGGER: Electronic Transfer (PFMS/SNA) or cheque receipt from higher government tiers.
+VALIDATION_RULES:
+                                                                                 * Grants must be logged here immediately and posted to the General Cash Book (Namuna 5).
+                                                                                 * Must be correctly categorized in the Classified Register of Receipts (Namuna 6) under the exact scheme head to ensure funds are not diverted.
+OBSIDIAN_TAGS: #namuna #receipt #grants #pfms
+OBSIDIAN_LINKS: [[Namuna-5]][[Namuna-6]]
+________________
+________________
+NAMUNA: 26
+NAME_EN: Loan Register
+NAME_MR: कर्ज नोंदवही
+CATEGORY: Advances
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: Tracks long-term borrowings made by the GP from banks or the Zilla Parishad, including principal and interest repayment schedules.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Gram Sabha / Zilla Parishad
+FREQUENCY: As needed
+SUBMISSION_DEADLINE: N/A
+SUBMITTED_TO: Internal
+FIELDS_IN_REGISTER:
+                                                                                    * Date of Loan
+                                                                                    * Source of Loan
+                                                                                    * Purpose of Loan
+                                                                                    * Total Amount Sanctioned
+                                                                                    * Rate of Interest
+                                                                                    * Repayment Schedule (EMI details)
+                                                                                    * Principal Repaid
+                                                                                    * Interest Paid
+                                                                                    * Outstanding Balance
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: GP successfully secures a loan, or makes a scheduled EMI payment.
+VALIDATION_RULES:
+                                                                                    * Inflow of loan principal must be logged as a receipt in Namuna 5.
+                                                                                    * Outflow of EMI (Principal + Interest) must be logged as an expenditure in Namuna 5.
+                                                                                    * The outstanding principal must reflect accurately in the Liabilities section of Namuna 4.
+OBSIDIAN_TAGS: #namuna #advances #liabilities
+OBSIDIAN_LINKS: [[Namuna-4]][[Namuna-5]]
+________________
+________________
+NAMUNA: 27
+NAME_EN: Audit Objection Compliance Register
+NAME_MR: आक्षेप पूर्तता नोंदवही
+CATEGORY: Audit
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: Tracks the steps taken by the GP to rectify anomalies, correct procedural errors, or recover funds flagged during statutory financial audits.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Gram Sabha / Auditor
+FREQUENCY: Upon receiving audit report
+SUBMISSION_DEADLINE: Compliance report typically due within 3 months of audit
+SUBMITTED_TO: Local Fund Audit Office / Panchayat Samiti
+FIELDS_IN_REGISTER:
+                                                                                       * Audit Year
+                                                                                       * Audit Paragraph / Objection Number (from Namuna 30)
+                                                                                       * Description of Objection
+                                                                                       * Amount Involved for Recovery (if any)
+                                                                                       * Action Taken by GP
+                                                                                       * Resolution Number of Gram Sabha approving compliance
+                                                                                       * Date of Final Settlement by Auditor
+DEPENDS_ON:
+FEEDS_INTO: [None]
+TRIGGER: GP initiates corrective action based on an official audit report.
+VALIDATION_RULES:
+                                                                                       * Every active objection in Namuna 30 must have a corresponding tracking row in Namuna 27.
+                                                                                       * An objection cannot be marked "Settled" in the system without documented approval from the statutory auditor.
+OBSIDIAN_TAGS: #namuna #audit #compliance
+OBSIDIAN_LINKS: [[Namuna-30]]
+________________
+________________
+NAMUNA: 28
+NAME_EN: Register of Investments
+NAME_MR: गुंतवणूक नोंदवही
+CATEGORY: Property
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: Records reserve funds, fixed deposits, or surplus GP funds invested in authorized securities or cooperative banks to generate interest.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Sarpanch
+FREQUENCY: As needed
+SUBMISSION_DEADLINE: N/A
+SUBMITTED_TO: Internal
+FIELDS_IN_REGISTER:
+                                                                                          * Date of Investment
+                                                                                          * Bank / Institution Name
+                                                                                          * Type of Investment (FD, Bonds)
+                                                                                          * Instrument Number
+                                                                                          * Amount Invested
+                                                                                          * Interest Rate & Maturity Date
+                                                                                          * Maturity Value
+                                                                                          * Date of Realization
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: GP passes a resolution to invest surplus funds.
+VALIDATION_RULES:
+                                                                                          * Initial outflow of cash must map to a payment in Namuna 5.
+                                                                                          * Active investments must feed into the Assets column of Namuna 4.
+                                                                                          * Realized investments (principal + interest) must be returned to the Cash Book (Namuna 5) upon maturity.
+OBSIDIAN_TAGS: #namuna #property #investments
+OBSIDIAN_LINKS: [[Namuna-4]][[Namuna-5]]
+________________
+________________
+NAMUNA: 29
+NAME_EN: Register of Deposits
+NAME_MR: अनामत नोंदवही
+CATEGORY: Advances
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: Tracks security deposits and earnest money deposits (EMD) collected from contractors, ensuring they are held in trust and accurately refunded or forfeited.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Sarpanch
+FREQUENCY: As needed
+SUBMISSION_DEADLINE: N/A
+SUBMITTED_TO: Internal
+FIELDS_IN_REGISTER:
+                                                                                             * Date of Receipt
+                                                                                             * Name of Depositor (Contractor/Bidder)
+                                                                                             * Tender/Work Reference (Namuna 17)
+                                                                                             * Amount of Deposit
+                                                                                             * Cash Book (Namuna 5) Receipt Reference
+                                                                                             * Date of Refund or Forfeiture
+                                                                                             * Cash Book (Namuna 5) Payment Reference (for refund)
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: Contractor submits EMD/Security Deposit for a GP project.
+VALIDATION_RULES:
+                                                                                             * Deposits must be logged as receipts in Namuna 5.
+                                                                                             * Unrefunded deposits represent a liability and must feed into Namuna 4.
+                                                                                             * Refunds must map to a payment in Namuna 5 and be authorized by the Sarpanch.
+OBSIDIAN_TAGS: #namuna #advances #liabilities #works
+OBSIDIAN_LINKS: [[Namuna-5]][[Namuna-17]][[Namuna-4]]
+________________
+________________
+NAMUNA: 30
+NAME_EN: Audit Objection Register
+NAME_MR: लेखा आक्षेप नोंदवही
+CATEGORY: Audit
+LEGAL_REF: Lekha Sanhita 2011
+PURPOSE: The master log of all anomalies, missing vouchers, and financial irregularities identified by the Local Fund Audit or Accountant General.
+WHO_MAINTAINS: Gram Sevak
+WHO_APPROVES: Auditor
+FREQUENCY: Annual (Post-Audit)
+SUBMISSION_DEADLINE: N/A
+SUBMITTED_TO: Gram Sabha
+FIELDS_IN_REGISTER:
+                                                                                                * Audit Year
+                                                                                                * Date of Audit Report
+                                                                                                * Paragraph Number
+                                                                                                * Brief Nature of Objection
+                                                                                                * Financial Implication
+                                                                                                * Status (Pending/Settled)
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: Receipt of the formal audit report for the financial year.
+VALIDATION_RULES:
+                                                                                                * Derived from the auditing of the Annual Administration Report (Namuna 31) and associated ledgers.
+                                                                                                * Remains 'Pending' until explicitly resolved in Namuna 27.
+OBSIDIAN_TAGS: #namuna #audit #master_data
+OBSIDIAN_LINKS: [[Namuna-31]][[Namuna-27]]
+________________
+________________
+NAMUNA: 31 NAME_EN: Annual Administration Report NAME_MR: वार्षिक प्रशासन अहवाल CATEGORY: Reporting LEGAL_REF: MVP Act 1958 Sec 62 / Lekha Sanhita 2011 PURPOSE: The definitive annual summary representing the progress, financial health, and administrative actions of the Gram Panchayat, acting as a mirror of its overall performance.6 WHO_MAINTAINS: Gram Sevak WHO_APPROVES: Gram Sabha FREQUENCY: Annual SUBMISSION_DEADLINE: SUBMITTED_TO: Panchayat Samiti / Zilla Parishad FIELDS_IN_REGISTER:
+                                                                                                   * Financial Year
+                                                                                                   * Total Receipts (from Namuna 3)
+                                                                                                   * Total Expenditure (from Namuna 3)
+                                                                                                   * Tax Collection Efficiency (from Namuna 9)
+                                                                                                   * Infrastructure Works Completed (from Namuna 20)
+                                                                                                   * Gram Sabha Meeting Dates & Resolutions
+                                                                                                   * Status of Assets & Liabilities (from Namuna 4)
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: End of the financial year requiring an aggregated performance review.
+VALIDATION_RULES:
+                                                                                                   * Financial aggregates must perfectly match the audited Namuna 3 and Namuna 4.
+                                                                                                   * Forms the basis upon which statutory auditors generate Namuna 30 (Objections).
+OBSIDIAN_TAGS: #namuna #reporting #annual_report
+OBSIDIAN_LINKS: [[Namuna-3]][[Namuna-4]][[Namuna-9]][[Namuna-20]][[Namuna-30]]
+________________
+________________
+NAMUNA: 32 NAME_EN: Refund Order NAME_MR: परतावा आदेश CATEGORY: Receipt LEGAL_REF: Lekha Sanhita 2011 PURPOSE: Formal authorization for refunding excess taxes collected, surplus auction proceeds, or erroneously credited fees back to citizens.18 WHO_MAINTAINS: Gram Sevak WHO_APPROVES: Sarpanch FREQUENCY: As needed SUBMISSION_DEADLINE: N/A SUBMITTED_TO: Internal FIELDS_IN_REGISTER:
+                                                                                                      * Date of Order
+                                                                                                      * Name of Payee
+                                                                                                      * Original Receipt Number (Namuna 10) or Tax Register Reference (Namuna 9)
+                                                                                                      * Reason for Refund
+                                                                                                      * Amount to be Refunded
+                                                                                                      * Signature of Sarpanch
+DEPENDS_ON:
+FEEDS_INTO:
+TRIGGER: Taxpayer successfully appeals an assessment post-payment, or an auction yields surplus funds.
+VALIDATION_RULES:
+                                                                                                      * A refund cannot exceed the original amount paid in Namuna 10/Namuna 9.
+                                                                                                      * The approved order acts as a voucher to authorize an expenditure payout in the Cash Book (Namuna 5).
+OBSIDIAN_TAGS: #namuna #receipt #refunds
+OBSIDIAN_LINKS: [[Namuna-9]][[Namuna-5]]
+________________
+________________
+NAMUNA: 33 NAME_EN: General / Miscellaneous Register NAME_MR: इतर नोंदवही (किंवा सामान्य नोंदवही) CATEGORY: Reporting LEGAL_REF: Lekha Sanhita 2011 PURPOSE: A catch-all register for recording events, schemes, or specialized demographics not covered by the standard 32 registers.6 WHO_MAINTAINS: Gram Sevak WHO_APPROVES: Sarpanch FREQUENCY: As needed SUBMISSION_DEADLINE: N/A SUBMITTED_TO: Internal FIELDS_IN_REGISTER:
+                                                                                                         * Date
+                                                                                                         * Subject / Category
+                                                                                                         * Description of Entry
+                                                                                                         * Relevant Financial Implication (if any)
+                                                                                                         * Signatures
+DEPENDS_ON: [None]
+FEEDS_INTO: [None]
+TRIGGER: Introduction of a unique state scheme or non-standard administrative requirement.
+VALIDATION_RULES:
+                                                                                                         * Must absolutely not be used for transactions that legally require posting in Namuna 1 through 32 to prevent obfuscation of financial data.
+OBSIDIAN_TAGS: #namuna #reporting #miscellaneous
+OBSIDIAN_LINKS:
+________________
+System Validation and Implementation Directives
+Translating the dense, interlocked logic of the Maharashtra Gram Panchayat Lekha Sanhita 2011 into a functional digital architecture requires treating the 33 Namune not as isolated tables, but as a Directed Acyclic Graph (DAG) for reporting mechanisms, and a cyclical graph for advanced financial adjustments (like deposits and advances).
+For engineers and system architects utilizing this document as a payload for AI systems (via Model Context Protocol or similar vector embeddings), Namuna 5 (General Cash Book) must be configured as the central hub of the database schema. It possesses the highest degree of centrality, receiving inputs from over ten distinct registers and feeding into nearly as many. A software audit tool built upon this schema must employ continuous reconciliation algorithms. If a user attempts to log an expenditure in Namuna 7 without a matching outflow in Namuna 5, the system must trigger a critical transaction lock.
+Furthermore, edge cases inherent to rural administration—such as the execution of a Warrant of Attachment (Namuna 12) resulting in a public auction (Namuna 14) to satisfy an unpaid tax demand (Namuna 9)—must be handled with ACID (Atomicity, Consistency, Isolation, Durability) compliant database transactions. The exact bidirectional rules articulated within the blocks above provide the definitive constraints required to prevent AI hallucination during data modeling, ensuring that the resulting Obsidian dependency graph or relational database perfectly mirrors the stringent statutory requirements of the MVP Act 1958.
+Works cited
+                                                                                                            1. CHAPTER I ACCOUNTS AND FINANCES OF PANCHAYATI RAJ INSTITUTIONS - Comptroller and Auditor General of India, accessed on April 18, 2026, https://cag.gov.in/uploads/download_audit_report/2014/Maharashtra_Report_6_2014_Chap_1.pdf
+                                                                                                            2. Accounting, Auditing & Compliance of Panchayati Raj Institutions (PRIs) - Committee on Public & Government Financial Management (CP&GFM), accessed on April 18, 2026, https://cpgfm.icai.org/wp-content/uploads/2025/05/Publication-on-Accounting-Auditing-Compliance-of-Panchayati-Raj-Institutions-PRIs.pdf
+                                                                                                            3. CHAPTER I ACCOUNTS AND FINANCES OF PANCHAYATI RAJ INSTITUTIONS - Comptroller and Auditor General of India, accessed on April 18, 2026, https://saiindia.gov.in/uploads/download_audit_report/2010/Maharashtra_TL_Local_Bodies_5_2010-11_Chap_1.pdf
+                                                                                                            4. Grampanchayat | Rural Development and Panchayat Raj Department | India, accessed on April 18, 2026, https://rdd.maharashtra.gov.in/en/grampanchayat/
+                                                                                                            5. Scholarly Research Journal for Interdisciplinary Studies, Online ISSN 2278-8808, SJIF 2018 = 6.371, www.srjis.com PEER REVIEWED, accessed on April 18, 2026, https://oaji.net/pdf.html?n=2019/1174-1559733646.pdf
+                                                                                                            6. महाराष्ट्र ग्रामपंचायत लेखा संहिता २०११: नमुना १ ते ३३ ;आर्थिक प्रशासन, accessed on April 18, 2026, https://sangharshnayakmedia.com/?p=34377
+                                                                                                            7. National Panchayat Accounting Manual | PDF | Debits And Credits - Scribd, accessed on April 18, 2026, https://www.scribd.com/document/78524280/Draft-Accounting-Manual-for-Panchayati-Raj
+                                                                                                            8. CSC ASSK July 2021 - mahaegram.co.in, accessed on April 18, 2026, https://mahaegram.co.in/images/report/CSC%20ASSK%20July%202021.pdf
+                                                                                                            9. Smart Gram Panchayat Register System: E-Gram33, accessed on April 18, 2026, https://www.egramr33.com/
+                                                                                                            10. FEB 2022 - mahaegram.co.in, accessed on April 18, 2026, https://mahaegram.co.in/images/report/ASSK_Report-February_2022.pdf
+                                                                                                            11. 1959 : III] 1 THE MAHARASHTRA VILLAGE PANCHAYATS ACT [Text as on 4th April 2025] - S3waas, accessed on April 18, 2026, https://cdnbbsr.s3waas.gov.in/s3b427426b8acd2c2e53827970f2c2f526/uploads/2025/08/20250820872671990.pdf
+                                                                                                            12. Maharashtra Village Panchayats Act - S3waas, accessed on April 18, 2026, https://cdnbbsr.s3waas.gov.in/s316026d60ff9b54410b3435b403afd226/uploads/2025/01/20250118880446913.pdf
+                                                                                                            13. The Bombay Village Panchayats Act, 1958 Keyword(s): Repealed, Associate Member, Building, Cattle, Zilla Parishad, Factory, Gram - PRS India, accessed on April 18, 2026, https://prsindia.org/files/bills_acts/acts_states/maharashtra/1959/1959MH3.pdf
+                                                                                                            14. report of expert committee on - SVAMITVA Scheme, accessed on April 18, 2026, https://svamitva.nic.in/DownloadPDF/ExpertCommitteeReportFinalReport_1678960275389.pdf
+                                                                                                            15. Grampanchayat Namune 1 ते 33 PDF Download, accessed on April 18, 2026, https://mygrampanchayat.co.in/
+                                                                                                            16. ग्रामपंचायत अभिलेखे - ग्रामविकास E-सेवा, accessed on April 18, 2026, https://gramvikaseseva.com/gp-record/
+                                                                                                            17. Grampanchayat Format 1 To 33 | PDF - Scribd, accessed on April 18, 2026, https://www.scribd.com/document/755671813/Grampanchayat-Format-1-to-33-PPT

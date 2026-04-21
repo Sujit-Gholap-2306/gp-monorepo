@@ -1,83 +1,10 @@
-@import "tailwindcss";
-
-@custom-variant dark (&:is(.dark *));
-
-/* HSL triplets for shadcn Sidebar (used as hsl(var(--sidebar-*))) */
-:root {
-  --sidebar: 0 0% 100%;
-  --sidebar-foreground: 222 47% 11%;
-  --sidebar-primary: 142 71% 36%;
-  --sidebar-primary-foreground: 0 0% 100%;
-  --sidebar-accent: 138 62% 96%;
-  --sidebar-accent-foreground: 142 72% 28%;
-  --sidebar-border: 214 32% 91%;
-  --sidebar-ring: 142 71% 36%;
-}
-
+/* App scan paths only — all @theme tokens live in packages/shadcn gp-theme-layer (single Tailwind entry). */
 @source "../**/*.{ts,tsx}";
 @source "../../../packages/shadcn/src/**/*.{ts,tsx}";
 
-@theme inline {
-  --color-sidebar: hsl(var(--sidebar));
-  --color-sidebar-foreground: hsl(var(--sidebar-foreground));
-  --color-sidebar-primary: hsl(var(--sidebar-primary));
-  --color-sidebar-primary-foreground: hsl(var(--sidebar-primary-foreground));
-  --color-sidebar-accent: hsl(var(--sidebar-accent));
-  --color-sidebar-accent-foreground: hsl(var(--sidebar-accent-foreground));
-  --color-sidebar-border: hsl(var(--sidebar-border));
-  --color-sidebar-ring: hsl(var(--sidebar-ring));
-}
-
-@theme {
-  /* Backgrounds */
-  --color-background: #f5f7fa;
-  --color-foreground: #0f172a;
-
-  /* Card / Surface */
-  --color-card: #ffffff;
-  --color-card-foreground: #0f172a;
-
-  /* Primary — deep green (Maharashtra sarkari) */
-  --color-primary: #15803d;
-  --color-primary-foreground: #ffffff;
-  --color-primary-light: #dcfce7;
-
-  /* Secondary */
-  --color-secondary: #f1f5f9;
-  --color-secondary-foreground: #334155;
-
-  /* Muted */
-  --color-muted: #f1f5f9;
-  --color-muted-foreground: #64748b;
-
-  /* Accent — saffron */
-  --color-accent: #ea580c;
-  --color-accent-foreground: #ffffff;
-
-  /* Status */
-  --color-success: #16a34a;
-  --color-success-bg: #f0fdf4;
-  --color-warning: #d97706;
-  --color-warning-bg: #fffbeb;
-  --color-destructive: #dc2626;
-  --color-destructive-bg: #fef2f2;
-
-  /* Borders & inputs */
-  --color-border: #e2e8f0;
-  --color-input: #ffffff;
-  --color-ring: #15803d;
-
-  /* Legacy / extra sidebar chrome (optional utilities) */
-  --color-sidebar-active-bg: #f0fdf4;
-  --color-sidebar-active-text: #15803d;
-  --color-sidebar-idle-text: #475569;
-
-  /* shadcn-style tokens (consumed by @repo/shadcn primitives) */
-  --color-popover: #ffffff;
-  --color-popover-foreground: #0f172a;
-}
-
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
@@ -86,7 +13,7 @@ body {
   padding: 0;
   background: var(--color-background);
   color: var(--color-foreground);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
 }
 
@@ -94,21 +21,31 @@ input:-webkit-autofill,
 input:-webkit-autofill:hover,
 input:-webkit-autofill:focus {
   -webkit-box-shadow: 0 0 0 1000px #fff inset;
-  -webkit-text-fill-color: #0f172a;
-  caret-color: #0f172a;
+  -webkit-text-fill-color: var(--color-foreground);
+  caret-color: var(--color-foreground);
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(8px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .animate-fade-in {
   animation: fadeIn 0.2s ease-out both;
 }
 
-/* Print */
 @media print {
-  aside, header { display: none !important; }
-  main { padding: 0 !important; }
+  aside,
+  header {
+    display: none !important;
+  }
+  main {
+    padding: 0 !important;
+  }
 }
