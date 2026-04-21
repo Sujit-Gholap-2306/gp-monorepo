@@ -3,9 +3,18 @@ import path from 'path'
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
-  transpilePackages: ['@repo/shadcn'],
+  transpilePackages: ['@gp/shadcn'],
   turbopack: {
     root: path.join(__dirname, '..', '..'),
+  },
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '*.supabase.co',
+        pathname: '/storage/v1/object/public/**',
+      },
+    ],
   },
 }
 

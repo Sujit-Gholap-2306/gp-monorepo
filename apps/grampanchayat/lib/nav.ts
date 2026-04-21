@@ -1,9 +1,10 @@
 import {
   LayoutDashboard,
-  ScrollText,
-  FilePlus,
-  Search,
   ClipboardList,
+  FileText,
+  Banknote,
+  ScrollText,
+  Database,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -13,9 +14,14 @@ export interface NavItem {
   labelMr: string
   desc: string
   icon: LucideIcon
+  badge?: string
   exact?: boolean
 }
 
+/**
+ * Sidebar — demo-only: wired UI + IndexedDB persistence.
+ * Placeholder pages (citizens, properties, cashbook, classified, search) are hidden until F3.
+ */
 export const APP_NAV: NavItem[] = [
   {
     href: '/',
@@ -26,35 +32,51 @@ export const APP_NAV: NavItem[] = [
     exact: true,
   },
   {
-    href: '/namuna8',
-    label: 'Namuna 8',
-    labelMr: 'नमुना ८ — घरपट्टी',
-    desc: 'Property tax register',
+    href: '/masters',
+    label: 'Master data',
+    labelMr: 'मास्टर डेटा',
+    desc: 'GP profile, FY, heads — demo seed',
+    icon: Database,
+    exact: true,
+  },
+  {
+    href: '/assessment',
+    label: 'Assessment',
+    labelMr: 'कर आकारण',
+    desc: 'Namuna 8 — property tax assessment',
     icon: ClipboardList,
+    badge: 'N08',
+    exact: false,
+  },
+  {
+    href: '/demand',
+    label: 'Tax demand',
+    labelMr: 'कर मागणी',
+    desc: 'Namuna 9',
+    icon: FileText,
+    badge: 'N09',
+    exact: false,
+  },
+  {
+    href: '/collect',
+    label: 'Collect payment',
+    labelMr: 'वसूली',
+    desc: 'Namuna 10',
+    icon: Banknote,
+    badge: 'N10',
     exact: false,
   },
   {
     href: '/utaras',
-    label: 'Utara List',
+    label: 'Utara list',
     labelMr: 'उतारे',
-    desc: 'All records',
+    desc: 'Persisted utara records',
     icon: ScrollText,
     exact: false,
   },
-  {
-    href: '/utaras/new',
-    label: 'Add Utara',
-    labelMr: 'नवीन उतारा',
-    desc: 'New entry',
-    icon: FilePlus,
-    exact: true,
-  },
-  {
-    href: '/search',
-    label: 'Search',
-    labelMr: 'शोध',
-    desc: 'Find records',
-    icon: Search,
-    exact: true,
-  },
 ]
+
+/*
+Full IA (unhide when pages are ready):
+  /citizens, /properties, /cashbook, /classified, /search
+*/

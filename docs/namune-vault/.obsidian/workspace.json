@@ -13,12 +13,12 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": "Namune/Receipt/Namuna-06.md",
+                "file": "MOC-Master.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
-              "title": "Namuna-06"
+              "title": "MOC-Master"
             }
           }
         ]
@@ -182,9 +182,32 @@
   },
   "active": "716abafe3f65a10c",
   "lastOpenFiles": [
-    "Namune/Budget/Namuna-01.md",
+    "Master-Flow.md",
     "MOC-Master.md",
-    "Namune/Advances/MOC-Advances.md",
-    "Namune/Reporting/Namuna-04.md"
+    "Namune/Audit/Audit-Flow.md",
+    "Namune/Advances/Advances-Flow.md",
+    "Namune/Reporting/Reporting-Flow.md",
+    "Namune/Property/Property-Flow.md",
+    "Namune/Staff/Staff-Flow.md",
+    "Namune/Works/Works-Flow.md",
+    "Namune/Expenditure/Expenditure-Flow.md",
+    "Namune/Receipt/Receipt-Flow.md",
+    "Namune/Tax/Tax-Flow.md",
+    "Namune/Cash/Cash-Flow.md",
+    "Namune/Budget/Budget-Flow.md",
+    "diagrams/Works-Flow.md",
+    "diagrams/Audit-Flow.md",
+    "diagrams/Advances-Flow.md",
+    "diagrams/Reporting-Flow.md",
+    "diagrams/Property-Flow.md",
+    "diagrams/Staff-Flow.md",
+    "diagrams/Expenditure-Flow.md",
+    "diagrams/Receipt-Flow.md",
+    "diagrams/Tax-Flow.md",
+    "diagrams/Cash-Flow.md",
+    "diagrams/Budget-Flow.md",
+    "diagrams/Master-Flow.md",
+    "diagrams",
+    "Namune/Receipt/Namuna-06.md"
   ]
 }

@@ -1,0 +1,12 @@
+# compiled output
+src/**/*.js
+src/**/*.js.map
+src/**/*.jsx
+src/**/*.d.ts
+dist/
+
+# deps
+node_modules/
+
+# misc
+*.log

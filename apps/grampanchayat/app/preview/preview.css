@@ -1,0 +1,161 @@
+/**
+ * Civic Elegant — preview-only CSS.
+ *
+ * Every colour and shadow comes from a theme object; see
+ *   - lib/preview/theme.ts           (token source + presets)
+ *   - themeToCssVars()               (injects the variables below)
+ *   - app/preview/layout.tsx         (applies them to .civic-root)
+ *
+ * The `:root` block below is ONLY a safety fallback so the page doesn't
+ * render colourless if JS or the layout somehow fails to set the vars.
+ * The authoritative values live in theme.ts.
+ */
+
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT,WONK@9..144,300..900,30..100,0..1&display=swap');
+
+.civic-root {
+  /* Fallback palette — overwritten at runtime by themeToCssVars() so each
+     tenant gets its own brand. Keep values here in sync with the default
+     Civic Elegant preset in lib/preview/theme.ts. */
+
+  /* Surfaces */
+  --civic-bg: #faf7f0;
+  --civic-bg-soft: #f3eee2;
+  --civic-paper: #ffffff;
+  --civic-ink: #141311;
+  --civic-ink-soft: #3c3a35;
+  --civic-muted: #7a736a;
+
+  /* Lines */
+  --civic-border: #e9dfc9;
+  --civic-border-strong: #d6c9a8;
+
+  /* Accents (gold family by default) */
+  --civic-gold: #b08a3e;
+  --civic-gold-soft: #d4b366;
+  --civic-gold-ink: #6b5220;
+  --civic-gold-highlight: #f5e4b8;
+
+  /* Illustration — about-section portrait (only these escape to CSS;
+     map colours are read via useTheme() inside map-section.tsx). */
+  --civic-illus-portrait-from: #1a1714;
+  --civic-illus-portrait-mid1: #2a2220;
+  --civic-illus-portrait-mid2: #3a2d22;
+  --civic-illus-portrait-to: #5a4428;
+
+  /* Effects — glows + shadows */
+  --civic-glow-accent-low: rgba(176, 138, 62, 0.1);
+  --civic-glow-accent-mid: rgba(212, 179, 102, 0.22);
+  --civic-glow-secondary-low: rgba(14, 67, 64, 0.08);
+  --civic-glow-ink-faint: rgba(20, 19, 17, 0.06);
+  --civic-shadow-card: 0 28px 60px -30px rgba(20, 19, 17, 0.22);
+  --civic-shadow-card-strong: 0 30px 60px -20px rgba(20, 19, 17, 0.25);
+  --civic-shadow-portrait: 0 40px 80px -30px rgba(20, 19, 17, 0.35);
+
+  /* Motion */
+  --civic-ease: cubic-bezier(0.22, 1, 0.36, 1);
+
+  /* Fonts */
+  --font-editorial: 'Fraunces', 'Plus Jakarta Sans', 'Noto Sans Devanagari',
+    ui-serif, Georgia, serif;
+
+  background: var(--civic-bg);
+  color: var(--civic-ink);
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-feature-settings: 'ss01', 'ss02', 'ss03';
+}
+
+/* Typography shortcuts scoped to civic-root */
+.civic-root .font-editorial {
+  font-family: var(--font-editorial);
+  font-optical-sizing: auto;
+  font-variation-settings: 'SOFT' 50, 'WONK' 0;
+}
+
+.civic-root .font-editorial-italic {
+  font-family: var(--font-editorial);
+  font-style: italic;
+  font-variation-settings: 'SOFT' 80, 'WONK' 1;
+}
+
+.civic-root .tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Gold foil text — driven by the accent family so it rebrands automatically. */
+.civic-root .foil {
+  background: linear-gradient(
+    100deg,
+    var(--civic-gold-ink) 0%,
+    var(--civic-gold-soft) 30%,
+    var(--civic-gold-highlight) 50%,
+    var(--civic-gold-soft) 70%,
+    var(--civic-gold-ink) 100%
+  );
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-size: 200% 100%;
+}
+
+/* Grain overlay used by hero */
+.civic-root .grain::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.08 0 0 0 0 0.07 0 0 0 0 0.06 0 0 0 0.9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: 0.08;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+}
+
+/* Section separator used between blocks */
+.civic-root .rule {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    var(--civic-border-strong) 20%,
+    var(--civic-border-strong) 80%,
+    transparent
+  );
+}
+
+/* Focus outline that respects the civic palette */
+.civic-root a:focus-visible,
+.civic-root button:focus-visible {
+  outline: 2px solid var(--civic-gold);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+/* Reduced motion overrides */
+@media (prefers-reduced-motion: reduce) {
+  .civic-root *,
+  .civic-root *::before,
+  .civic-root *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Masonry fallback helper */
+.civic-masonry {
+  column-gap: 1rem;
+}
+.civic-masonry > * {
+  break-inside: avoid;
+  margin-bottom: 1rem;
+}
+@media (min-width: 640px) {
+  .civic-masonry {
+    column-count: 2;
+  }
+}
+@media (min-width: 1024px) {
+  .civic-masonry {
+    column-count: 3;
+  }
+}
