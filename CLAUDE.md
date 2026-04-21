@@ -2,7 +2,7 @@
 
 > Maharashtra Gram Panchayat accounting + public portal + marketing — one product.
 > Separated from FundSight monorepo — no shared code between projects.
-> Last updated: 2026-04-19
+> Last updated: 2026-04-20
 
 ---
 
@@ -103,3 +103,66 @@ Enable or `@`-reference these in Cursor so the agent loads them. **MCP:** `user-
 - Never auto-commit or auto-push
 - Package scope is `@gp/*` — not `@repo/*` or `@fundsight/*`
 - Domain logic lives in `apps/grampanchayat/lib/` — not in route handlers
+
+---
+
+## Marketing / Public Portal (Civic Elegant) — added 2026-04-20
+
+**Intent.** A premium, standalone public-facing village portal that a GP can hand out
+as its official website. Positioned as a **lead-magnet + upsell** for our admin /
+namune / accounting product:
+- **Free tier** — bundled free with any paid GP app subscription (marketing pull).
+- **Standalone SKU** — offered at **₹7,000** one-time to GPs that only want the portal
+  (no accounting product). Acts as an independent revenue stream + top-of-funnel.
+
+**Where it lives.**
+- Route: `/preview` on the grampanchayat app (no tenant lookup, no Supabase —
+  pure showcase with mock data).
+- All preview code is scoped and isolated — nothing leaks into the live
+  `[tenant]/(public)` pages.
+
+```
+apps/grampanchayat/
+├── app/preview/
+│   ├── layout.tsx
+│   ├── page.tsx            ← ?lang=en toggles English
+│   └── preview.css         ← Civic Elegant tokens (scoped to .civic-root)
+├── components/preview/
+│   ├── preview-nav.tsx
+│   ├── motion-primitives.tsx   ← Reveal, Counter, Parallax, MagneticHover, SplitText
+│   ├── rangoli-motif.tsx
+│   ├── section-header.tsx
+│   └── sections/               ← hero, about, members, announcements,
+│                                  achievements, events, gallery, progress,
+│                                  map, contact-footer
+└── lib/preview/mock-data.ts    ← bilingual mock tenant ("Deshmukhwadi")
+```
+
+**Stack additions.** `framer-motion@^12` added to `apps/grampanchayat` for the
+premium animations (scroll-linked parallax, timeline draw-on, animated counters,
+magnetic hover, lightbox physics, SVG map pin pulse).
+
+**Design system.** Civic Elegant — cream paper bg, near-black ink, warm gold
+accent, deep civic teal. Fraunces display serif + existing Plus Jakarta /
+Noto Sans Devanagari. `prefers-reduced-motion` respected throughout.
+
+**Status: tweaks pending.** The `/preview` build is directionally approved but
+needs refinement passes before it ships as a sellable template. Outstanding
+tweak dials (to decide on later):
+- Gold intensity (current = accent, option = rare / seals-only)
+- Vertical rhythm (option to tighten ~30%)
+- Motion preset (current = rich, option = subtle)
+- Member cards — swap conic-gradient monogram for real photo slot
+- Map — option to replace illustrated SVG with real OSM + branded pins
+- Replace hero rangoli with a topographic village contour (alternative)
+
+**Productisation path (not built yet).**
+1. Parameterise `lib/preview/mock-data.ts` so a single config object drives
+   a tenant's portal (name, colours, village photo slots, members, etc.).
+2. Wire the 10 sections to live Supabase queries (shape already matches
+   `[tenant]/(public)` — mostly a mechanical lift).
+3. Add an admin toggle per tenant: `portal_theme: 'standard' | 'civic-elegant'`
+   so the same codebase serves both tiers.
+
+> When pricing / packaging is finalised, update this section with the SKU name,
+> what's included free vs paid, and the upgrade trigger.
