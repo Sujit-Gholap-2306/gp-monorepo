@@ -2,7 +2,7 @@
 
 > Maharashtra Gram Panchayat accounting + public portal + marketing — one product.
 > Separated from FundSight monorepo — no shared code between projects.
-> Last updated: 2026-04-20
+> Last updated: 2026-04-21 (preview map + doc sync)
 
 ---
 
@@ -134,9 +134,20 @@ apps/grampanchayat/
 │   ├── section-header.tsx
 │   └── sections/               ← hero, about, members, announcements,
 │                                  achievements, events, gallery, progress,
-│                                  map, contact-footer
+│                                  map-section, contact-footer
 └── lib/preview/mock-data.ts    ← bilingual mock tenant ("Deshmukhwadi")
 ```
+
+**Map section (as of 2026-04-21).** Implemented in
+`components/preview/sections/map-section.tsx` only: a hand-composed illustrated
+SVG (1000×700 viewBox) — decorative “village” geometry, not cadastral accuracy.
+**Pins** are data-driven: `previewMapPins` in `lib/preview/mock-data.ts` (six
+`kind` values: office, school, temple, health, water, market) with `x`/`y` as
+percentages of the canvas. **Colours** for land, river, fields, and pins come
+from `PreviewTheme` (`lib/preview/theme.ts`, consumed via `useTheme()` for SVG
+attributes). There is no separate `MapConfig` / OSM / custom-SVG pipeline in
+the repo yet; that remains a productisation item when tenants need real
+geometry.
 
 **Stack additions.** `framer-motion@^12` added to `apps/grampanchayat` for the
 premium animations (scroll-linked parallax, timeline draw-on, animated counters,
@@ -153,7 +164,8 @@ tweak dials (to decide on later):
 - Vertical rhythm (option to tighten ~30%)
 - Motion preset (current = rich, option = subtle)
 - Member cards — swap conic-gradient monogram for real photo slot
-- Map — option to replace illustrated SVG with real OSM + branded pins
+- Map — replace illustrated SVG with real OSM, tenant-traced SVG, or a
+  config-driven street layer (future; current build is illustration + pins only)
 - Replace hero rangoli with a topographic village contour (alternative)
 
 **Productisation path (not built yet).**
