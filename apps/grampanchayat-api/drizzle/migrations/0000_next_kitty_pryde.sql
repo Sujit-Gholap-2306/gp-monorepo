@@ -34,10 +34,4 @@ SET
   feature_flags = '{"showProgress":true,"showMap":true,"showAchievements":true}'::jsonb,
   tier = 'free'
 WHERE portal_theme IS NULL;
-
---> statement-breakpoint
-
--- Update the metadata table for drizzle
-INSERT INTO drizzle_migrations (hash, created_at) 
-VALUES ('0000_next_kitty_pryde', now())
-ON CONFLICT DO NOTHING;
+-- Applied migrations are recorded by drizzle-kit in schema "drizzle", table "__drizzle_migrations" — do not INSERT here.
