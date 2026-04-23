@@ -1,6 +1,7 @@
-// Auto-generated from live Supabase schema. Do not edit manually.
-// Regenerate: use Supabase MCP tool `generate_typescript_types`
-// or: supabase gen types typescript --project-id kntraxcpflpptmtlqqvv > lib/supabase/types.ts
+// Client mirror of the public Supabase schema. Regenerate with:
+//   supabase gen types typescript --project-id kntraxcpflpptmtlqqvv > lib/supabase/types.ts
+// After `supabase gen`, merge the `gp_tenants` (and other) blocks if the CLI output
+// lags; Drizzle migrations in `apps/grampanchayat-api` are the migration source of truth.
 
 export type Json =
   | string
@@ -233,33 +234,45 @@ export type Database = {
           contact: Json | null
           created_at: string
           established: string | null
+          feature_flags: Json
           id: string
           logo_url: string | null
           name_en: string
           name_mr: string
+          portal_config: Json
+          portal_theme: string
           subdomain: string
+          tier: string
           village: Json | null
         }
         Insert: {
           contact?: Json | null
           created_at?: string
           established?: string | null
+          feature_flags?: Json
           id?: string
           logo_url?: string | null
           name_en: string
           name_mr: string
+          portal_config?: Json
+          portal_theme?: string
           subdomain: string
+          tier?: string
           village?: Json | null
         }
         Update: {
           contact?: Json | null
           created_at?: string
           established?: string | null
+          feature_flags?: Json
           id?: string
           logo_url?: string | null
           name_en?: string
           name_mr?: string
+          portal_config?: Json
+          portal_theme?: string
           subdomain?: string
+          tier?: string
           village?: Json | null
         }
         Relationships: []

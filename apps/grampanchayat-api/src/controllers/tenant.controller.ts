@@ -1,6 +1,7 @@
 import { asyncHandler } from '../common/guards/async-handler.ts'
 import { BaseController } from '../common/base/base.controller.ts'
 import { tenantService } from '../services/tenant.service.ts'
+import { parseTenantSettingsBody } from '../types/tenant-settings.dto.ts'
 
 function firstString(value: string | string[] | undefined): string | undefined {
   if (value === undefined) return undefined
@@ -25,12 +26,21 @@ export class TenantController extends BaseController {
   updateSettings = asyncHandler(async (req, res) => {
     const subdomain = firstString(req.params.subdomain) ?? firstString(req.headers['x-tenant'])
     if (!subdomain) {
-      return this.fail(400, 'Subdomain is required')
+      this.fail(400, 'Subdomain is required')
+    }
+
+    let payload: ReturnType<typeof parseTenantSettingsBody>
+    try {
+      payload = parseTenantSettingsBody(
+        (req.body ?? {}) as Record<string, unknown>
+      )
+    } catch (e) {
+      this.fail(400, (e as Error).message)
     }
 
     const updatedTenant = await tenantService.updateSettings(
       subdomain,
-      req.body,
+      payload,
       req.file
     )
 
