@@ -1,6 +1,6 @@
 ---
 name: gp-dev
-description: GP-Monorepo development standards for the grampanchayat Next.js app. Use whenever building or modifying components, pages, API routes, or lib logic in apps/grampanchayat/ or packages/shadcn/. Covers @gp/shadcn usage, Tailwind v4, domain conventions, and monorepo rules.
+description: GP-Monorepo development standards for the grampanchayat Next.js app. Use whenever building or modifying components, pages, API routes, or lib logic in apps/grampanchayat/ or packages/shadcn/. Covers @gp/shadcn usage, Tailwind v4, API-only mutations (no new server actions for domain writes), domain conventions, and monorepo rules.
 ---
 
 # GP-Monorepo Dev Standards
@@ -74,9 +74,18 @@ When adding new shared components, add them to `packages/shadcn/src/components/g
 - All shared types in `lib/types.ts` (or `lib/<domain>/types.ts` for complex domains)
 - No implicit `any` in function parameters
 
+## Mutations: Express API only (no new server actions)
+
+- **Do not** add new **`'use server'`** form actions or `lib/actions/*.ts` **mutations** for tenant content, settings, or portal data.
+- **Do** implement writes in **`apps/grampanchayat-api`** (Drizzle + routes), and call the API from the **client** with `fetch` and `Authorization: Bearer <Supabase access token>`, or from a minimal BFF if we add one later.
+- **Reads** in Server Components (e.g. `getTenant` via Supabase) are fine.
+- Auth for tenant admin routes: Supabase session + `gp_admins` check (see `supabaseTenantAdminGuard` on the API).
+- Full rationale: `docs/architecture/grampanchayat-mutations.md`
+
 ## Never Do
 
 - Import from `@repo/shadcn` or `@fundsight/*` — wrong scope for this repo
 - Put business logic in route handlers
+- Add new server actions in `lib/actions/` for domain writes (use `grampanchayat-api` instead)
 - Hardcode register field names — derive from domain lib
 - Auto-commit or auto-push — always ask first

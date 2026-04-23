@@ -1,5 +1,6 @@
 import { MapPin, Calendar } from 'lucide-react'
 import type { GpTenant } from '@/lib/types'
+import { getHeroTaglineForLocale, getShowStatsStrip } from '@/lib/portal-config'
 
 interface SiteHeroProps {
   tenant: GpTenant
@@ -27,24 +28,38 @@ export function SiteHero({ tenant, locale, stats }: SiteHeroProps) {
         : `${village.taluka}, ${village.district}`
       : null
 
-  const statItems = stats
-    ? [
+  const cfg = tenant.portal_config
+  const showStats = getShowStatsStrip(cfg)
+  const tagline = getHeroTaglineForLocale(cfg, locale)
+  const bgUrl = (cfg.hero_background_image_url as string | undefined)?.trim()
+
+  const statItems =
+    showStats && stats
+      ? [
         { value: stats.announcements ?? 0, label_mr: 'घोषणा',      label_en: 'Announcements' },
         { value: stats.events ?? 0,        label_mr: 'कार्यक्रम',   label_en: 'Events' },
         { value: stats.gallery ?? 0,       label_mr: 'दालन',        label_en: 'Gallery' },
         { value: stats.postHolders ?? 0,   label_mr: 'पदाधिकारी',   label_en: 'Post Holders' },
       ]
-    : []
+      : []
 
   return (
     <section className="relative overflow-hidden bg-background border-b border-gp-border">
-      {/* Subtle gradient background */}
+      {/* Subtle gradient or optional full-size background from portal_config */}
       <div
         className="absolute inset-0 -z-10 opacity-60"
-        style={{
-          background:
+        style={
+          bgUrl
+            ? {
+                backgroundImage: `linear-gradient(180deg, hsl(var(--background) / 0.85), hsl(var(--background) / 0.92)), url("${bgUrl.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}")`,
+                backgroundSize: 'cover',
+                backgroundPosition: 'center',
+              }
+            : {
+                background:
             'radial-gradient(ellipse 80% 50% at 50% -20%, hsl(var(--gp-primary) / 0.10), transparent 70%), radial-gradient(ellipse 50% 40% at 100% 30%, hsl(var(--gp-cta) / 0.06), transparent 70%)',
-        }}
+              }
+        }
         aria-hidden="true"
       />
 
@@ -75,11 +90,8 @@ export function SiteHero({ tenant, locale, stats }: SiteHeroProps) {
             {gpNameAlt}
           </p>
 
-          {/* Tagline */}
           <p className="mt-6 text-base sm:text-lg text-foreground/80 max-w-2xl leading-relaxed">
-            {locale === 'mr'
-              ? 'आपल्या गावाची अधिकृत वेबसाइट — घोषणा, कार्यक्रम, पदाधिकारी व माहिती एकाच ठिकाणी.'
-              : 'Your village\'s official portal — announcements, events, post holders, and information, all in one place.'}
+            {tagline}
           </p>
         </div>
 

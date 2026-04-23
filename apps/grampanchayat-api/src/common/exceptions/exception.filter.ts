@@ -1,7 +1,7 @@
 import type { Request, Response, NextFunction } from 'express'
 import { ZodError } from 'zod'
-import { ApiError } from './http.exception.js'
-import { ApiResponse } from '../interceptors/response.interceptor.js'
+import { ApiError } from './http.exception.ts'
+import { ApiResponse } from '../interceptors/response.interceptor.ts'
 
 export const exceptionFilter = (
   err: unknown,

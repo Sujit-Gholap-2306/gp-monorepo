@@ -1,4 +1,6 @@
 import type { Tables, TablesInsert, TablesUpdate } from './supabase/types'
+import type { FeatureFlags, PortalConfig, PortalThemeId } from './portal-config'
+import type { Tier } from './tiers'
 
 export type Locale = 'mr' | 'en'
 
@@ -19,11 +21,18 @@ export type ContactInfo = {
   address_en?: string
 }
 
-// ─── Domain types (derived from DB, no manual duplication) ───────────────────
+// ─── Domain types (derived from DB) ───────────────────────────────────────────
 
-export type GpTenant = Omit<Tables<'gp_tenants'>, 'village' | 'contact'> & {
+export type GpTenant = Omit<
+  Tables<'gp_tenants'>,
+  'village' | 'contact' | 'portal_config' | 'feature_flags' | 'portal_theme' | 'tier'
+> & {
   village: VillageInfo | null
   contact: ContactInfo | null
+  portal_config: PortalConfig
+  feature_flags: FeatureFlags
+  portal_theme: PortalThemeId
+  tier: Tier
 }
 
 export type PostHolder = Tables<'post_holders'>

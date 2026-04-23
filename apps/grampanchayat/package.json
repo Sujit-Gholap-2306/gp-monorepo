@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start --port 3004",
     "typecheck": "tsc --noEmit",
-    "lint": "next lint"
+    "lint": "next lint",
+    "supabase:types": "supabase gen types typescript --project-id kntraxcpflpptmtlqqvv > lib/supabase/types.ts"
   },
   "dependencies": {
     "@gp/shadcn": "workspace:*",

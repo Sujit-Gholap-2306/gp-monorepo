@@ -33,7 +33,7 @@ GP-Monorepo/
 │   │   │   ├── tiers.ts       ← TIER_FEATURES map, canAccess(), featureForPath()
 │   │   │   ├── tenant.ts      ← getTenant(subdomain) — cached
 │   │   │   ├── supabase/      ← server/client/middleware clients + generated types
-│   │   │   ├── actions/       ← Server Actions (announcements, events, gallery, etc.)
+│   │   │   ├── actions/       ← Legacy server actions; new domain writes use `grampanchayat-api` (see `docs/architecture/grampanchayat-mutations.md`)
 │   │   │   ├── i18n/          ← Marathi/English strings
 │   │   │   └── ...            ← existing: db.ts (IDB), masters/, namuna8.ts, nav.ts
 │   │   └── middleware.ts      ← subdomain routing + Supabase auth refresh
@@ -77,6 +77,7 @@ Enforcement layers: middleware (redirect) → UI (lock icon + upgrade CTA) → B
 ## Architecture Docs
 - **Subdomain routing & multi-tenant** → `docs/architecture/subdomain-routing.md`
 - **Storage strategy (media)** → `docs/architecture/storage-strategy.md`
+- **Admin writes: API only (no new server actions for domain mutations)** → `docs/architecture/grampanchayat-mutations.md`
 
 ## Dev
 ```bash

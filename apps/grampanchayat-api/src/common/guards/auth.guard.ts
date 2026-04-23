@@ -1,9 +1,9 @@
 import jwt from 'jsonwebtoken'
 import { eq } from 'drizzle-orm'
-import { db } from '../../db/index.js'
-import { users } from '../../db/schema/index.js'
-import { ApiError } from '../exceptions/http.exception.js'
-import { asyncHandler } from './async-handler.js'
+import { db } from '../../db/index.ts'
+import { users } from '../../db/schema/index.ts'
+import { ApiError } from '../exceptions/http.exception.ts'
+import { asyncHandler } from './async-handler.ts'
 
 export const authGuard = asyncHandler(async (req, _res, next) => {
   const token =

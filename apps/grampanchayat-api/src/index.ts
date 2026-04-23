@@ -1,8 +1,8 @@
 import 'dotenv/config'
-import { app }      from './app.js'
-import { db, pgClient } from './db/index.js'
+import { app }      from './app.ts'
+import { db, pgClient } from './db/index.ts'
 import { sql }     from 'drizzle-orm'
-import { env }     from './config/index.js'
+import { env }     from './config/index.ts'
 
 async function bootstrap() {
   await db.execute(sql`SELECT 1`)
