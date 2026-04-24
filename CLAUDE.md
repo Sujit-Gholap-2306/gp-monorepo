@@ -35,6 +35,7 @@ GP-Monorepo/
 │   │   │   ├── supabase/      ← server/client/middleware clients + generated types
 │   │   │   ├── actions/       ← Legacy server actions; new domain writes use `grampanchayat-api` (see `docs/architecture/grampanchayat-mutations.md`)
 │   │   │   ├── i18n/          ← Marathi/English strings
+│   │   │   ├── toast/         ← `gpToast`, `AppToaster`, `useGpToast` (Sonner; app-wide defaults in `toast-defaults.ts`)
 │   │   │   └── ...            ← existing: db.ts (IDB), masters/, namuna8.ts, nav.ts
 │   │   └── middleware.ts      ← subdomain routing + Supabase auth refresh
 │   └── grampanchayat-api/   ← Express 5 BE (port 3005) — Drizzle + JWT + bcrypt + Supabase Storage
@@ -44,6 +45,7 @@ GP-Monorepo/
 
 ## Stack
 - **Frontend**: Next.js 16 (App Router, React Compiler), TypeScript, Tailwind v4, TanStack Query, Supabase SSR
+- **Toasts (grampanchayat)**: `apps/grampanchayat/lib/toast/` only — import `gpToast` / `useGpToast` from `@/lib/toast` and mount a single `<AppToaster />` in `app/providers.tsx`. Do not import `sonner` directly in feature code; adjust defaults in `lib/toast/toast-defaults.ts` (`appToasterProps`, `GP_TOAST_DURATION_MS`).
 - **Backend**: Express 5, Drizzle ORM, Postgres (Supabase DB), JWT + bcrypt, Supabase Storage
 - **Monorepo**: pnpm workspaces + Turborepo
 - **Package scope**: `@gp/*`
@@ -99,6 +101,19 @@ Project-local skills live under **`.cursor/skills/`**. For Supabase (DB, Auth, R
 - `.cursor/skills/supabase-postgres-best-practices/SKILL.md` — Postgres performance & RLS on Supabase
 
 Enable or `@`-reference these in Cursor so the agent loads them. **MCP:** `user-supabase` (project-linked) complements the skills for live schema/migrations.
+
+## Agent persona default (Codex + Claude + Cursor)
+
+For this repository, apply a hybrid persona by default:
+- Base assistant behavior stays enabled (collaborative, clear, safe execution).
+- Overlay `skills/gp-persona/SKILL.md` on top for project tone/domain rules.
+
+Expected output style:
+- Senior full-stack peer tone, short and direct.
+- Maharashtra GP domain-aware decisions (33 Namune + legal context).
+- No preamble/trailing fluff unless complexity requires extra detail.
+
+If platform supports explicit skill invocation, auto-load `gp-persona` first, then add task-specific skills.
 
 ## Rules
 - Never auto-commit or auto-push

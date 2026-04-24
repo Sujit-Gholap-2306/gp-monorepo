@@ -3,7 +3,10 @@ import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { ArrowRight, Megaphone, Calendar, Image as ImageIcon, Users } from 'lucide-react'
 import { getTenant } from '@/lib/tenant'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { listAnnouncements } from '@/lib/api/announcements'
+import { listEvents } from '@/lib/api/events'
+import { listGallery } from '@/lib/api/gallery'
+import { listPostHolders } from '@/lib/api/post-holders'
 import { SiteHero } from '@/components/public/site-hero'
 import type { Locale } from '@/lib/types'
 
@@ -19,39 +22,30 @@ export default async function HomePage({
   const cookieStore = await cookies()
   const locale = (cookieStore.get('locale')?.value ?? 'mr') as Locale
 
-  const supabase = await createSupabaseServerClient()
-
   const [
-    { data: announcements, count: annCount },
-    { data: events, count: evCount },
-    { count: galleryCount },
-    { count: phCount },
+    allAnnouncements,
+    allEvents,
+    gallery,
+    postHolders,
   ] = await Promise.all([
-    supabase
-      .from('announcements')
-      .select('id, title_mr, title_en, category, published_at', { count: 'exact' })
-      .eq('gp_id', tenant.id)
-      .eq('is_published', true)
-      .order('published_at', { ascending: false })
-      .limit(3),
-    supabase
-      .from('events')
-      .select('id, title_mr, title_en, event_date, location_mr, location_en', { count: 'exact' })
-      .eq('gp_id', tenant.id)
-      .eq('is_published', true)
-      .gte('event_date', new Date().toISOString().slice(0, 10))
-      .order('event_date', { ascending: true })
-      .limit(3),
-    supabase.from('gallery').select('id', { count: 'exact', head: true }).eq('gp_id', tenant.id),
-    supabase
-      .from('post_holders')
-      .select('id', { count: 'exact', head: true })
-      .eq('gp_id', tenant.id)
-      .eq('is_active', true),
+    listAnnouncements(subdomain, true),
+    listEvents(subdomain, true),
+    listGallery(subdomain),
+    listPostHolders(subdomain),
   ])
 
-  const hasContent =
-    (annCount ?? 0) > 0 || (evCount ?? 0) > 0
+  const announcements = allAnnouncements.slice(0, 3)
+  const annCount = allAnnouncements.length
+
+  const today = new Date().toISOString().slice(0, 10)
+  const upcomingEvents = allEvents.filter((ev: any) => ev.event_date >= today)
+  const events = upcomingEvents.slice(0, 3)
+  const evCount = upcomingEvents.length
+
+  const galleryCount = gallery.length
+  const phCount = postHolders.length
+
+  const hasContent = annCount > 0 || evCount > 0
 
   return (
     <>
@@ -78,7 +72,7 @@ export default async function HomePage({
             emptyText={locale === 'mr' ? 'कोणतीही घोषणा नाही' : 'No announcements yet'}
           >
             <ul className="grid gap-3">
-              {announcements?.map((a) => (
+              {announcements?.map((a: any) => (
                 <li key={a.id}>
                   <Link
                     href={`/${subdomain}/announcements`}
@@ -116,7 +110,7 @@ export default async function HomePage({
             emptyText={locale === 'mr' ? 'कोणताही कार्यक्रम नाही' : 'No upcoming events'}
           >
             <ul className="grid gap-3">
-              {events?.map((ev) => {
+              {events?.map((ev: any) => {
                 const date = new Date(ev.event_date)
                 return (
                   <li key={ev.id}>

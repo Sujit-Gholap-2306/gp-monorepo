@@ -2,7 +2,7 @@ import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { Calendar, MapPin } from 'lucide-react'
 import { getTenant } from '@/lib/tenant'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { listEvents } from '@/lib/api/events'
 import { PageHeader } from '@/components/public/page-header'
 import { EmptyState } from '@/components/public/empty-state'
 import type { GpEvent, Locale } from '@/lib/types'
@@ -19,26 +19,13 @@ export default async function EventsPage({
   const cookieStore = await cookies()
   const locale = (cookieStore.get('locale')?.value ?? 'mr') as Locale
 
-  const supabase = await createSupabaseServerClient()
-  const today = new Date().toISOString().split('T')[0]
+  const allEvents = await listEvents(subdomain, true)
+  const today = new Date().toISOString().slice(0, 10)
 
-  const [{ data: upcomingData }, { data: pastData }] = await Promise.all([
-    supabase
-      .from('events')
-      .select('*')
-      .eq('gp_id', tenant.id)
-      .eq('is_published', true)
-      .gte('event_date', today)
-      .order('event_date', { ascending: true }),
-    supabase
-      .from('events')
-      .select('*')
-      .eq('gp_id', tenant.id)
-      .eq('is_published', true)
-      .lt('event_date', today)
-      .order('event_date', { ascending: false })
-      .limit(20),
-  ])
+  const upcomingData = allEvents.filter((e: any) => e.event_date >= today)
+  const pastData = allEvents.filter((e: any) => e.event_date < today)
+    .sort((a: any, b: any) => new Date(b.event_date).getTime() - new Date(a.event_date).getTime())
+    .slice(0, 20)
 
   const upcoming = (upcomingData ?? []) as GpEvent[]
   const past = (pastData ?? []) as GpEvent[]

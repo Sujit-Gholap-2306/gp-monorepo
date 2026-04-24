@@ -20,6 +20,7 @@ apps/grampanchayat/
 │   └── api/              ← Route handlers (thin — no business logic here)
 ├── components/           ← React components
 ├── lib/                  ← All domain logic — calculations, validation, GP rules
+│   ├── toast/            ← In-app toasts: `gpToast`, `AppToaster` from `@/lib/toast` (do not import `sonner` in feature code)
 │   └── nav.ts            ← Navigation items (APP_NAV)
 └── ...
 
@@ -79,7 +80,7 @@ When adding new shared components, add them to `packages/shadcn/src/components/g
 - **Do not** add new **`'use server'`** form actions or `lib/actions/*.ts` **mutations** for tenant content, settings, or portal data.
 - **Do** implement writes in **`apps/grampanchayat-api`** (Drizzle + routes), and call the API from the **client** with `fetch` and `Authorization: Bearer <Supabase access token>`, or from a minimal BFF if we add one later.
 - **Reads** in Server Components (e.g. `getTenant` via Supabase) are fine.
-- Auth for tenant admin routes: Supabase session + `gp_admins` check (see `supabaseTenantAdminGuard` on the API).
+- Auth for tenant admin routes: Supabase session + `gp_admins` check with `is_active` and `deleted_at` (see `supabaseTenantAdminGuard` on the API). `gp_admins` rows are soft-lifecycle, not hard-deleted for Gram Sevak turnover.
 - Full rationale: `docs/architecture/grampanchayat-mutations.md`
 
 ## Never Do

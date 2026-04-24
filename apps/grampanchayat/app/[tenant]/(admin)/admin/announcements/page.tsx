@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getTenant } from '@/lib/tenant'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { deleteAnnouncement } from '@/lib/actions/announcements'
+import { listAnnouncements } from '@/lib/api/announcements'
+import { DeleteAnnouncementButton } from '@/components/admin/delete-announcement-button'
 import type { Announcement } from '@/lib/types'
 
 const CATEGORY_LABEL: Record<string, string> = {
@@ -20,14 +20,12 @@ export default async function AdminAnnouncementsPage({
   const tenant = await getTenant(subdomain)
   if (!tenant) notFound()
 
-  const supabase = await createSupabaseServerClient()
-  const { data: raw } = await supabase
-    .from('announcements')
-    .select('*')
-    .eq('gp_id', tenant.id)
-    .order('created_at', { ascending: false })
+  const cookieStore = await (await import('next/headers')).cookies()
+  const list = await listAnnouncements(subdomain, false, {
+    headers: { cookie: cookieStore.toString() }
+  })
 
-  const list = (raw ?? []) as Announcement[]
+
 
   return (
     <div>
@@ -84,16 +82,7 @@ export default async function AdminAnnouncementsPage({
                     <Link href={`/${subdomain}/admin/announcements/${ann.id}/edit`} className="text-sm text-gp-primary hover:underline">
                       संपादित
                     </Link>
-                    <form
-                      action={async () => {
-                        'use server'
-                        await deleteAnnouncement(subdomain, ann.id)
-                      }}
-                    >
-                      <button type="submit" className="text-sm text-destructive hover:underline">
-                        हटवा
-                      </button>
-                    </form>
+                    <DeleteAnnouncementButton subdomain={subdomain} id={ann.id} />
                   </td>
                 </tr>
               ))}

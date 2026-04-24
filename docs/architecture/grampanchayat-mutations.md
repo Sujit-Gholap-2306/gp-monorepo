@@ -2,25 +2,25 @@
 
 ## Rule
 
-**Do not add new “server action” mutators in `apps/grampanchayat/lib/actions/*` for domain data.**
+**Do not add** new **`'use server'`** mutators in `apps/grampanchayat/lib/actions/*` for domain data, and **do not** use `supabase.from()` against tenant domain tables in the Next app (anything beyond auth and the `gp_tenants` row used for routing).
 
-Mutations (create / update / delete) that change tenant data, content, or settings must go through **`@gp/grampanchayat-api`** (Express + Drizzle) so that:
-
-- Business rules and auth live in one place.
-- The browser calls `fetch` with `Authorization: Bearer <Supabase access token>` (see tenant settings: `PUT /api/v1/tenants/:subdomain/settings` and `supabaseTenantAdminGuard`).
-
-`next/headers` + Supabase server client may still be used for **read-only** RSC data (`getTenant`, listing pages) unless you move reads to the API as well.
+- **Auth only** in the app: Supabase session cookies, `getUser()`, login.
+- **Subdomain / tenant** lookup may use Supabase **`gp_tenants` only** (`lib/tenant.ts`) — a frontend routing concern.
+- **All other reads and writes** (announcements, events, gallery, post-holders, GP admins, masters, tax chain, tenant settings) go through **`@gp/grampanchayat-api`**: RSC and client use `fetch` to the API (see `apps/grampanchayat/lib/api/*`); the API uses `supabaseTenantAdminGuard` and Drizzle.
 
 ## Current split
 
 | Area | Read path (Next) | Write path |
 |------|------------------|------------|
-| Tenant settings, `portal_config`, `feature_flags` | `getTenant` (Supabase in RSC) | **API** `PUT /api/v1/tenants/:subdomain/settings` |
-| Announcements, events, gallery, post-holders | RSC + `lib/actions/*` (server actions) today | **Planned: migrate to API** — follow the same pattern as settings (client `fetch` + API routes). |
+| `gp_tenants` (routing, portal metadata) | `getTenant` (Supabase) | **API** `PUT /api/v1/tenants/:subdomain/settings` (logo, config) |
+| Announcements, events, gallery, post-holders, GP admins, masters | **API** with cookie or public routes as designed | **API** only (no new server actions for these) |
+| `gp-media` storage | Upload via **Next** `POST /api/gp/media/*` then persist URL through **API** | Same |
 
 ## Admin auth for the API
 
-The API verifies Supabase sessions with the service key and enforces `gp_admins` membership for the tenant. See `apps/grampanchayat-api/src/common/guards/supabase-tenant.guard.ts`.
+The API verifies Supabase sessions and enforces `gp_admins` membership for the tenant. Access requires **`is_active = true`** and **`deleted_at IS NULL`**. **Roles** are `admin` (read/write) and `viewer` (read-only) — see `GP_ADMIN_ROLES` in `apps/grampanchayat-api/src/db/schema/gp-admins.ts`.
+
+Apply app-schema changes with Drizzle migrations in `apps/grampanchayat-api/drizzle/migrations/`. See **`docs/MIGRATIONS.md`** for migration ownership and journal checks.
 
 ## Portal config in the DB
 

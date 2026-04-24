@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getTenant } from '@/lib/tenant'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { deletePostHolder } from '@/lib/actions/post-holders'
+import { listPostHolders } from '@/lib/api/post-holders'
+import { DeletePostHolderButton } from '@/components/admin/delete-post-holder-button'
+import { cookies } from 'next/headers'
 
 export default async function AdminPostHoldersPage({
   params,
@@ -13,14 +14,10 @@ export default async function AdminPostHoldersPage({
   const tenant = await getTenant(subdomain)
   if (!tenant) notFound()
 
-  const supabase = await createSupabaseServerClient()
-  const { data: holders } = await supabase
-    .from('post_holders')
-    .select('*')
-    .eq('gp_id', tenant.id)
-    .order('sort_order', { ascending: true })
-
-  const list = holders ?? []
+  const cookieStore = await cookies()
+  const list = await listPostHolders(subdomain, {
+    headers: { cookie: cookieStore.toString() },
+  })
 
   return (
     <div>
@@ -70,23 +67,16 @@ export default async function AdminPostHoldersPage({
                       {ph.is_active ? 'सक्रिय' : 'निष्क्रिय'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 flex gap-2 justify-end">
-                    <Link
-                      href={`/${subdomain}/admin/post-holders/${ph.id}/edit`}
-                      className="text-sm text-gp-primary hover:underline"
-                    >
-                      संपादित
-                    </Link>
-                    <form
-                      action={async () => {
-                        'use server'
-                        await deletePostHolder(subdomain, ph.id)
-                      }}
-                    >
-                      <button type="submit" className="text-sm text-destructive hover:underline">
-                        हटवा
-                      </button>
-                    </form>
+                  <td className="px-4 py-3">
+                    <div className="flex gap-2 justify-end">
+                      <Link
+                        href={`/${subdomain}/admin/post-holders/${ph.id}/edit`}
+                        className="text-sm text-gp-primary hover:underline"
+                      >
+                        संपादित
+                      </Link>
+                      <DeletePostHolderButton subdomain={subdomain} id={ph.id} photoUrl={ph.photo_url} />
+                    </div>
                   </td>
                 </tr>
               ))}

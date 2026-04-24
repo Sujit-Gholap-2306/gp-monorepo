@@ -202,20 +202,26 @@ export type Database = {
       }
       gp_admins: {
         Row: {
+          deleted_at: string | null
           gp_id: string
           id: string
+          is_active: boolean
           role: string
           user_id: string
         }
         Insert: {
+          deleted_at?: string | null
           gp_id: string
           id?: string
+          is_active?: boolean
           role?: string
           user_id: string
         }
         Update: {
+          deleted_at?: string | null
           gp_id?: string
           id?: string
+          is_active?: boolean
           role?: string
           user_id?: string
         }
@@ -276,6 +282,135 @@ export type Database = {
           village?: Json | null
         }
         Relationships: []
+      }
+      /**
+       * Synced with apps/grampanchayat-api Drizzle — RLS: not exposed to browser in v1; API uses direct DB.
+       * If you add Supabase client reads, enable RLS + policies for gp_id + gp_admins.
+       */
+      gp_citizens: {
+        Row: {
+          aadhaar_last4: string | null
+          address_mr: string
+          citizen_no: number
+          created_at: string
+          gp_id: string
+          household_id: string | null
+          id: string
+          mobile: string
+          name_en: string | null
+          name_mr: string
+          updated_at: string
+          ward_number: string
+        }
+        Insert: {
+          aadhaar_last4?: string | null
+          address_mr: string
+          citizen_no: number
+          created_at?: string
+          gp_id: string
+          household_id?: string | null
+          id?: string
+          mobile: string
+          name_en?: string | null
+          name_mr: string
+          updated_at?: string
+          ward_number: string
+        }
+        Update: {
+          aadhaar_last4?: string | null
+          address_mr?: string
+          citizen_no?: number
+          created_at?: string
+          gp_id?: string
+          household_id?: string | null
+          id?: string
+          mobile?: string
+          name_en?: string | null
+          name_mr?: string
+          updated_at?: string
+          ward_number?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gp_citizens_gp_id_fkey"
+            columns: ["gp_id"]
+            isOneToOne: false
+            referencedRelation: "gp_tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gp_properties: {
+        Row: {
+          age_bracket: string | null
+          assessment_date: string | null
+          assessment_inputs: Json | null
+          created_at: string
+          gp_id: string
+          id: string
+          length_ft: number | null
+          occupant_name: string
+          owner_citizen_id: string
+          plot_or_gat: string | null
+          property_no: string
+          property_type: string
+          resolution_ref: string | null
+          survey_number: string | null
+          updated_at: string
+          width_ft: number | null
+        }
+        Insert: {
+          age_bracket?: string | null
+          assessment_date?: string | null
+          assessment_inputs?: Json | null
+          created_at?: string
+          gp_id: string
+          id?: string
+          length_ft?: number | null
+          occupant_name: string
+          owner_citizen_id: string
+          plot_or_gat?: string | null
+          property_no: string
+          property_type: string
+          resolution_ref?: string | null
+          survey_number?: string | null
+          updated_at?: string
+          width_ft?: number | null
+        }
+        Update: {
+          age_bracket?: string | null
+          assessment_date?: string | null
+          assessment_inputs?: Json | null
+          created_at?: string
+          gp_id?: string
+          id?: string
+          length_ft?: number | null
+          occupant_name?: string
+          owner_citizen_id?: string
+          plot_or_gat?: string | null
+          property_no?: string
+          property_type?: string
+          resolution_ref?: string | null
+          survey_number?: string | null
+          updated_at?: string
+          width_ft?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gp_properties_gp_id_fkey"
+            columns: ["gp_id"]
+            isOneToOne: false
+            referencedRelation: "gp_tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "gp_properties_owner_citizen_id_fkey"
+            columns: ["owner_citizen_id"]
+            isOneToOne: false
+            referencedRelation: "gp_citizens"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       post_holders: {
         Row: {

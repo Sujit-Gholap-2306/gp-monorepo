@@ -2,7 +2,7 @@ import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { Megaphone, FileDown } from 'lucide-react'
 import { getTenant } from '@/lib/tenant'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { listAnnouncements } from '@/lib/api/announcements'
 import { PageHeader } from '@/components/public/page-header'
 import { EmptyState } from '@/components/public/empty-state'
 import type { Announcement, Locale } from '@/lib/types'
@@ -25,15 +25,7 @@ export default async function AnnouncementsPage({
   const cookieStore = await cookies()
   const locale = (cookieStore.get('locale')?.value ?? 'mr') as Locale
 
-  const supabase = await createSupabaseServerClient()
-  const { data: raw } = await supabase
-    .from('announcements')
-    .select('*')
-    .eq('gp_id', tenant.id)
-    .eq('is_published', true)
-    .order('published_at', { ascending: false })
-
-  const items = (raw ?? []) as Announcement[]
+  const items = (await listAnnouncements(subdomain, true)) as Announcement[]
 
   return (
     <>

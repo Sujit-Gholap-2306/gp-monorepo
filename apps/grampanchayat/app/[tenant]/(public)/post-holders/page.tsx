@@ -2,7 +2,7 @@ import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { Users, Phone } from 'lucide-react'
 import { getTenant } from '@/lib/tenant'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { listPostHolders } from '@/lib/api/post-holders'
 import { PageHeader } from '@/components/public/page-header'
 import { EmptyState } from '@/components/public/empty-state'
 import type { PostHolder, Locale } from '@/lib/types'
@@ -19,15 +19,8 @@ export default async function PostHoldersPage({
   const cookieStore = await cookies()
   const locale = (cookieStore.get('locale')?.value ?? 'mr') as Locale
 
-  const supabase = await createSupabaseServerClient()
-  const { data: raw } = await supabase
-    .from('post_holders')
-    .select('*')
-    .eq('gp_id', tenant.id)
-    .eq('is_active', true)
-    .order('sort_order', { ascending: true })
-
-  const list = (raw ?? []) as PostHolder[]
+  const raw = (await listPostHolders(subdomain)) as PostHolder[]
+  const list = raw.filter((ph) => ph.is_active)
 
   return (
     <>

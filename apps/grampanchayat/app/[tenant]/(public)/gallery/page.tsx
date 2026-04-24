@@ -2,7 +2,7 @@ import { cookies } from 'next/headers'
 import { notFound } from 'next/navigation'
 import { Image as ImageIcon } from 'lucide-react'
 import { getTenant } from '@/lib/tenant'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { listGallery } from '@/lib/api/gallery'
 import { PageHeader } from '@/components/public/page-header'
 import { EmptyState } from '@/components/public/empty-state'
 import { GalleryGrid } from '@/components/public/gallery-grid'
@@ -20,14 +20,7 @@ export default async function GalleryPage({
   const cookieStore = await cookies()
   const locale = (cookieStore.get('locale')?.value ?? 'mr') as Locale
 
-  const supabase = await createSupabaseServerClient()
-  const { data: raw } = await supabase
-    .from('gallery')
-    .select('*')
-    .eq('gp_id', tenant.id)
-    .order('sort_order', { ascending: true })
-
-  const items = (raw ?? []) as Gallery[]
+  const items = (await listGallery(subdomain)) as Gallery[]
 
   return (
     <>

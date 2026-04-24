@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getTenant } from '@/lib/tenant'
 import { EventForm } from '@/components/admin/event-form'
-import { createEvent } from '@/lib/actions/events'
 
 export default async function NewEventPage({
   params,
@@ -21,13 +20,7 @@ export default async function NewEventPage({
         </Link>
         <h1 className="text-xl font-bold text-gp-primary mt-2">नवीन कार्यक्रम</h1>
       </div>
-      <EventForm
-        action={async (formData) => {
-          'use server'
-          await createEvent(subdomain, formData)
-        }}
-        submitLabel="जोडा व मीडिया अपलोड करा"
-      />
+      <EventForm subdomain={subdomain} submitLabel="जोडा व मीडिया अपलोड करा" redirectToMediaOnCreate />
     </div>
   )
 }

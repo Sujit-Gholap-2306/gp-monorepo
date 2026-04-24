@@ -1,4 +1,5 @@
 import type { Request, Response, NextFunction } from 'express'
+import { MulterError } from 'multer'
 import { ZodError } from 'zod'
 import { ApiError } from './http.exception.ts'
 import { ApiResponse } from '../interceptors/response.interceptor.ts'
@@ -10,6 +11,17 @@ export const exceptionFilter = (
   _next: NextFunction,
 ) => {
   const requestId = req.id
+
+  if (err instanceof MulterError) {
+    const message =
+      err.code === 'LIMIT_FILE_SIZE'
+        ? 'Uploaded file is too large'
+        : err.message
+    return res.status(400).json({
+      ...new ApiResponse(400, null, message),
+      requestId,
+    })
+  }
 
   if (err instanceof ApiError) {
     return res.status(err.statusCode).json({

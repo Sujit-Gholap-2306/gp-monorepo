@@ -11,7 +11,8 @@ function firstString(value: string | string[] | undefined): string | undefined {
 
 /**
  * Verifies `Authorization: Bearer <Supabase access token>` and ensures the user
- * is listed in `gp_admins` for the tenant in `:subdomain`.
+ * is listed in `gp_admins` for the tenant in `:subdomain` with
+ * `is_active = true` and `deleted_at IS NULL` (soft-deleted or inactive = no access).
  */
 export const supabaseTenantAdminGuard = asyncHandler(async (req, _res, next) => {
   const auth = req.headers.authorization
@@ -39,10 +40,14 @@ export const supabaseTenantAdminGuard = asyncHandler(async (req, _res, next) => 
     .select('id')
     .eq('user_id', user.id)
     .eq('gp_id', tenant.id)
+    .eq('is_active', true)
+    .is('deleted_at', null)
     .maybeSingle()
 
   if (adminErr) throw new ApiError(500, 'Failed to verify admin access')
-  if (!adminRow) throw new ApiError(403, 'Not an admin for this GP')
+  if (!adminRow) {
+    throw new ApiError(403, 'Not an active admin for this GP (inactive or removed)')
+  }
 
   req.supabaseUser = user
   req.gpTenant = tenant

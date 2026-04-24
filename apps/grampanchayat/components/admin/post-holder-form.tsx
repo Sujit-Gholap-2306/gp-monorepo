@@ -1,17 +1,88 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { Field, SelectField, FormSection, SubmitButton } from './form'
+import { createPostHolder, updatePostHolder } from '@/lib/api/post-holders'
+import { gpToast } from '@/lib/toast'
 import type { PostHolder } from '@/lib/types'
 
 interface Props {
-  action: (formData: FormData) => Promise<void>
+  subdomain: string
+  postHolderId?: string
   defaultValues?: Partial<PostHolder>
   submitLabel?: string
 }
 
-export function PostHolderForm({ action, defaultValues: d = {}, submitLabel = 'जतन करा' }: Props) {
+async function uploadToGpMedia(subdomain: string, folder: 'events', file: File): Promise<string> {
+  const fd = new FormData()
+  fd.set('subdomain', subdomain)
+  fd.set('folder', folder)
+  fd.set('file', file)
+  const res = await fetch('/api/gp/media/upload', { method: 'POST', body: fd, credentials: 'include' })
+  const json = await res.json().catch(() => ({}))
+  if (!res.ok) {
+    throw new Error((json as { message?: string }).message ?? 'Upload failed')
+  }
+  return (json as { url: string }).url
+}
+
+export function PostHolderForm({
+  subdomain,
+  postHolderId,
+  defaultValues: d = {},
+  submitLabel = 'जतन करा',
+}: Props) {
+  const router = useRouter()
+  const [pending, setPending] = useState(false)
+
+  async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault()
+    setPending(true)
+    const form = e.currentTarget
+    const fd = new FormData(form)
+    const photo = fd.get('photo') as File | null
+
+    try {
+      let photoUrl: string | null | undefined = d.photo_url ?? null
+      if (photo && photo.size > 0) {
+        photoUrl = await uploadToGpMedia(subdomain, 'events', photo)
+      }
+
+      const base = {
+        nameMr: (fd.get('name_mr') as string) || '',
+        nameEn: (fd.get('name_en') as string) || '',
+        postMr: (fd.get('post_mr') as string) || '',
+        postEn: (fd.get('post_en') as string) || '',
+        phone: (fd.get('phone') as string) || null,
+        sortOrder: Number(fd.get('sort_order') ?? 0),
+        isActive: d.id ? fd.get('is_active') === 'true' : true,
+      }
+
+      if (postHolderId) {
+        const payload: Record<string, unknown> = {
+          ...base,
+          isActive: fd.get('is_active') === 'true',
+        }
+        if (photo && photo.size > 0) payload.photoUrl = photoUrl
+        await updatePostHolder(subdomain, postHolderId, payload)
+      } else {
+        await createPostHolder(subdomain, {
+          ...base,
+          photoUrl: photoUrl && photoUrl.length > 0 ? photoUrl : null,
+        })
+      }
+      router.push(`/${subdomain}/admin/post-holders`)
+      router.refresh()
+    } catch (err) {
+      gpToast.error(err instanceof Error ? err.message : 'जतन अयशस्वी')
+    } finally {
+      setPending(false)
+    }
+  }
+
   return (
-    <form action={action} className="grid gap-5 max-w-2xl">
+    <form onSubmit={onSubmit} className="grid gap-5 max-w-2xl">
       <FormSection title="व्यक्तिगत माहिती" description="पदाधिकाऱ्याचे नाव व पद">
         <div className="grid sm:grid-cols-2 gap-4">
           <Field label="नाव (मराठी) *" name="name_mr" defaultValue={d.name_mr} required />
@@ -61,7 +132,9 @@ export function PostHolderForm({ action, defaultValues: d = {}, submitLabel = '�
         </FormSection>
       )}
 
-      <SubmitButton>{submitLabel}</SubmitButton>
+      <SubmitButton>
+        {pending ? '…' : submitLabel}
+      </SubmitButton>
     </form>
   )
 }
