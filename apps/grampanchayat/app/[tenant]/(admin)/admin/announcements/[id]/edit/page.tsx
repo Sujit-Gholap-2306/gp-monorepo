@@ -1,9 +1,9 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getTenant } from '@/lib/tenant'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { getAnnouncement } from '@/lib/api/announcements'
 import { AnnouncementForm } from '@/components/admin/announcement-form'
-import { updateAnnouncement } from '@/lib/actions/announcements'
+import { cookies } from 'next/headers'
 import type { Announcement } from '@/lib/types'
 
 export default async function EditAnnouncementPage({
@@ -12,16 +12,11 @@ export default async function EditAnnouncementPage({
   params: Promise<{ tenant: string; id: string }>
 }) {
   const { tenant: subdomain, id } = await params
-  const [tenant, supabase] = [await getTenant(subdomain), await createSupabaseServerClient()]
+  const tenant = await getTenant(subdomain)
   if (!tenant) notFound()
 
-  const { data: raw } = await supabase
-    .from('announcements')
-    .select('*')
-    .eq('id', id)
-    .eq('gp_id', tenant.id)
-    .single()
-
+  const cookieStore = await cookies()
+  const raw = await getAnnouncement(subdomain, id, { headers: { cookie: cookieStore.toString() } })
   if (!raw) notFound()
   const ann = raw as Announcement
 
@@ -33,13 +28,7 @@ export default async function EditAnnouncementPage({
         </Link>
         <h1 className="text-xl font-bold text-gp-primary mt-2">{ann.title_mr} संपादित करा</h1>
       </div>
-      <AnnouncementForm
-        action={async (formData) => {
-          'use server'
-          await updateAnnouncement(subdomain, id, formData)
-        }}
-        defaultValues={ann}
-      />
+      <AnnouncementForm subdomain={subdomain} announcementId={id} defaultValues={ann} />
     </div>
   )
 }

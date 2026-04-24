@@ -2,6 +2,8 @@ import { redirect, notFound } from 'next/navigation'
 import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { getTenant } from '@/lib/tenant'
 import { AdminSidebar } from '@/components/admin/sidebar'
+import { getMe } from '@/lib/api/gp-admins'
+import { cookies } from 'next/headers'
 
 export default async function AdminLayout({
   children,
@@ -19,14 +21,15 @@ export default async function AdminLayout({
 
   if (!user) redirect(`/${subdomain}/login`)
 
-  const { data: admin } = await supabase
-    .from('gp_admins')
-    .select('id, role')
-    .eq('gp_id', tenant.id)
-    .eq('user_id', user.id)
-    .single()
-
-  if (!admin) redirect(`/${subdomain}/login?error=unauthorized`)
+  let admin = null
+  try {
+    const cookieStore = await cookies()
+    admin = await getMe(subdomain, {
+      headers: { cookie: cookieStore.toString() }
+    })
+  } catch (error) {
+    redirect(`/${subdomain}/login?error=unauthorized`)
+  }
 
   return (
     <div className="min-h-screen flex bg-gp-surface">

@@ -10,7 +10,6 @@ import {
   TrendingUp,
 } from 'lucide-react'
 import { getTenant } from '@/lib/tenant'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
 import { AdminPageHeader } from '@/components/admin/page-header'
 
 export default async function DashboardPage({
@@ -22,28 +21,39 @@ export default async function DashboardPage({
   const tenant = await getTenant(subdomain)
   if (!tenant) notFound()
 
-  const supabase = await createSupabaseServerClient()
   const today = new Date().toISOString().split('T')[0]
 
+  const cookieStore = await (await import('next/headers')).cookies()
+  const init = { headers: { cookie: cookieStore.toString() } }
+
+  const { listEvents } = await import('@/lib/api/events')
+  const { listAnnouncements } = await import('@/lib/api/announcements')
+  const { listPostHolders } = await import('@/lib/api/post-holders')
+  const { listGallery } = await import('@/lib/api/gallery')
+
   const [
-    { count: eventCount },
-    { count: upcomingEventCount },
-    { count: announcementCount },
-    { count: publishedAnnouncementCount },
-    { count: postHolderCount },
-    { count: galleryCount },
-    { data: recentAnnouncements },
-    { data: upcomingEvents },
+    allEvents,
+    allAnnouncements,
+    allPostHolders,
+    allGallery,
   ] = await Promise.all([
-    supabase.from('events').select('*', { count: 'exact', head: true }).eq('gp_id', tenant.id),
-    supabase.from('events').select('*', { count: 'exact', head: true }).eq('gp_id', tenant.id).gte('event_date', today),
-    supabase.from('announcements').select('*', { count: 'exact', head: true }).eq('gp_id', tenant.id),
-    supabase.from('announcements').select('*', { count: 'exact', head: true }).eq('gp_id', tenant.id).eq('is_published', true),
-    supabase.from('post_holders').select('*', { count: 'exact', head: true }).eq('gp_id', tenant.id).eq('is_active', true),
-    supabase.from('gallery').select('*', { count: 'exact', head: true }).eq('gp_id', tenant.id),
-    supabase.from('announcements').select('id, title_mr, category, is_published, created_at').eq('gp_id', tenant.id).order('created_at', { ascending: false }).limit(5),
-    supabase.from('events').select('id, title_mr, event_date, location_mr, is_published').eq('gp_id', tenant.id).gte('event_date', today).order('event_date', { ascending: true }).limit(5),
+    listEvents(subdomain, false, init),
+    listAnnouncements(subdomain, false, init),
+    listPostHolders(subdomain, init),
+    listGallery(subdomain, init),
   ])
+
+  const eventCount = allEvents.length
+  const upcomingEventsAll = allEvents.filter((ev: any) => ev.event_date >= today)
+  const upcomingEventCount = upcomingEventsAll.length
+  const upcomingEvents = upcomingEventsAll.slice(0, 5)
+
+  const announcementCount = allAnnouncements.length
+  const publishedAnnouncementCount = allAnnouncements.filter((a: any) => a.is_published).length
+  const recentAnnouncements = allAnnouncements.slice(0, 5)
+
+  const postHolderCount = allPostHolders.filter((p: any) => p.is_active).length
+  const galleryCount = allGallery.length
 
   const stats = [
     {

@@ -1,6 +1,17 @@
 ---
 name: ts-express-backend
-description: Build and scaffold TypeScript Express backends using a NestJS-inspired class-based architecture with Drizzle ORM, PostgreSQL (via Supabase), Supabase Storage, zod, and JWT auth. Use this skill whenever: scaffolding a new Node.js/TypeScript API, creating controllers/services/repositories, defining Drizzle schemas or relations, implementing JWT auth with refresh tokens, setting up Supabase Storage for file uploads, writing BaseController/BaseRepository/asyncHandler utilities, designing a service layer with interface-driven DI, validating requests with zod, adding a new resource module (users, videos, posts, etc.) to an Express TS backend. Trigger even if the user just says "add a controller for X", "create a schema for Y", or "add a new module" without explicitly naming the stack.
+description: >-
+  Build and scaffold TypeScript Express backends using a NestJS-inspired
+  class-based architecture with Drizzle ORM, PostgreSQL via Supabase, Supabase
+  Storage, zod, and JWT auth. Use this skill when scaffolding a new
+  Node.js/TypeScript API, creating controllers/services/repositories, defining
+  Drizzle schemas or relations, implementing JWT auth with refresh tokens,
+  setting up Supabase Storage for file uploads, writing
+  BaseController/BaseRepository/asyncHandler utilities, designing a service
+  layer with interface-driven DI, validating requests with zod, or adding a new
+  resource module to an Express TypeScript backend. Trigger even if the user
+  just says "add a controller for X", "create a schema for Y", or "add a new
+  module" without explicitly naming the stack.
 ---
 
 # TypeScript Express Backend (NestJS-inspired class-based MVC)

@@ -1,9 +1,10 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getTenant } from '@/lib/tenant'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { getEvent } from '@/lib/api/events'
 import { EventForm } from '@/components/admin/event-form'
-import { updateEvent } from '@/lib/actions/events'
+import { cookies } from 'next/headers'
+import type { GpEvent } from '@/lib/types'
 
 export default async function EditEventPage({
   params,
@@ -11,16 +12,13 @@ export default async function EditEventPage({
   params: Promise<{ tenant: string; id: string }>
 }) {
   const { tenant: subdomain, id } = await params
-  const [tenant, supabase] = [await getTenant(subdomain), await createSupabaseServerClient()]
+  const tenant = await getTenant(subdomain)
   if (!tenant) notFound()
 
-  const { data: ev } = await supabase
-    .from('events')
-    .select('*')
-    .eq('id', id)
-    .eq('gp_id', tenant.id)
-    .single()
-
+  const cookieStore = await cookies()
+  const ev = (await getEvent(subdomain, id, {
+    headers: { cookie: cookieStore.toString() },
+  })) as GpEvent
   if (!ev) notFound()
 
   return (
@@ -31,13 +29,7 @@ export default async function EditEventPage({
         </Link>
         <h1 className="text-xl font-bold text-gp-primary mt-2">{ev.title_mr} संपादित करा</h1>
       </div>
-      <EventForm
-        action={async (formData) => {
-          'use server'
-          await updateEvent(subdomain, id, formData)
-        }}
-        defaultValues={ev}
-      />
+      <EventForm subdomain={subdomain} eventId={id} defaultValues={ev} />
     </div>
   )
 }

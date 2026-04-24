@@ -11,6 +11,7 @@ import {
   Settings,
   LogOut,
   ExternalLink,
+  Database,
 } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
 
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { href: 'admin/events',        label: 'कार्यक्रम',     labelEn: 'Events',        Icon: Calendar },
   { href: 'admin/announcements', label: 'घोषणा',         labelEn: 'Announcements', Icon: Megaphone },
   { href: 'admin/gallery',       label: 'दालन',          labelEn: 'Gallery',       Icon: ImageIcon },
+  { href: 'admin/masters/import', label: 'मास्टर आयात', labelEn: 'Masters import', Icon: Database },
   { href: 'admin/settings',      label: 'सेटिंग्ज',      labelEn: 'Settings',      Icon: Settings },
 ]
 

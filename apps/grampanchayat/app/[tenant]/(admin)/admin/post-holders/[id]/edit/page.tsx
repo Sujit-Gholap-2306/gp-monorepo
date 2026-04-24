@@ -1,9 +1,10 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getTenant } from '@/lib/tenant'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { getPostHolder } from '@/lib/api/post-holders'
 import { PostHolderForm } from '@/components/admin/post-holder-form'
-import { updatePostHolder } from '@/lib/actions/post-holders'
+import { cookies } from 'next/headers'
+import type { PostHolder } from '@/lib/types'
 
 export default async function EditPostHolderPage({
   params,
@@ -11,16 +12,13 @@ export default async function EditPostHolderPage({
   params: Promise<{ tenant: string; id: string }>
 }) {
   const { tenant: subdomain, id } = await params
-  const [tenant, supabase] = [await getTenant(subdomain), await createSupabaseServerClient()]
+  const tenant = await getTenant(subdomain)
   if (!tenant) notFound()
 
-  const { data: ph } = await supabase
-    .from('post_holders')
-    .select('*')
-    .eq('id', id)
-    .eq('gp_id', tenant.id)
-    .single()
-
+  const cookieStore = await cookies()
+  const ph = (await getPostHolder(subdomain, id, {
+    headers: { cookie: cookieStore.toString() },
+  })) as PostHolder
   if (!ph) notFound()
 
   return (
@@ -31,14 +29,7 @@ export default async function EditPostHolderPage({
         </Link>
         <h1 className="text-xl font-bold text-gp-primary mt-2">{ph.name_mr} संपादित करा</h1>
       </div>
-      <PostHolderForm
-        action={async (formData) => {
-          'use server'
-          await updatePostHolder(subdomain, id, formData)
-        }}
-        defaultValues={ph}
-        submitLabel="जतन करा"
-      />
+      <PostHolderForm subdomain={subdomain} postHolderId={id} defaultValues={ph} submitLabel="जतन करा" />
     </div>
   )
 }

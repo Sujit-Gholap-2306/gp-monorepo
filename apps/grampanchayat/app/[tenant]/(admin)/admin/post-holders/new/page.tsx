@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getTenant } from '@/lib/tenant'
 import { PostHolderForm } from '@/components/admin/post-holder-form'
-import { createPostHolder } from '@/lib/actions/post-holders'
 
 export default async function NewPostHolderPage({
   params,
@@ -21,13 +20,7 @@ export default async function NewPostHolderPage({
         </Link>
         <h1 className="text-xl font-bold text-gp-primary mt-2">नवीन पदाधिकारी</h1>
       </div>
-      <PostHolderForm
-        action={async (formData) => {
-          'use server'
-          await createPostHolder(subdomain, formData)
-        }}
-        submitLabel="जोडा"
-      />
+      <PostHolderForm subdomain={subdomain} submitLabel="जोडा" />
     </div>
   )
 }

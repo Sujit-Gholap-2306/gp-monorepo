@@ -1,3 +1,8 @@
+/**
+ * Tenant resolution by subdomain for Next.js routing and layouts.
+ * This stays on Supabase (not grampanchayat-api) — routing and middleware are frontend concerns.
+ * Domain content reads/writes use the API under lib/api/.
+ */
 import { cache } from 'react'
 import {
   normalizeFeatureFlags,

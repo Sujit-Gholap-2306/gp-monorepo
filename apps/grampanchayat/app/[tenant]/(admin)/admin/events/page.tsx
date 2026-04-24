@@ -1,8 +1,9 @@
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { getTenant } from '@/lib/tenant'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
-import { deleteEvent, toggleEventPublished } from '@/lib/actions/events'
+import { listEvents } from '@/lib/api/events'
+import { EventPublishedToggle, EventRowEndActions } from '@/components/admin/event-row-actions'
+import { cookies } from 'next/headers'
 
 export default async function AdminEventsPage({
   params,
@@ -13,14 +14,10 @@ export default async function AdminEventsPage({
   const tenant = await getTenant(subdomain)
   if (!tenant) notFound()
 
-  const supabase = await createSupabaseServerClient()
-  const { data: events } = await supabase
-    .from('events')
-    .select('*')
-    .eq('gp_id', tenant.id)
-    .order('event_date', { ascending: false })
-
-  const list = events ?? []
+  const cookieStore = await cookies()
+  const list = await listEvents(subdomain, false, {
+    headers: { cookie: cookieStore.toString() },
+  })
 
   return (
     <div>
@@ -61,43 +58,16 @@ export default async function AdminEventsPage({
                   <td className="px-4 py-3 text-gp-muted">{ev.event_date}</td>
                   <td className="px-4 py-3 text-gp-muted">{ev.location_mr ?? '—'}</td>
                   <td className="px-4 py-3">
-                    <form
-                      action={async () => {
-                        'use server'
-                        await toggleEventPublished(subdomain, ev.id, !ev.is_published)
-                      }}
-                    >
-                      <button
-                        type="submit"
-                        className={`text-xs px-2 py-0.5 rounded-full border transition-colors ${
-                          ev.is_published
-                            ? 'bg-green-100 text-green-700 border-green-200'
-                            : 'bg-gray-100 text-gray-500 border-gray-200'
-                        }`}
-                      >
-                        {ev.is_published ? 'प्रकाशित' : 'मसुदा'}
-                      </button>
-                    </form>
+                    <EventPublishedToggle
+                      subdomain={subdomain}
+                      ev={{ id: ev.id, is_published: ev.is_published }}
+                    />
                   </td>
                   <td className="px-4 py-3">
-                    <div className="flex gap-3 justify-end">
-                      <Link href={`/${subdomain}/admin/events/${ev.id}/media`} className="text-sm text-gp-primary hover:underline">
-                        मीडिया
-                      </Link>
-                      <Link href={`/${subdomain}/admin/events/${ev.id}/edit`} className="text-sm text-gp-primary hover:underline">
-                        संपादित
-                      </Link>
-                      <form
-                        action={async () => {
-                          'use server'
-                          await deleteEvent(subdomain, ev.id)
-                        }}
-                      >
-                        <button type="submit" className="text-sm text-destructive hover:underline">
-                          हटवा
-                        </button>
-                      </form>
-                    </div>
+                    <EventRowEndActions
+                      subdomain={subdomain}
+                      ev={{ id: ev.id, is_published: ev.is_published }}
+                    />
                   </td>
                 </tr>
               ))}
