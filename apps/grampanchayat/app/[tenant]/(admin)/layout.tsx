@@ -1,9 +1,8 @@
 import { redirect, notFound } from 'next/navigation'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServerClient, getSupabaseAccessToken } from '@/lib/supabase/server'
 import { getTenant } from '@/lib/tenant'
 import { AdminSidebar } from '@/components/admin/sidebar'
 import { getMe } from '@/lib/api/gp-admins'
-import { cookies } from 'next/headers'
 
 export default async function AdminLayout({
   children,
@@ -21,13 +20,14 @@ export default async function AdminLayout({
 
   if (!user) redirect(`/${subdomain}/login`)
 
-  let admin = null
+  const accessToken = await getSupabaseAccessToken(supabase)
+  if (!accessToken) redirect(`/${subdomain}/login`)
+
   try {
-    const cookieStore = await cookies()
-    admin = await getMe(subdomain, {
-      headers: { cookie: cookieStore.toString() }
+    await getMe(subdomain, {
+      headers: { Authorization: `Bearer ${accessToken}` },
     })
-  } catch (error) {
+  } catch {
     redirect(`/${subdomain}/login?error=unauthorized`)
   }
 

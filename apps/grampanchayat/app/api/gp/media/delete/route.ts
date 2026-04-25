@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server'
-import { createSupabaseServerClient } from '@/lib/supabase/server'
+import { createSupabaseServerClient, getSupabaseAccessToken } from '@/lib/supabase/server'
 import { deleteFile } from '@/lib/storage'
 import { getMe } from '@/lib/api/gp-admins'
-import { cookies } from 'next/headers'
 
 export async function POST(request: Request) {
   const supabase = await createSupabaseServerClient()
@@ -10,6 +9,11 @@ export async function POST(request: Request) {
     data: { user },
   } = await supabase.auth.getUser()
   if (!user) {
+    return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+  }
+
+  const accessToken = await getSupabaseAccessToken(supabase)
+  if (!accessToken) {
     return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
   }
 
@@ -28,10 +32,10 @@ export async function POST(request: Request) {
     return NextResponse.json({ message: 'url is required' }, { status: 400 })
   }
 
-  const cookieStore = await cookies()
-  const cookieHeader = cookieStore.toString()
   try {
-    await getMe(subdomain, { headers: { cookie: cookieHeader } })
+    await getMe(subdomain, {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
   } catch {
     return NextResponse.json({ message: 'Forbidden' }, { status: 403 })
   }

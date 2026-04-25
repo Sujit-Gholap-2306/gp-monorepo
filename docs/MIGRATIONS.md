@@ -31,4 +31,6 @@ Do **not** use `supabase db push` for ordinary `public` app tables. Reserve Supa
 
 ## RLS
 
-Row Level Security may be **enabled** with no policies: the app must not rely on the browser talking to Postgres for domain tables. The Express API uses the service role and enforces `gp_tenants` + `gp_admins` in code.
+Row Level Security may be **enabled** with no policies: the Express API uses the service role and enforces `gp_tenants` + `gp_admins` in code for domain tables.
+
+**Exception:** `gp_tenants` has a **public `SELECT` policy** (`0002_gp_tenants_public_select_rls.sql`) so the Next.js app can resolve `subdomain → tenant` with the anon/authenticated Supabase client (`lib/tenant.ts`). Without it, every tenant route returns 404 (“GP not found”).

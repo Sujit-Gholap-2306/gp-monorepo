@@ -15,6 +15,13 @@
       "when": 1777038924691,
       "tag": "0001_portal_audit_columns_and_checks",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1777112400000,
+      "tag": "0002_gp_tenants_public_select_rls",
+      "breakpoints": true
     }
   ]
 }
