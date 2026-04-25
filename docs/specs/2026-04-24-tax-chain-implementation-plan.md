@@ -1333,7 +1333,7 @@ INV-5   Voided N10 → reversal entry in N05 + N06 on the void date
 | **4** | N08 read API + service | — | `namuna8.{service,controller}.ts`, `tenant-namune.routes.ts` mounted from `tenant.routes.ts` | `GET /:subdomain/namune/8` returns 4-head breakdown for seeded GP | ✅ |
 | **5** | N08 admin list UI + filters + rate verification panel | — | `app/[tenant]/(admin)/admin/namuna8/page.tsx`, sidebar nav | List renders, filters work, tier-gated, and `rateMaster` warning/check panel works | ✅ |
 | **6** | N08 detail + उतारा print layout | H | `[id]/page.tsx`, `[id]/print/page.tsx` with `?layout=certificate` | A4 print preview matches Balsane `उतारा` sheet | ✅ |
-| **7** | N09 schema — header + `demand_lines` child table | A | Drizzle schema `namuna9-demands.ts`, `namuna9-demand-lines.ts`, migration | Migration runs; INSERT 1 header + 4 lines works | ☐ |
+| **7** | N09 schema — header + `demand_lines` child table | A | Drizzle schema `namuna9-demands.ts`, `namuna9-demand-lines.ts`, migration | Migration runs; INSERT 1 header + 4 lines works | ✅ |
 | **8** | N09 generate API (current FY only, no arrears) | — | `namuna9.service.ts` `generate()`, controller, route | Generate twice → 0 duplicates; `INV-1` passes | ☐ |
 | **9** | N09 list/detail UI + per-head columns | A | `app/[tenant]/(admin)/admin/namuna9/{page,[id]}.tsx` | Layout matches Balsane `नमुना ९` 4-heads × {मागील\|चालू\|एकूण} | ☐ |
 | **10** | N09 print layout — physical register format | A | `namuna9/print/page.tsx` | Side-by-side print vs Balsane sheet — visual parity | ☐ |
@@ -1365,7 +1365,7 @@ INV-5   Voided N10 → reversal entry in N05 + N06 on the void date
 | Bundle | Phases | Demo checkpoint | User test focus | Push rule | Status |
 |--------|--------|-----------------|-----------------|-----------|--------|
 | B1 — N08 read flow | 1–6 | N08 list/detail/उतारा works from API | Tax values, filters, print parity | Push only after user approves Phase 6 bundle | 🔄 |
-| B2 — N09 + onboarding | 7–12 | N09 schema/generate/opening import/onboarding ready | Opening import preview, N09 rows, generate guards | Push only after user approves Phase 12 bundle | ☐ |
+| B2 — N09 + onboarding | 7–12 | N09 schema/generate/opening import/onboarding ready | Opening import preview, N09 rows, generate guards | Push only after user approves Phase 12 bundle | 🔄 |
 | B3 — N10 collection desk | 13–16 | Receipt create/print/void works | Receipt sequence, payment flow, void behavior | Push only after user approves Phase 16 bundle | ☐ |
 | B4 — N05/N06 automation | 17–21 | N10 auto-posts to N05; N06 view reconciles | Cashbook, classified view, invariant test harness | Push only after user approves Phase 21 bundle | ☐ |
 
