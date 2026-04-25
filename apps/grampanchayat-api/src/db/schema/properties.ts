@@ -10,6 +10,7 @@ import {
   timestamp,
   date,
   real,
+  bigint,
   jsonb,
   index,
   uniqueIndex,
@@ -37,6 +38,9 @@ export const gpProperties = pgTable(
     occupantName:     text('occupant_name').notNull(),
     resolutionRef:    text('resolution_ref'),
     assessmentDate:   date('assessment_date'),
+    lightingTaxPaise: bigint('lighting_tax_paise', { mode: 'number' }),
+    sanitationTaxPaise: bigint('sanitation_tax_paise', { mode: 'number' }),
+    waterTaxPaise:    bigint('water_tax_paise', { mode: 'number' }),
     /** Optional raw rate/tax inputs; computed columns can live in app layer. */
     assessmentInputs: jsonb('assessment_inputs').$type<Record<string, unknown>>(),
     createdAt:        timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),

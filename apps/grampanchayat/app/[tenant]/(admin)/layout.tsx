@@ -33,7 +33,7 @@ export default async function AdminLayout({
 
   return (
     <div className="min-h-screen flex bg-gp-surface">
-      <AdminSidebar tenantName={tenant.name_mr} />
+      <AdminSidebar tenantName={tenant.name_mr} tenantTier={tenant.tier} />
       <main className="flex-1 overflow-auto p-6">{children}</main>
     </div>
   )

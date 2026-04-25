@@ -8,6 +8,10 @@ const rateValue = z.preprocess(
   (v) => (v === '' || v == null ? null : v),
   z.union([z.coerce.number().nonnegative(), z.null()])
 )
+const paiseValue = z.preprocess(
+  (v) => (v === '' || v == null ? null : v),
+  z.union([z.coerce.number().int().nonnegative(), z.null()])
+)
 
 export const propertyTypeRateRowSchema = z
   .object({
@@ -17,6 +21,9 @@ export const propertyTypeRateRowSchema = z
     land_rate_per_sqft:             rateValue,
     construction_rate_per_sqft:     rateValue,
     new_construction_rate_per_sqft: rateValue,
+    default_lighting_paise:         paiseValue,
+    default_sanitation_paise:       paiseValue,
+    default_water_paise:            paiseValue,
   })
   .superRefine((r, ctx) => {
     const { min_rate: min, max_rate: max } = r
@@ -77,6 +84,9 @@ export const propertyTypeRatesService = {
       landRatePerSqft:            r.land_rate_per_sqft != null ? String(r.land_rate_per_sqft) : null,
       constructionRatePerSqft:    r.construction_rate_per_sqft != null ? String(r.construction_rate_per_sqft) : null,
       newConstructionRatePerSqft: r.new_construction_rate_per_sqft != null ? String(r.new_construction_rate_per_sqft) : null,
+      defaultLightingPaise:      r.default_lighting_paise != null ? r.default_lighting_paise : null,
+      defaultSanitationPaise:    r.default_sanitation_paise != null ? r.default_sanitation_paise : null,
+      defaultWaterPaise:         r.default_water_paise != null ? r.default_water_paise : null,
     }))
 
     await db
@@ -90,6 +100,9 @@ export const propertyTypeRatesService = {
           landRatePerSqft:            sql`excluded.land_rate_per_sqft`,
           constructionRatePerSqft:    sql`excluded.construction_rate_per_sqft`,
           newConstructionRatePerSqft: sql`excluded.new_construction_rate_per_sqft`,
+          defaultLightingPaise:       sql`excluded.default_lighting_paise`,
+          defaultSanitationPaise:     sql`excluded.default_sanitation_paise`,
+          defaultWaterPaise:          sql`excluded.default_water_paise`,
           updatedAt:                  sql`now()`,
         },
       })

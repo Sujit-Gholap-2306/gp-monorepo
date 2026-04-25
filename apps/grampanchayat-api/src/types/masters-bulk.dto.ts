@@ -185,6 +185,24 @@ export const PROPERTY_IMPORT_FIELDS: readonly ImportFieldDef[] = [
       z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use ISO date YYYY-MM-DD')
     ).optional(),
   },
+  {
+    key:      'lighting_tax_paise',
+    required: false,
+    hint:     'Override (paise) for lighting tax. Empty = use property-type default.',
+    zod:      emptyToUndef(z.coerce.number().int().nonnegative()).optional(),
+  },
+  {
+    key:      'sanitation_tax_paise',
+    required: false,
+    hint:     'Override (paise) for sanitation tax. Empty = use property-type default.',
+    zod:      emptyToUndef(z.coerce.number().int().nonnegative()).optional(),
+  },
+  {
+    key:      'water_tax_paise',
+    required: false,
+    hint:     'Override (paise) for water tax. Empty = use property-type default.',
+    zod:      emptyToUndef(z.coerce.number().int().nonnegative()).optional(),
+  },
 ]
 
 export const CITIZENS_TEMPLATE_COLUMNS = CITIZEN_IMPORT_FIELDS.map(({ key, required, hint }) => ({
@@ -239,6 +257,24 @@ export const PROPERTY_TYPE_RATES_IMPORT_FIELDS: readonly ImportFieldDef[] = [
     key:      'new_construction_rate_per_sqft',
     required: false,
     hint:     'चौ. ft दर: नवीन बांधकाम.',
+    zod:      z.unknown(),
+  },
+  {
+    key:      'default_lighting_paise',
+    required: false,
+    hint:     'Default lighting tax in paise for this property type.',
+    zod:      z.unknown(),
+  },
+  {
+    key:      'default_sanitation_paise',
+    required: false,
+    hint:     'Default sanitation tax in paise for this property type.',
+    zod:      z.unknown(),
+  },
+  {
+    key:      'default_water_paise',
+    required: false,
+    hint:     'Default water tax in paise for this property type.',
     zod:      z.unknown(),
   },
 ]

@@ -29,6 +29,11 @@ function formatRate(s: string | null | undefined) {
   return s
 }
 
+function formatPaise(v: number | null | undefined) {
+  if (v == null) return '—'
+  return `₹${(v / 100).toFixed(2)}`
+}
+
 export function MastersBulkImport({ subdomain }: Props) {
   const queryClient = useQueryClient()
   const [citizensFile, setCitizensFile] = useState<File | null>(null)
@@ -88,9 +93,9 @@ export function MastersBulkImport({ subdomain }: Props) {
   }, [metaQuery.isError, metaQuery.error])
 
   const limits = metaQuery.data?.limits
-  const citizensColsRequired = (metaQuery.data?.citizens.columns ?? []).filter((c) => c.required)
-  const propertiesColsRequired = (metaQuery.data?.properties.columns ?? []).filter((c) => c.required)
-  const propertyTypeRatesColsRequired = (metaQuery.data?.propertyTypeRates?.columns ?? []).filter((c) => c.required)
+  const citizensCols = metaQuery.data?.citizens.columns ?? []
+  const propertiesCols = metaQuery.data?.properties.columns ?? []
+  const propertyTypeRatesCols = metaQuery.data?.propertyTypeRates?.columns ?? []
 
   const downloadCit = useMutation({
     mutationFn: async () => {
@@ -339,20 +344,22 @@ export function MastersBulkImport({ subdomain }: Props) {
                     <tr className="border-b border-gp-border bg-muted/40">
                       <th className="p-2 font-medium">Column</th>
                       <th className="p-2 font-medium">Rule</th>
+                      <th className="p-2 font-medium">Required</th>
                     </tr>
                   </thead>
                   <tbody>
                     {metaQuery.isPending && (
                       <tr>
-                        <td colSpan={2} className="p-2 text-gp-muted">
+                        <td colSpan={3} className="p-2 text-gp-muted">
                           लोड होत आहे…
                         </td>
                       </tr>
                     )}
-                    {citizensColsRequired.map((c) => (
+                    {citizensCols.map((c) => (
                       <tr key={c.key} className="border-b border-gp-border/50 last:border-0">
                         <td className="p-2 font-mono text-[11px]">{c.key}</td>
                         <td className="p-2 text-gp-muted">{c.hint}</td>
+                        <td className="p-2 text-gp-muted">{c.required ? 'Yes' : 'No'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -371,7 +378,7 @@ export function MastersBulkImport({ subdomain }: Props) {
               )}
               {citizensListQuery.data && citizensListQuery.data.length > 0 && (
                 <div className="max-h-[min(70vh,36rem)] overflow-auto rounded-md border border-gp-border/60">
-                  <table className="w-full min-w-md text-left text-xs">
+                  <table className="w-full min-w-[64rem] text-left text-xs">
                     <thead>
                       <tr className="sticky top-0 border-b border-gp-border bg-muted/90 backdrop-blur">
                         <th className="p-1.5 text-left align-bottom">
@@ -383,12 +390,24 @@ export function MastersBulkImport({ subdomain }: Props) {
                           <span className="mt-0.5 block text-[10px] font-normal leading-tight text-gp-muted">name_mr</span>
                         </th>
                         <th className="p-1.5 text-left align-bottom">
+                          <span className="block font-medium">English नाव</span>
+                          <span className="mt-0.5 block text-[10px] font-normal leading-tight text-gp-muted">name_en</span>
+                        </th>
+                        <th className="p-1.5 text-left align-bottom">
                           <span className="block font-medium">मोबाईल</span>
                           <span className="mt-0.5 block text-[10px] font-normal leading-tight text-gp-muted">mobile</span>
                         </th>
                         <th className="p-1.5 text-left align-bottom">
                           <span className="block font-medium">वॉर्ड</span>
                           <span className="mt-0.5 block text-[10px] font-normal leading-tight text-gp-muted">ward_number</span>
+                        </th>
+                        <th className="p-1.5 text-left align-bottom">
+                          <span className="block font-medium">पत्ता</span>
+                          <span className="mt-0.5 block text-[10px] font-normal leading-tight text-gp-muted">address_mr</span>
+                        </th>
+                        <th className="p-1.5 text-left align-bottom">
+                          <span className="block font-medium">कुटुंब</span>
+                          <span className="mt-0.5 block text-[10px] font-normal leading-tight text-gp-muted">household_id</span>
                         </th>
                         <th className="p-1.5 text-left align-bottom">
                           <span className="block font-medium">नोंद</span>
@@ -403,8 +422,15 @@ export function MastersBulkImport({ subdomain }: Props) {
                           <td className="p-1.5 max-w-40 truncate" title={r.nameMr}>
                             {r.nameMr}
                           </td>
+                          <td className="p-1.5 max-w-36 truncate" title={r.nameEn ?? ''}>
+                            {r.nameEn ?? '—'}
+                          </td>
                           <td className="p-1.5 font-mono text-[11px]">{r.mobile}</td>
                           <td className="p-1.5">{r.wardNumber}</td>
+                          <td className="p-1.5 max-w-52 truncate" title={r.addressMr}>
+                            {r.addressMr}
+                          </td>
+                          <td className="p-1.5 font-mono text-[11px]">{r.householdId ?? '—'}</td>
                           <td className="p-1.5 text-gp-muted whitespace-nowrap">{formatDate(r.createdAt)}</td>
                         </tr>
                       ))}
@@ -463,20 +489,22 @@ export function MastersBulkImport({ subdomain }: Props) {
                     <tr className="border-b border-gp-border bg-muted/40">
                       <th className="p-2 font-medium">Column</th>
                       <th className="p-2 font-medium">Rule</th>
+                      <th className="p-2 font-medium">Required</th>
                     </tr>
                   </thead>
                   <tbody>
                     {metaQuery.isPending && (
                       <tr>
-                        <td colSpan={2} className="p-2 text-gp-muted">
+                        <td colSpan={3} className="p-2 text-gp-muted">
                           लोड होत आहे…
                         </td>
                       </tr>
                     )}
-                    {propertiesColsRequired.map((c) => (
+                    {propertiesCols.map((c) => (
                       <tr key={c.key} className="border-b border-gp-border/50 last:border-0">
                         <td className="p-2 font-mono text-[11px]">{c.key}</td>
                         <td className="p-2 text-gp-muted">{c.hint}</td>
+                        <td className="p-2 text-gp-muted">{c.required ? 'Yes' : 'No'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -495,7 +523,7 @@ export function MastersBulkImport({ subdomain }: Props) {
               )}
               {propertiesListQuery.data && propertiesListQuery.data.length > 0 && (
                 <div className="max-h-[min(70vh,36rem)] overflow-auto rounded-md border border-gp-border/60">
-                  <table className="w-full min-w-lg text-left text-xs">
+                  <table className="w-full min-w-[72rem] text-left text-xs">
                     <thead>
                       <tr className="sticky top-0 border-b border-gp-border bg-muted/90 backdrop-blur">
                         <th className="p-1.5 text-left align-bottom">
@@ -517,6 +545,26 @@ export function MastersBulkImport({ subdomain }: Props) {
                           <span className="mt-0.5 block text-[10px] font-normal leading-tight text-gp-muted">occupant_name</span>
                         </th>
                         <th className="p-1.5 text-left align-bottom">
+                          <span className="block font-medium">सर्वे / गट</span>
+                          <span className="mt-0.5 block text-[10px] font-normal leading-tight text-gp-muted">survey_number, plot_or_gat</span>
+                        </th>
+                        <th className="p-1.5 text-left align-bottom">
+                          <span className="block font-medium">लांबी x रुंदी</span>
+                          <span className="mt-0.5 block text-[10px] font-normal leading-tight text-gp-muted">length_ft, width_ft</span>
+                        </th>
+                        <th className="p-1.5 text-left align-bottom">
+                          <span className="block font-medium">वय</span>
+                          <span className="mt-0.5 block text-[10px] font-normal leading-tight text-gp-muted">age_bracket</span>
+                        </th>
+                        <th className="p-1.5 text-left align-bottom">
+                          <span className="block font-medium">ठराव / दिनांक</span>
+                          <span className="mt-0.5 block text-[10px] font-normal leading-tight text-gp-muted">resolution_ref, assessment_date</span>
+                        </th>
+                        <th className="p-1.5 text-left align-bottom">
+                          <span className="block font-medium">सेवा कर</span>
+                          <span className="mt-0.5 block text-[10px] font-normal leading-tight text-gp-muted">lighting / sanitation / water</span>
+                        </th>
+                        <th className="p-1.5 text-left align-bottom">
                           <span className="block font-medium">नोंद</span>
                           <span className="mt-0.5 block text-[10px] font-normal leading-tight text-gp-muted">तारीख</span>
                         </th>
@@ -532,6 +580,19 @@ export function MastersBulkImport({ subdomain }: Props) {
                           </td>
                           <td className="p-1.5 max-w-40 truncate" title={r.occupantName}>
                             {r.occupantName}
+                          </td>
+                          <td className="p-1.5 max-w-36 truncate" title={[r.surveyNumber, r.plotOrGat].filter(Boolean).join(' / ')}>
+                            {[r.surveyNumber, r.plotOrGat].filter(Boolean).join(' / ') || '—'}
+                          </td>
+                          <td className="p-1.5 font-mono text-[10px]">
+                            {r.lengthFt != null || r.widthFt != null ? `${r.lengthFt ?? '—'} x ${r.widthFt ?? '—'}` : '—'}
+                          </td>
+                          <td className="p-1.5 font-mono text-[10px]">{r.ageBracket ?? '—'}</td>
+                          <td className="p-1.5 max-w-40 truncate" title={[r.resolutionRef, r.assessmentDate].filter(Boolean).join(' / ')}>
+                            {[r.resolutionRef, r.assessmentDate].filter(Boolean).join(' / ') || '—'}
+                          </td>
+                          <td className="p-1.5 font-mono text-[10px]">
+                            {formatPaise(r.lightingTaxPaise)} / {formatPaise(r.sanitationTaxPaise)} / {formatPaise(r.waterTaxPaise)}
                           </td>
                           <td className="p-1.5 text-gp-muted whitespace-nowrap">{formatDate(r.createdAt)}</td>
                         </tr>
@@ -594,20 +655,22 @@ export function MastersBulkImport({ subdomain }: Props) {
                     <tr className="border-b border-gp-border bg-muted/40">
                       <th className="p-2 font-medium">Column</th>
                       <th className="p-2 font-medium">Rule</th>
+                      <th className="p-2 font-medium">Required</th>
                     </tr>
                   </thead>
                   <tbody>
                     {metaQuery.isPending && (
                       <tr>
-                        <td colSpan={2} className="p-2 text-gp-muted">
+                        <td colSpan={3} className="p-2 text-gp-muted">
                           लोड होत आहे…
                         </td>
                       </tr>
                     )}
-                    {propertyTypeRatesColsRequired.map((c) => (
+                    {propertyTypeRatesCols.map((c) => (
                       <tr key={c.key} className="border-b border-gp-border/50 last:border-0">
                         <td className="p-2 font-mono text-[11px]">{c.key}</td>
                         <td className="p-2 text-gp-muted">{c.hint}</td>
+                        <td className="p-2 text-gp-muted">{c.required ? 'Yes' : 'No'}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -628,7 +691,7 @@ export function MastersBulkImport({ subdomain }: Props) {
               )}
               {propertyTypeRatesListQuery.data && propertyTypeRatesListQuery.data.length > 0 && (
                 <div className="max-h-[min(70vh,36rem)] overflow-auto rounded-md border border-gp-border/60">
-                  <table className="w-full min-w-[48rem] text-left text-xs">
+                  <table className="w-full min-w-[64rem] text-left text-xs">
                     <thead>
                       <tr className="sticky top-0 border-b border-gp-border bg-muted/90 backdrop-blur">
                         <th className="p-1.5 text-left align-bottom">
@@ -652,6 +715,10 @@ export function MastersBulkImport({ subdomain }: Props) {
                           <span className="mt-0.5 block text-[10px] font-normal leading-tight text-gp-muted">new_constr…</span>
                         </th>
                         <th className="p-1.5 text-left align-bottom">
+                          <span className="block font-medium">डिफॉल्ट सेवा कर</span>
+                          <span className="mt-0.5 block text-[10px] font-normal leading-tight text-gp-muted">lighting / sanitation / water</span>
+                        </th>
+                        <th className="p-1.5 text-left align-bottom">
                           <span className="block font-medium">अद्यतन</span>
                         </th>
                       </tr>
@@ -666,6 +733,9 @@ export function MastersBulkImport({ subdomain }: Props) {
                           <td className="p-1.5 font-mono text-[10px]">{formatRate(r.landRatePerSqft)}</td>
                           <td className="p-1.5 font-mono text-[10px]">{formatRate(r.constructionRatePerSqft)}</td>
                           <td className="p-1.5 font-mono text-[10px]">{formatRate(r.newConstructionRatePerSqft)}</td>
+                          <td className="p-1.5 font-mono text-[10px]">
+                            {formatPaise(r.defaultLightingPaise)} / {formatPaise(r.defaultSanitationPaise)} / {formatPaise(r.defaultWaterPaise)}
+                          </td>
                           <td className="p-1.5 text-gp-muted whitespace-nowrap">{formatDate(r.updatedAt)}</td>
                         </tr>
                       ))}

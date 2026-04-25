@@ -12,11 +12,15 @@ import { upload } from '../common/guards/upload.guard.ts'
 import { mastersBulkController, mastersBulkUpload } from '../controllers/masters-bulk.controller.ts'
 import { bulkImportRateLimit } from '../common/guards/rate-limit.guard.ts'
 import { propertyTypeRatesController } from '../controllers/property-type-rates.controller.ts'
+import tenantNamuneRouter from './tenant-namune.routes.ts'
 
 const router = Router()
 
 // Public - Get tenant details
 router.get('/:subdomain', tenantController.getTenant)
+
+// Namune routes (tenant-scoped, admin-only)
+router.use('/:subdomain/namune', supabaseTenantAdminGuard, tenantNamuneRouter)
 
 // Masters — template metadata + Excel (admin only; same constraints as bulk POST)
 router.get(

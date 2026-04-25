@@ -45,6 +45,9 @@ input:-webkit-autofill:focus {
   header {
     display: none !important;
   }
+  [data-namuna8-print-root="true"] header {
+    display: block !important;
+  }
   main {
     padding: 0 !important;
   }

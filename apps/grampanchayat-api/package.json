@@ -6,6 +6,8 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "start": "node dist/index.js",
+    "test:phase1": "node --import tsx scripts/phase1-smoke.ts",
+    "test:phase3": "node --import tsx scripts/phase3-smoke.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",

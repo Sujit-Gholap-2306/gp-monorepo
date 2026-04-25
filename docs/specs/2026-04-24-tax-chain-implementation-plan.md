@@ -143,9 +143,9 @@ rate master.
   computed tax.
 - `src/controllers/namuna8.controller.ts`.
 - Routes:
-  - `GET  /:subdomain/namuna8` — list with query: `?ward=`, `?q=`,
+  - `GET  /:subdomain/namune/8` — list with query: `?ward=`, `?q=`,
     `?propertyType=`
-  - `GET  /:subdomain/namuna8/:propertyId` — single row with full calc
+  - `GET  /:subdomain/namune/8/:propertyId` — single row with full calc
     breakdown
 
 **Frontend** (`apps/grampanchayat`):
@@ -159,8 +159,11 @@ rate master.
 
 **Validation rules**:
 - `property_type` must exist in rate master for the GP.
-- Rate master must be complete before opening N08 (block with clear error:
-  "Set rates for all property types first").
+- N08 API must stay non-blocking even when rate master is incomplete.
+- API returns `rateMaster` status payload (`isComplete`,
+  `missingPropertyTypes`, `incompletePropertyTypes`).
+- UI is responsible for showing the rate verification check and warning state
+  before normal N08 usage.
 
 **Acceptance**:
 - [ ] List shows all properties for the tenant with computed tax.
@@ -279,8 +282,14 @@ Routes:
          arrears for a brand-new GP — generate does **not** invent them.
     3. Insert header `gp_namuna9_demands` with `ON CONFLICT (gp_id,
        property_id, fiscal_year) DO NOTHING`. Default = skip if exists.
-       `?force=true` → `DO UPDATE SET updated_at = now()` AND replaces
-       the 4 child lines (DELETE + INSERT inside the same tx).
+       `?force=true` is **non-destructive**:
+       - Lock the existing header + 4 lines with `SELECT ... FOR UPDATE`.
+       - If any line has `paid_paise > 0` OR any `gp_namuna10_receipt_lines`
+         row points to those demand-lines, return `409`.
+       - If no payments exist, update the existing 4 child lines in place
+         (`previous_paise`, `current_paise`, `updated_at`) instead of
+         deleting and recreating them.
+       - This preserves stable demand-line IDs for receipts and audit history.
     4. Insert exactly 4 `gp_namuna9_demand_lines` rows (one per
        `tax_head`) with `current_paise` from step 1, `previous_paise`
        from step 2, `paid_paise = 0`.
@@ -355,12 +364,19 @@ Single-use, part of onboarding checklist:
    - `tax_head` must be one of the 4 canonical values; template includes
      a `heads` sheet with a data-validation list so users can't typo.
    - **Every property must have exactly 4 rows** (all 4 heads).
-3. Uploads via admin UI.
+3. Uploads via admin UI. The UI first shows a **preview + confirmation**
+   screen with row count, property count, total previous/current/paid amounts,
+   and validation errors. Nothing is written until the Gram Sevak confirms.
+   No silent overwrite, no bulk "fix existing data" behavior.
 4. Backend (single DB transaction):
+   - Before reading rows, reject with `409` if:
+     - `gp_tenants.opening_balance_imported_at IS NOT NULL`, OR
+     - any `gp_namuna9_demands` header already exists for this GP + current FY.
+     Opening import is a one-time onboarding action, not an update path.
    - For each `(property_no)` group of 4 rows:
      - Insert one `gp_namuna9_demands` header for the **current** FY
-       (`ON CONFLICT … DO NOTHING` — opening import must run before
-       `generate`).
+       (`ON CONFLICT` should never fire because of the pre-check above;
+       if it does, rollback and return `409`).
      - Insert 4 `gp_namuna9_demand_lines` rows with:
        - `previous_paise = toPaise(arrears_prior_years_₹)`
        - `current_paise  = toPaise(current_year_demand_₹)` — the GP's
@@ -394,6 +410,8 @@ gp_tenants {
 - `POST /:subdomain/namuna9/opening-balances` — multipart upload
   - Validates: every `property_no` exists, every property has exactly 4
     rows (one per canonical head), all amounts ≥ 0, ≤ 2 decimal places
+  - Rejects with `409` if opening balances already imported or current-FY
+    N09 demand headers already exist
   - Runs in single transaction; returns row-level errors on failure
 - After successful run, sets `gp_tenants.opening_balance_imported_at = now()`.
   The `onboarding_complete` flag is set by the onboarding flow UI (§5),
@@ -406,9 +424,10 @@ gp_tenants {
   2. Citizens imported
   3. Properties imported
   4. **Opening balances imported** ← new
-  5. Ready to generate N09
+  5. Ready to use N09 / generate next FY
 - `components/admin/opening-balance-import.tsx` — same pattern as
-  `masters-bulk-import.tsx`
+  `masters-bulk-import.tsx`, but with an explicit preview + confirmation
+  step before the import API is called
 
 **Acceptance**:
 - [ ] Template download works; head validation list present.
@@ -416,6 +435,8 @@ gp_tenants {
       decimals, unknown property_no, < 4 rows for a property).
 - [ ] Successful import: 1 demand header + 4 demand-lines per property,
       with correct `previous_paise + current_paise + paid_paise`.
+- [ ] Duplicate/current-FY guard: second import attempt or import after
+      current-FY N09 exists returns 409 and writes nothing.
 - [ ] N09 list after import shows correct मागील + चालू per head.
 - [ ] `gp_tenants.opening_balance_imported_at` is set; INV-2 holds.
 - [ ] Generate endpoint returns 409 while `onboarding_complete = false`.
@@ -587,6 +608,14 @@ FROM gp_namuna9_demand_lines dl;
 
 Both views are pure SQL — no triggers, no recompute. They re-evaluate
 on every query.
+
+**Why allocation still matters even though total balance is just
+`previous + current - paid`**: for raw balance math, one `paid_paise` total is
+enough. The arrears-first split is only for statutory display and audit:
+N09/bill print must show how much old arrears remain versus current demand.
+Because the split is deterministic and computed from one total, we do not
+store separate `applied_to_previous` / `applied_to_current` fields and the
+clerk cannot override it in v1.
 
 #### 3C.5 FY attribution rule (resolves §10 Open Q #3)
 
@@ -1195,7 +1224,10 @@ running FY total.
 
 So **N06 is monthly + classified**, **N05 is daily cashbook**. The §0
 context block and §3D have been rewritten with the corrected identities
-and table names: `gp_namuna05_cashbook_entries` (daily), `gp_namuna06_classified_receipts` (monthly).
+and v1 storage strategy: write only `gp_namuna05_cashbook_entries`, then
+read `gp_namuna05_view` for running balance and `gp_namuna06_view` for
+monthly classified totals. There is no `gp_namuna06_classified_receipts`
+table in v1.
 
 #### G. N09 is per-property — multi-property owners get N rows
 
@@ -1273,19 +1305,34 @@ INV-5   Voided N10 → reversal entry in N05 + N06 on the void date
 
 > One row = one PR-sized phase. Each phase ends with a **verify gate**
 > before push. Update the **Status** column as we move.
-> Status legend: ☐ todo · 🔄 in-progress · ✅ done (local) · 🟢 verified · 🚀 pushed
+> Status legend: ☐ todo · 🔄 building · ✅ local verified · 👀 user testing
+> · 🛠 changes requested · 🟢 user approved · 🚀 pushed
+
+**Execution rhythm (locked)**:
+
+1. Codex/Cursor implements the next smallest phase or agreed bundle.
+2. Codex runs local verification: typecheck, migrations, tests, smoke checks,
+   and relevant invariants.
+3. Status becomes `✅ local verified`.
+4. User tests the feature manually. Status becomes `👀 user testing`.
+5. If user requests changes, status becomes `🛠 changes requested`; Codex/Cursor
+   fixes and repeats local verification.
+6. When user approves, status becomes `🟢 user approved`.
+7. Only after explicit user instruction, push to repo and mark `🚀 pushed`.
+8. Start the next phase only after the current phase/bundle is pushed or the
+   user explicitly says to continue without pushing.
 
 ### 12.1 Phase plan
 
 | # | Phase | Gap fixed | Files / scope | Verify gate | Status |
 |---|-------|-----------|---------------|-------------|--------|
 | **0** | Doc baseline — gap log + Balsane reference | — | `docs/specs/2026-04-24-…plan.md` §11, `docs/references/balsane-…xlsx` | Doc reviewed by domain owner | 🚀 |
-| **1** | Foundation: `fiscal.ts` (incl. `fyMonthNo`), `money.ts` (`toPaise` HALF-UP), `tax-head.ts` TS enum + label map, `account-heads.ts` ledger-code constants | B | `apps/grampanchayat-api/src/lib/{fiscal,money,tax-head,account-heads}.ts`, `apps/grampanchayat/lib/tax/{labels,heads}.ts` | Unit tests for FY parse, `fyMonthNo` boundary cases (Mar/Apr), `toPaise` rounding (₹136.4063 → 13641), label lookup, account-head lookup | ☐ |
-| **2** | Rate-master extension + per-property head overrides | C | Drizzle migration: extend `gp_property_type_rates` (default flat amounts), `gp_properties` (override columns) | Migration runs clean on dev; existing rows backfilled with NULLs (= use GP default) | ☐ |
-| **3** | `tax-calc.ts` rewrite — house derived, others flat-with-fallback | C | `apps/grampanchayat-api/src/lib/tax-calc.ts` + golden-master tests | 20 seeded properties match Balsane row 10–12 exact paise values | ☐ |
-| **4** | N08 read API + service | — | `namuna8.{service,controller}.ts`, route in `tenant.routes.ts` | `GET /:subdomain/namuna8` returns 4-head breakdown for seeded GP | ☐ |
-| **5** | N08 admin list UI + filters | — | `app/[tenant]/(admin)/admin/namuna8/page.tsx`, sidebar nav | List renders, filters work, tier-gated | ☐ |
-| **6** | N08 detail + उतारा print layout | H | `[id]/page.tsx`, `[id]/print/page.tsx` with `?layout=certificate` | A4 print preview matches Balsane `उतारा` sheet | ☐ |
+| **1** | Foundation: `fiscal.ts` (incl. `fyMonthNo`), `money.ts` (`toPaise` HALF-UP), `tax-head.ts` TS enum + label map, `account-heads.ts` ledger-code constants | B | `apps/grampanchayat-api/src/lib/{fiscal,money,tax-head,account-heads}.ts`, `apps/grampanchayat/lib/tax/{labels,heads}.ts` | Unit tests for FY parse, `fyMonthNo` boundary cases (Mar/Apr), `toPaise` rounding (₹136.4063 → 13641), label lookup, account-head lookup | ✅ |
+| **2** | Rate-master extension + per-property head overrides | C | Drizzle migration: extend `gp_property_type_rates` (default flat amounts), `gp_properties` (override columns) | Migration runs clean on dev; existing rows backfilled with NULLs (= use GP default) | ✅ |
+| **3** | `tax-calc.ts` rewrite — house derived, others flat-with-fallback | C | `apps/grampanchayat-api/src/lib/tax-calc.ts` + golden-master tests | 20 seeded properties match Balsane row 10–12 exact paise values | ✅ |
+| **4** | N08 read API + service | — | `namuna8.{service,controller}.ts`, `tenant-namune.routes.ts` mounted from `tenant.routes.ts` | `GET /:subdomain/namune/8` returns 4-head breakdown for seeded GP | ✅ |
+| **5** | N08 admin list UI + filters + rate verification panel | — | `app/[tenant]/(admin)/admin/namuna8/page.tsx`, sidebar nav | List renders, filters work, tier-gated, and `rateMaster` warning/check panel works | ✅ |
+| **6** | N08 detail + उतारा print layout | H | `[id]/page.tsx`, `[id]/print/page.tsx` with `?layout=certificate` | A4 print preview matches Balsane `उतारा` sheet | ✅ |
 | **7** | N09 schema — header + `demand_lines` child table | A | Drizzle schema `namuna9-demands.ts`, `namuna9-demand-lines.ts`, migration | Migration runs; INSERT 1 header + 4 lines works | ☐ |
 | **8** | N09 generate API (current FY only, no arrears) | — | `namuna9.service.ts` `generate()`, controller, route | Generate twice → 0 duplicates; `INV-1` passes | ☐ |
 | **9** | N09 list/detail UI + per-head columns | A | `app/[tenant]/(admin)/admin/namuna9/{page,[id]}.tsx` | Layout matches Balsane `नमुना ९` 4-heads × {मागील\|चालू\|एकूण} | ☐ |
@@ -1313,16 +1360,19 @@ INV-5   Voided N10 → reversal entry in N05 + N06 on the void date
 | D5 | Bank reconciliation flow | — | Cheque/NEFT volume becomes painful |
 | D6 | SMS reminders on pending demands | — | After collection-desk volume stable |
 
-### 12.3 Push cadence
+### 12.3 Review + push cadence
 
-- **Phases 1–6** ship as one logical bundle (N08 read flow). Push after Phase 6 is 🟢.
-- **Phases 7–12** ship as the second bundle (N09 + onboarding). Push after Phase 12 is 🟢.
-- **Phases 13–16** = the collection-desk bundle. Push after Phase 16 is 🟢.
-- **Phases 17–21** = automation + reconciliation bundle. Push after Phase 21 is 🟢.
+| Bundle | Phases | Demo checkpoint | User test focus | Push rule | Status |
+|--------|--------|-----------------|-----------------|-----------|--------|
+| B1 — N08 read flow | 1–6 | N08 list/detail/उतारा works from API | Tax values, filters, print parity | Push only after user approves Phase 6 bundle | 🔄 |
+| B2 — N09 + onboarding | 7–12 | N09 schema/generate/opening import/onboarding ready | Opening import preview, N09 rows, generate guards | Push only after user approves Phase 12 bundle | ☐ |
+| B3 — N10 collection desk | 13–16 | Receipt create/print/void works | Receipt sequence, payment flow, void behavior | Push only after user approves Phase 16 bundle | ☐ |
+| B4 — N05/N06 automation | 17–21 | N10 auto-posts to N05; N06 view reconciles | Cashbook, classified view, invariant test harness | Push only after user approves Phase 21 bundle | ☐ |
 
-Reasoning: each bundle is independently demoable. A bundle never pushes
-half-finished — invariants must hold at every push checkpoint, otherwise
-the next phase inherits a broken base.
+Reasoning: each bundle is independently demoable and reviewable. We can still
+build phases one by one inside a bundle, but we stop at each meaningful test
+point for user review. A bundle never pushes half-finished — invariants must
+hold at every push checkpoint, otherwise the next phase inherits a broken base.
 
 ### 12.4 Per-phase verify checklist (apply to every row above)
 
@@ -1339,4 +1389,4 @@ Before flipping a phase to 🟢:
 - [ ] **§2.7 simplicity rules respected**: no triggers, no background
       jobs, no unenforced denormalised caches introduced. If any of these
       were added, the PR description explains the case.
-
+- [ ] User manually tested the current phase/bundle and approved it.

@@ -12,20 +12,30 @@ import {
   LogOut,
   ExternalLink,
   Database,
+  ClipboardList,
+  Lock,
 } from 'lucide-react'
 import { createSupabaseBrowserClient } from '@/lib/supabase/client'
+import { canAccess, type Feature, type Tier } from '@/lib/tiers'
 
 const NAV_ITEMS = [
-  { href: 'admin/dashboard',     label: 'डॅशबोर्ड',     labelEn: 'Dashboard',     Icon: LayoutDashboard },
-  { href: 'admin/post-holders',  label: 'पदाधिकारी',     labelEn: 'Post Holders',  Icon: Users },
-  { href: 'admin/events',        label: 'कार्यक्रम',     labelEn: 'Events',        Icon: Calendar },
-  { href: 'admin/announcements', label: 'घोषणा',         labelEn: 'Announcements', Icon: Megaphone },
-  { href: 'admin/gallery',       label: 'दालन',          labelEn: 'Gallery',       Icon: ImageIcon },
-  { href: 'admin/masters/import', label: 'मास्टर आयात', labelEn: 'Masters import', Icon: Database },
-  { href: 'admin/settings',      label: 'सेटिंग्ज',      labelEn: 'Settings',      Icon: Settings },
+  { href: 'admin/dashboard',      label: 'डॅशबोर्ड',       labelEn: 'Dashboard',       Icon: LayoutDashboard },
+  { href: 'admin/post-holders',   label: 'पदाधिकारी',      labelEn: 'Post Holders',    Icon: Users },
+  { href: 'admin/events',         label: 'कार्यक्रम',       labelEn: 'Events',          Icon: Calendar },
+  { href: 'admin/announcements',  label: 'घोषणा',           labelEn: 'Announcements',   Icon: Megaphone },
+  { href: 'admin/gallery',        label: 'दालन',            labelEn: 'Gallery',         Icon: ImageIcon },
+  { href: 'admin/masters/import', label: 'मास्टर आयात',      labelEn: 'Masters import',  Icon: Database },
+  { href: 'admin/namuna8',        label: 'नमुना ८',         labelEn: 'Namuna 8',        Icon: ClipboardList, feature: 'tax' as Feature },
+  { href: 'admin/settings',       label: 'सेटिंग्ज',        labelEn: 'Settings',        Icon: Settings },
 ]
 
-export function AdminSidebar({ tenantName }: { tenantName: string }) {
+export function AdminSidebar({
+  tenantName,
+  tenantTier,
+}: {
+  tenantName: string
+  tenantTier: Tier
+}) {
   const pathname = usePathname()
   const params = useParams()
   const tenant = params.tenant as string
@@ -64,15 +74,33 @@ export function AdminSidebar({ tenantName }: { tenantName: string }) {
         {NAV_ITEMS.map((item) => {
           const href = `/${tenant}/${item.href}`
           const active = pathname === href || pathname.startsWith(`${href}/`)
+          const locked = item.feature ? !canAccess(tenantTier, item.feature) : false
+          const itemClasses = `group flex items-center gap-2.5 px-3 py-2.5 rounded-md text-sm transition-colors ${
+            active
+              ? 'bg-gp-primary text-gp-primary-fg font-medium shadow-sm'
+              : 'text-foreground/75 hover:bg-gp-surface hover:text-foreground'
+          } ${locked ? 'opacity-70 cursor-not-allowed hover:bg-transparent hover:text-foreground/75' : 'cursor-pointer'}`
+
+          if (locked) {
+            return (
+              <div
+                key={item.href}
+                className={itemClasses}
+                title="Pro योजना आवश्यक"
+                aria-disabled="true"
+              >
+                <item.Icon className={`h-4 w-4 shrink-0 ${active ? '' : 'text-gp-muted'}`} aria-hidden="true" />
+                <span className="flex-1">{item.label}</span>
+                <Lock className="h-3.5 w-3.5 text-gp-muted" aria-hidden="true" />
+              </div>
+            )
+          }
+
           return (
             <Link
               key={item.href}
               href={href}
-              className={`group flex items-center gap-2.5 px-3 py-2.5 rounded-md text-sm transition-colors cursor-pointer ${
-                active
-                  ? 'bg-gp-primary text-gp-primary-fg font-medium shadow-sm'
-                  : 'text-foreground/75 hover:bg-gp-surface hover:text-foreground'
-              }`}
+              className={itemClasses}
             >
               <item.Icon className={`h-4 w-4 shrink-0 ${active ? '' : 'text-gp-muted group-hover:text-foreground'}`} aria-hidden="true" />
               <span>{item.label}</span>
