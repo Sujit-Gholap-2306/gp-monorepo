@@ -157,7 +157,7 @@ function mapNamuna8Row(row: PropertyRateRow) {
   }
 }
 
-function isNullish(value: unknown): boolean {
+function isNullish(value: unknown): boolean { //
   return value === null || value === undefined
 }
 
