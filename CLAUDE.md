@@ -100,6 +100,8 @@ Project-local skills under **`.cursor/skills/`**. Supabase (DB, Auth, RLS, migra
 - `.cursor/skills/supabase/SKILL.md` — primary Supabase workflow
 - `.cursor/skills/supabase-postgres-best-practices/SKILL.md` — Postgres performance & RLS on Supabase
 
+**API clients (grampanchayat ↔ grampanchayat-api):** `skills/gp-api-client/SKILL.md` — Raw types, `normalize*`, `endpoints.ts`, Bearer auth (server vs client). Reference implementations: `apps/grampanchayat/lib/api/namuna9.ts`, `onboarding.ts`.
+
 Enable or `@`-reference in Cursor to load. **MCP:** `user-supabase` (project-linked) for live schema/migrations.
 
 ## Agent persona default (Codex + Claude + Cursor)

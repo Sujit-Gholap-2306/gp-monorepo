@@ -1,3 +1,8 @@
+---
+name: gp-api-client
+description: GP Next.js API client pattern for grampanchayat-api. Use when adding or changing files under apps/grampanchayat/lib/api/, tenant fetch wrappers, or wiring snake_case JSON from BaseController to camelCase types. Covers Raw* types, normalize*, endpoints.ts, Bearer auth in server vs client components.
+---
+
 # GP API Client Pattern
 
 ## Why this skill exists

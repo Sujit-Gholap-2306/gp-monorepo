@@ -13,6 +13,7 @@ skills/
   gp-dev/                 ← Dev standards: @gp/shadcn, Next.js 16, Tailwind v4, lib rules
   gp-review/              ← Code review checklist for PRs and audits
   gp-component-variants/  ← CVA variant system, folder structure, server/client split for gram/ components
+  gp-api-client/          ← lib/api pattern: Raw* snake_case → normalize → camelCase; auth headers; endpoints.ts
 
   General (copied from shared library, update when upstream changes):
   shadcn/             ← shadcn/ui component management
@@ -49,6 +50,7 @@ The `description` field is the key — write it so any AI can match it to the ri
   ln -sf $(pwd)/skills/gp-persona ~/.claude/skills/gp-persona
   ln -sf $(pwd)/skills/gp-dev ~/.claude/skills/gp-dev
   ln -sf $(pwd)/skills/gp-review ~/.claude/skills/gp-review
+  ln -sf $(pwd)/skills/gp-api-client ~/.claude/skills/gp-api-client
   ```
 - Or reference in `CLAUDE.md` (already done at repo root)
 
