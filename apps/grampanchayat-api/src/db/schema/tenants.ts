@@ -4,6 +4,7 @@ import {
   text,
   timestamp,
   jsonb,
+  boolean,
 } from 'drizzle-orm/pg-core'
 
 export const gpTenants = pgTable('gp_tenants', {
@@ -23,6 +24,9 @@ export const gpTenants = pgTable('gp_tenants', {
     showMap: true,
     showAchievements: true,
   }).notNull(),
+  profileCompleteAt: timestamp('profile_complete_at', { withTimezone: true }),
+  openingBalanceImportedAt: timestamp('opening_balance_imported_at', { withTimezone: true }),
+  onboardingComplete: boolean('onboarding_complete').default(false).notNull(),
   tier:         text('tier', { enum: ['free', 'pro', 'enterprise'] })
                 .default('free')
                 .notNull(),

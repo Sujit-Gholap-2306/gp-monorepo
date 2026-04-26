@@ -14,6 +14,15 @@ function compactJsonFields(
   return o
 }
 
+function hasContactInfo(contact: Record<string, string | undefined>): boolean {
+  return Boolean(
+    contact.phone ||
+    contact.email ||
+    contact.address_mr ||
+    contact.address_en
+  )
+}
+
 export type TenantSettingsPayload = {
   nameMr: string
   nameEn: string
@@ -75,6 +84,14 @@ export const tenantService = {
     if (logoUrl) {
       updateData.logoUrl = logoUrl
     }
+
+    const effectiveLogoUrl = logoUrl ?? tenant.logoUrl ?? undefined
+    updateData.profileCompleteAt = (
+      data.nameMr &&
+      data.nameEn &&
+      effectiveLogoUrl &&
+      hasContactInfo(data.contact)
+    ) ? new Date() : null
 
     const updated = await tenantModel.update(tenant.id, updateData)
     if (!updated) throw new Error('Failed to update tenant')

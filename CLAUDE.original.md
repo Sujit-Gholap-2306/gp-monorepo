@@ -8,12 +8,12 @@
 
 ## What Is This
 
-Monorepo for Maharashtra Gram Panchayat software tools. Single product:
-1. **Public tenant sites** (multi-tenant, subdomain-based) — citizens: announcements, events, gallery, post-holders. Organic marketing.
+A monorepo for building software tools for Maharashtra Gram Panchayat. Single unified product covering:
+1. **Public tenant sites** (multi-tenant, subdomain-based) — citizens see announcements, events, gallery, post-holders. Also serves as organic marketing.
 2. **Admin panel** — Gram Sevak manages content (free tier) + namune/certificates/audit (paid tiers).
 3. **Marketing** — apex-domain landing, pricing, live customer spotlight grid.
 
-Based on Maharashtra Village Panchayats Act 1958 + Lekha Sanhita 2011.
+Based on the Maharashtra Village Panchayats Act 1958 and Lekha Sanhita 2011.
 
 ---
 
@@ -45,14 +45,14 @@ GP-Monorepo/
 
 ## Stack
 - **Frontend**: Next.js 16 (App Router, React Compiler), TypeScript, Tailwind v4, TanStack Query, Supabase SSR
-- **Toasts (grampanchayat)**: `apps/grampanchayat/lib/toast/` only. Import `gpToast` / `useGpToast` from `@/lib/toast`, mount single `<AppToaster />` in `app/providers.tsx`. No direct `sonner` imports in feature code. Adjust defaults in `lib/toast/toast-defaults.ts` (`appToasterProps`, `GP_TOAST_DURATION_MS`).
+- **Toasts (grampanchayat)**: `apps/grampanchayat/lib/toast/` only — import `gpToast` / `useGpToast` from `@/lib/toast` and mount a single `<AppToaster />` in `app/providers.tsx`. Do not import `sonner` directly in feature code; adjust defaults in `lib/toast/toast-defaults.ts` (`appToasterProps`, `GP_TOAST_DURATION_MS`).
 - **Backend**: Express 5, Drizzle ORM, Postgres (Supabase DB), JWT + bcrypt, Supabase Storage
 - **Monorepo**: pnpm workspaces + Turborepo
 - **Package scope**: `@gp/*`
 
 ## Three-Zone Routing
 
-Configurable via `NEXT_PUBLIC_ROOT_DOMAIN` (default `grampanchayat.co.in`):
+Configurable via `NEXT_PUBLIC_ROOT_DOMAIN` env var (default `grampanchayat.co.in`):
 
 | Host | Rewrites to | Zone |
 |------|-------------|------|
@@ -95,25 +95,25 @@ pnpm --filter @gp/grampanchayat-api dev         # BE only (port 3005)
 
 ## Cursor agent skills (this repo)
 
-Project-local skills under **`.cursor/skills/`**. Supabase (DB, Auth, RLS, migrations, `supabase-js`, MCP):
+Project-local skills live under **`.cursor/skills/`**. For Supabase (DB, Auth, RLS, migrations, `supabase-js`, MCP):
 
 - `.cursor/skills/supabase/SKILL.md` — primary Supabase workflow
 - `.cursor/skills/supabase-postgres-best-practices/SKILL.md` — Postgres performance & RLS on Supabase
 
-Enable or `@`-reference in Cursor to load. **MCP:** `user-supabase` (project-linked) for live schema/migrations.
+Enable or `@`-reference these in Cursor so the agent loads them. **MCP:** `user-supabase` (project-linked) complements the skills for live schema/migrations.
 
 ## Agent persona default (Codex + Claude + Cursor)
 
-Apply hybrid persona by default:
-- Base assistant behavior enabled.
-- Overlay `skills/gp-persona/SKILL.md` for project tone/domain rules.
+For this repository, apply a hybrid persona by default:
+- Base assistant behavior stays enabled (collaborative, clear, safe execution).
+- Overlay `skills/gp-persona/SKILL.md` on top for project tone/domain rules.
 
 Expected output style:
 - Senior full-stack peer tone, short and direct.
 - Maharashtra GP domain-aware decisions (33 Namune + legal context).
 - No preamble/trailing fluff unless complexity requires extra detail.
 
-If platform supports skill invocation, auto-load `gp-persona` first, then task-specific skills.
+If platform supports explicit skill invocation, auto-load `gp-persona` first, then add task-specific skills.
 
 ## Rules
 - Never auto-commit or auto-push
@@ -124,13 +124,18 @@ If platform supports skill invocation, auto-load `gp-persona` first, then task-s
 
 ## Marketing / Public Portal (Civic Elegant) — added 2026-04-20
 
-**Intent.** Premium standalone public village portal. GP's official website. **Lead-magnet + upsell** for admin/namune/accounting product:
-- **Free tier** — bundled with any paid GP app subscription.
-- **Standalone SKU** — **₹7,000** one-time for portal-only GPs. Independent revenue stream + top-of-funnel.
+**Intent.** A premium, standalone public-facing village portal that a GP can hand out
+as its official website. Positioned as a **lead-magnet + upsell** for our admin /
+namune / accounting product:
+- **Free tier** — bundled free with any paid GP app subscription (marketing pull).
+- **Standalone SKU** — offered at **₹7,000** one-time to GPs that only want the portal
+  (no accounting product). Acts as an independent revenue stream + top-of-funnel.
 
 **Where it lives.**
-- Route: `/preview` (no tenant lookup, no Supabase — mock data showcase).
-- Preview code scoped + isolated — no leak into `[tenant]/(public)`.
+- Route: `/preview` on the grampanchayat app (no tenant lookup, no Supabase —
+  pure showcase with mock data).
+- All preview code is scoped and isolated — nothing leaks into the live
+  `[tenant]/(public)` pages.
 
 ```
 apps/grampanchayat/
@@ -149,23 +154,43 @@ apps/grampanchayat/
 └── lib/preview/mock-data.ts    ← bilingual mock tenant ("Deshmukhwadi")
 ```
 
-**Map section (as of 2026-04-21).** `components/preview/sections/map-section.tsx` only: hand-composed illustrated SVG (1000×700 viewBox) — decorative geometry, not cadastral accuracy. **Pins** data-driven: `previewMapPins` in `lib/preview/mock-data.ts` (six `kind` values: office, school, temple, health, water, market), `x`/`y` as canvas percentages. **Colours** from `PreviewTheme` (`lib/preview/theme.ts`, `useTheme()` for SVG attrs). No `MapConfig` / OSM / custom-SVG pipeline yet — productisation item for real geometry.
+**Map section (as of 2026-04-21).** Implemented in
+`components/preview/sections/map-section.tsx` only: a hand-composed illustrated
+SVG (1000×700 viewBox) — decorative “village” geometry, not cadastral accuracy.
+**Pins** are data-driven: `previewMapPins` in `lib/preview/mock-data.ts` (six
+`kind` values: office, school, temple, health, water, market) with `x`/`y` as
+percentages of the canvas. **Colours** for land, river, fields, and pins come
+from `PreviewTheme` (`lib/preview/theme.ts`, consumed via `useTheme()` for SVG
+attributes). There is no separate `MapConfig` / OSM / custom-SVG pipeline in
+the repo yet; that remains a productisation item when tenants need real
+geometry.
 
-**Stack additions.** `framer-motion@^12` added to `apps/grampanchayat` for animations (scroll parallax, timeline draw-on, counters, magnetic hover, lightbox physics, SVG pin pulse).
+**Stack additions.** `framer-motion@^12` added to `apps/grampanchayat` for the
+premium animations (scroll-linked parallax, timeline draw-on, animated counters,
+magnetic hover, lightbox physics, SVG map pin pulse).
 
-**Design system.** Civic Elegant — cream paper bg, near-black ink, warm gold accent, deep civic teal. Fraunces display serif + existing Plus Jakarta / Noto Sans Devanagari. `prefers-reduced-motion` respected.
+**Design system.** Civic Elegant — cream paper bg, near-black ink, warm gold
+accent, deep civic teal. Fraunces display serif + existing Plus Jakarta /
+Noto Sans Devanagari. `prefers-reduced-motion` respected throughout.
 
-**Status: tweaks pending.** `/preview` directionally approved, needs refinement before shipping. Outstanding tweak dials:
+**Status: tweaks pending.** The `/preview` build is directionally approved but
+needs refinement passes before it ships as a sellable template. Outstanding
+tweak dials (to decide on later):
 - Gold intensity (current = accent, option = rare / seals-only)
 - Vertical rhythm (option to tighten ~30%)
 - Motion preset (current = rich, option = subtle)
 - Member cards — swap conic-gradient monogram for real photo slot
-- Map — replace illustrated SVG with real OSM, tenant-traced SVG, or config-driven street layer (future; current: illustration + pins only)
-- Replace hero rangoli with topographic village contour (alternative)
+- Map — replace illustrated SVG with real OSM, tenant-traced SVG, or a
+  config-driven street layer (future; current build is illustration + pins only)
+- Replace hero rangoli with a topographic village contour (alternative)
 
 **Productisation path (not built yet).**
-1. Parameterise `lib/preview/mock-data.ts` — single config object drives tenant portal (name, colours, photo slots, members, etc.).
-2. Wire 10 sections to live Supabase queries (shape matches `[tenant]/(public)` — mechanical lift).
-3. Add admin toggle per tenant: `portal_theme: 'standard' | 'civic-elegant'` — same codebase, both tiers.
+1. Parameterise `lib/preview/mock-data.ts` so a single config object drives
+   a tenant's portal (name, colours, village photo slots, members, etc.).
+2. Wire the 10 sections to live Supabase queries (shape already matches
+   `[tenant]/(public)` — mostly a mechanical lift).
+3. Add an admin toggle per tenant: `portal_theme: 'standard' | 'civic-elegant'`
+   so the same codebase serves both tiers.
 
-> When pricing/packaging finalised, update section with SKU name, free vs paid, upgrade trigger.
+> When pricing / packaging is finalised, update this section with the SKU name,
+> what's included free vs paid, and the upgrade trigger.

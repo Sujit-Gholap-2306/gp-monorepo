@@ -8,6 +8,10 @@ export const tenantApiPaths = {
     list: 'admins',
     byId: (id: string) => `admins/${id}`,
   },
+  onboarding: {
+    status: 'onboarding',
+    markReady: 'onboarding/mark-ready',
+  },
   announcements: {
     list: 'announcements',
     byId: (id: string) => `announcements/${id}`,
@@ -29,5 +33,11 @@ export const tenantApiPaths = {
   namune: {
     n08List: 'namune/8',
     n08ById: (propertyId: string) => `namune/8/${propertyId}`,
+    n09List: 'namune/9',
+    n09Citizens: 'namune/9/citizens',
+    n09Generate: 'namune/9/generate',
+    n09OpeningTemplate: 'namune/9/opening-template',
+    n09OpeningBalances: 'namune/9/opening-balances',
+    n09ById: (demandId: string) => `namune/9/${demandId}`,
   },
 } as const

@@ -1,0 +1,1 @@
+ALTER TABLE "gp_properties" DROP COLUMN "assessment_inputs";

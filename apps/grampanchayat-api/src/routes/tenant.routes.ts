@@ -12,6 +12,7 @@ import { upload } from '../common/guards/upload.guard.ts'
 import { mastersBulkController, mastersBulkUpload } from '../controllers/masters-bulk.controller.ts'
 import { bulkImportRateLimit } from '../common/guards/rate-limit.guard.ts'
 import { propertyTypeRatesController } from '../controllers/property-type-rates.controller.ts'
+import { onboardingController } from '../controllers/onboarding.controller.ts'
 import tenantNamuneRouter from './tenant-namune.routes.ts'
 
 const router = Router()
@@ -74,6 +75,8 @@ router.put(
   upload.single('logo'),
   tenantController.updateSettings
 )
+router.get('/:subdomain/onboarding', supabaseTenantAdminGuard, onboardingController.getStatus)
+router.post('/:subdomain/onboarding/mark-ready', supabaseTenantAdminGuard, onboardingController.markReady)
 
 // Masters bulk import (multipart file — citizens first, then properties in separate request)
 router.post(

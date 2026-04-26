@@ -18,7 +18,6 @@ type PropertyRateRow = {
   occupantName: string
   resolutionRef: string | null
   assessmentDate: string | null
-  assessmentInputs: Record<string, unknown> | null
   lightingTaxPaise: number | null
   sanitationTaxPaise: number | null
   waterTaxPaise: number | null
@@ -44,20 +43,6 @@ type RateMasterStatus = {
   incompletePropertyTypes: string[]
 }
 
-function parseAssessmentNumber(
-  input: Record<string, unknown> | null,
-  key: string
-): number | undefined {
-  if (!input || !(key in input)) return undefined
-  const value = input[key]
-  if (typeof value === 'number' && Number.isFinite(value)) return value
-  if (typeof value === 'string') {
-    const parsed = Number(value)
-    return Number.isFinite(parsed) ? parsed : undefined
-  }
-  return undefined
-}
-
 function toRateNumber(value: string | null | undefined): number {
   if (value == null || value === '') return 0
   const n = Number(value)
@@ -70,11 +55,6 @@ function perSqMFromPerSqft(perSqft: string | null | undefined): number {
 }
 
 function mapNamuna8Row(row: PropertyRateRow) {
-  const depreciationFactor = parseAssessmentNumber(row.assessmentInputs, 'depreciation_factor')
-  const usageWeightage = parseAssessmentNumber(row.assessmentInputs, 'usage_weightage')
-  const taxRatePaise = parseAssessmentNumber(row.assessmentInputs, 'tax_rate_paise')
-  const effTaxRatePaise = taxRatePaise ?? RECOMMENDED_TAX_RATE_PAISE
-
   const breakdown = calcPropertyTax(
     {
       lengthFt: row.lengthFt,
@@ -92,9 +72,6 @@ function mapNamuna8Row(row: PropertyRateRow) {
       defaultWaterPaise: row.defaultWaterPaise,
     },
     {
-      depreciationFactor,
-      usageWeightage,
-      taxRatePaise: effTaxRatePaise,
       useNewConstructionRate: row.propertyType === 'navi_rcc',
     }
   )
@@ -131,9 +108,9 @@ function mapNamuna8Row(row: PropertyRateRow) {
       bandhkam: bandhkamRrPerSqM,
     },
     assessment: {
-      depreciationFactor: depreciationFactor ?? 1,
-      usageWeightage: usageWeightage ?? 1,
-      taxRatePaise: effTaxRatePaise,
+      depreciationFactor: 1,
+      usageWeightage: 1,
+      taxRatePaise: RECOMMENDED_TAX_RATE_PAISE,
     },
     area: {
       sqFt: breakdown.areaSqFt,
@@ -230,7 +207,6 @@ const baseSelect = {
   occupantName: gpProperties.occupantName,
   resolutionRef: gpProperties.resolutionRef,
   assessmentDate: gpProperties.assessmentDate,
-  assessmentInputs: gpProperties.assessmentInputs,
   lightingTaxPaise: gpProperties.lightingTaxPaise,
   sanitationTaxPaise: gpProperties.sanitationTaxPaise,
   waterTaxPaise: gpProperties.waterTaxPaise,

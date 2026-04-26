@@ -36,6 +36,20 @@
       "when": 1777127832082,
       "tag": "0004_wise_mikhail_rasputin",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1777132731756,
+      "tag": "0005_drop_assessment_inputs",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1777192767115,
+      "tag": "0006_bouncy_sage",
+      "breakpoints": true
     }
   ]
 }

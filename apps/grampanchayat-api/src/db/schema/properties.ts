@@ -11,7 +11,6 @@ import {
   date,
   real,
   bigint,
-  jsonb,
   index,
   uniqueIndex,
 } from 'drizzle-orm/pg-core'
@@ -41,8 +40,6 @@ export const gpProperties = pgTable(
     lightingTaxPaise: bigint('lighting_tax_paise', { mode: 'number' }),
     sanitationTaxPaise: bigint('sanitation_tax_paise', { mode: 'number' }),
     waterTaxPaise:    bigint('water_tax_paise', { mode: 'number' }),
-    /** Optional raw rate/tax inputs; computed columns can live in app layer. */
-    assessmentInputs: jsonb('assessment_inputs').$type<Record<string, unknown>>(),
     createdAt:        timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt:        timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },

@@ -245,8 +245,11 @@ export type Database = {
           logo_url: string | null
           name_en: string
           name_mr: string
+          onboarding_complete: boolean
+          opening_balance_imported_at: string | null
           portal_config: Json
           portal_theme: string
+          profile_complete_at: string | null
           subdomain: string
           tier: string
           village: Json | null
@@ -260,8 +263,11 @@ export type Database = {
           logo_url?: string | null
           name_en: string
           name_mr: string
+          onboarding_complete?: boolean
+          opening_balance_imported_at?: string | null
           portal_config?: Json
           portal_theme?: string
+          profile_complete_at?: string | null
           subdomain: string
           tier?: string
           village?: Json | null
@@ -275,8 +281,11 @@ export type Database = {
           logo_url?: string | null
           name_en?: string
           name_mr?: string
+          onboarding_complete?: boolean
+          opening_balance_imported_at?: string | null
           portal_config?: Json
           portal_theme?: string
+          profile_complete_at?: string | null
           subdomain?: string
           tier?: string
           village?: Json | null
@@ -344,7 +353,6 @@ export type Database = {
         Row: {
           age_bracket: string | null
           assessment_date: string | null
-          assessment_inputs: Json | null
           created_at: string
           gp_id: string
           id: string
@@ -362,7 +370,6 @@ export type Database = {
         Insert: {
           age_bracket?: string | null
           assessment_date?: string | null
-          assessment_inputs?: Json | null
           created_at?: string
           gp_id: string
           id?: string
@@ -380,7 +387,6 @@ export type Database = {
         Update: {
           age_bracket?: string | null
           assessment_date?: string | null
-          assessment_inputs?: Json | null
           created_at?: string
           gp_id?: string
           id?: string

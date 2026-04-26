@@ -145,7 +145,6 @@ export const mastersBulkService = {
       lightingTaxPaise: r.lighting_tax_paise ?? null,
       sanitationTaxPaise: r.sanitation_tax_paise ?? null,
       waterTaxPaise: r.water_tax_paise ?? null,
-      assessmentInputs: null,
       createdAt:      now,
       updatedAt:      now,
     }))

@@ -31,6 +31,5 @@
 | `age_bracket` | optional | `0-2` … `60+` |
 | `occupant_name` | `occupant_name` | भोगवटदार |
 | `resolution_ref`, `assessment_date` | optional | N08 GP resolution context; date `YYYY-MM-DD` |
-| `assessment_inputs` | not in v1 CSV | Reserved JSON for rate/tax inputs |
 
 **N09** demand / half-year columns are **not** in this table; future `gp_tax_demands` (or similar) should FK to `gp_properties.id`.
