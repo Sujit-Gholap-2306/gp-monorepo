@@ -261,6 +261,7 @@ export default async function AdminNamuna9Page({ params, searchParams }: Namuna9
                 <th className="px-3 py-2 text-right font-medium">भरलेले</th>
                 <th className="px-3 py-2 text-right font-medium">बाकी</th>
                 <th className="px-3 py-2 font-medium">स्थिती</th>
+                <th className="px-3 py-2 font-medium">वसुली</th>
                 <th className="px-3 py-2 font-medium" aria-label="Open" />
               </tr>
             </thead>
@@ -291,6 +292,16 @@ export default async function AdminNamuna9Page({ params, searchParams }: Namuna9
                   <td className="px-3 py-2 text-right">₹{rupees(demand.totals.paidPaise)}</td>
                   <td className="px-3 py-2 text-right font-semibold">₹{rupees(demand.totals.totalDuePaise)}</td>
                   <td className="px-3 py-2"><Namuna9StatusBadge status={demand.status} /></td>
+                  <td className="px-3 py-2">
+                    {demand.status !== 'paid' && (
+                      <Link
+                        href={`/${subdomain}/admin/namuna10/new?propertyId=${encodeURIComponent(demand.property.id)}`}
+                        className="inline-flex h-8 items-center rounded-md border border-gp-border px-3 text-xs font-medium hover:bg-gp-surface"
+                      >
+                        वसुली नोंदवा
+                      </Link>
+                    )}
+                  </td>
                   <td className="px-3 py-2">
                     <Link
                       href={`/${subdomain}/admin/namuna9/${demand.id}`}

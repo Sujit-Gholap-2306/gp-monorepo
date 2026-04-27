@@ -8,6 +8,7 @@
     "start": "node dist/index.js",
     "test:phase1": "node --import tsx scripts/phase1-smoke.ts",
     "test:phase3": "node --import tsx scripts/phase3-smoke.ts",
+    "smoke:n10": "node --import tsx scripts/smoke-n10-create.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",

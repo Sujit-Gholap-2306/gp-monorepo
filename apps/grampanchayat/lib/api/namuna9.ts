@@ -6,6 +6,7 @@ import { downloadBlob } from '@/lib/download-blob'
 export type Namuna9Status = 'pending' | 'partial' | 'paid'
 
 export type Namuna9DemandLine = {
+  id: string
   taxHead: TaxHead
   previousPaise: number
   currentPaise: number
@@ -105,6 +106,7 @@ export type Namuna9BulkErrorBody = {
 }
 
 type RawNamuna9DemandLine = {
+  id: string
   tax_head: TaxHead
   previous_paise: number
   current_paise: number
@@ -202,6 +204,7 @@ export type ListNamuna9Filters = {
   q?: string
   status?: Namuna9Status
   citizenNo?: number
+  propertyId?: string
 }
 
 export type Namuna9OpeningTemplateMode = 'blank' | 'properties'
@@ -253,6 +256,7 @@ function normalizeDemand(raw: RawNamuna9Demand): Namuna9Demand {
       nameEn: raw.owner.name_en,
     },
     lines: raw.lines.map((line) => ({
+      id: line.id,
       taxHead: line.tax_head,
       previousPaise: line.previous_paise,
       currentPaise: line.current_paise,
@@ -288,6 +292,7 @@ export async function listNamuna9(
   if (filters.q) url.searchParams.set('q', filters.q)
   if (filters.status) url.searchParams.set('status', filters.status)
   if (filters.citizenNo != null) url.searchParams.set('citizenNo', String(filters.citizenNo))
+  if (filters.propertyId) url.searchParams.set('propertyId', filters.propertyId)
 
   const raw = await apiFetch<RawNamuna9ListResponse>(url.toString(), { method: 'GET', ...init })
   return {

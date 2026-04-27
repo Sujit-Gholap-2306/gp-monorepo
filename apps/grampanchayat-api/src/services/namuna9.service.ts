@@ -36,6 +36,7 @@ type PropertyRateRow = {
 }
 
 type DemandLineRow = {
+  lineId: string
   demandId: string
   generatedAt: Date
   propertyId: string
@@ -54,6 +55,7 @@ type DemandLineRow = {
 }
 
 type DemandLine = {
+  id: string
   taxHead: TaxHead
   previousPaise: number
   currentPaise: number
@@ -159,6 +161,7 @@ function groupDemandRows(rows: DemandLineRow[], fiscalYear: string): DemandSumma
     if (!isTaxHeadValue(row.taxHead)) continue
 
     const line: DemandLine = {
+      id: row.lineId,
       taxHead: row.taxHead,
       previousPaise: row.previousPaise,
       currentPaise: row.currentPaise,
@@ -180,6 +183,7 @@ function groupDemandRows(rows: DemandLineRow[], fiscalYear: string): DemandSumma
     ...demand,
     lines: TAX_HEADS.map((head) => (
       demand.lines.find((line) => line.taxHead === head) ?? {
+        id: `${demand.id}:${head}`,
         taxHead: head,
         previousPaise: 0,
         currentPaise: 0,
@@ -241,7 +245,7 @@ async function preFilterDemandIdsByStatus(
 async function selectDemandRows(
   gpId: string,
   fiscalYear: string,
-  filters: Pick<Namuna9ListQuery, 'ward' | 'q' | 'citizenNo'> & { demandId?: string; demandIds?: string[] } = {}
+  filters: Pick<Namuna9ListQuery, 'ward' | 'q' | 'citizenNo' | 'propertyId'> & { demandId?: string; demandIds?: string[] } = {}
 ): Promise<DemandLineRow[]> {
   const conditions = [
     eq(gpNamuna9Demands.gpId, gpId),
@@ -260,6 +264,9 @@ async function selectDemandRows(
   if (filters.citizenNo) {
     conditions.push(eq(gpCitizens.citizenNo, filters.citizenNo))
   }
+  if (filters.propertyId) {
+    conditions.push(eq(gpProperties.id, filters.propertyId))
+  }
   if (filters.q) {
     const q = `%${filters.q}%`
     conditions.push(
@@ -274,6 +281,7 @@ async function selectDemandRows(
   return db
     .select({
       demandId: gpNamuna9Demands.id,
+      lineId: gpNamuna9DemandLines.id,
       generatedAt: gpNamuna9Demands.generatedAt,
       propertyId: gpProperties.id,
       propertyNo: gpProperties.propertyNo,

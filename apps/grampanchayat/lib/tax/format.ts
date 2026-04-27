@@ -25,6 +25,7 @@ export function getNamuna9LineByHead(
   taxHead: TaxHead
 ): Namuna9DemandLine {
   return demand.lines.find((line) => line.taxHead === taxHead) ?? {
+    id: `missing:${taxHead}`,
     taxHead,
     previousPaise: 0,
     currentPaise: 0,

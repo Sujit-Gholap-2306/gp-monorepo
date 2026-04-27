@@ -92,7 +92,17 @@ export default async function AdminNamuna9DetailPage({ params }: PageProps) {
               वर्ष {demand.fiscalYear} · वार्ड {demand.property.wardNumber || '—'} · {demand.property.propertyType}
             </p>
           </div>
-          <StatusBadge status={demand.status} />
+          <div className="flex flex-wrap items-center gap-2">
+            <StatusBadge status={demand.status} />
+            {demand.status !== 'paid' && (
+              <Link
+                href={`/${subdomain}/admin/namuna10/new?propertyId=${encodeURIComponent(demand.property.id)}`}
+                className="inline-flex h-9 items-center rounded-md border border-gp-border px-3 text-sm hover:bg-gp-surface"
+              >
+                वसुली नोंदवा
+              </Link>
+            )}
+          </div>
         </div>
         <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
           <div className="rounded-md border border-gp-border bg-gp-surface p-3">

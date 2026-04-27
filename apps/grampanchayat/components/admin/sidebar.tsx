@@ -13,6 +13,7 @@ import {
   ExternalLink,
   Database,
   ClipboardList,
+  BadgeIndianRupee,
   Lock,
   ListChecks,
 } from 'lucide-react'
@@ -28,6 +29,7 @@ const NAV_ITEMS = [
   { href: 'admin/masters/import', label: 'मास्टर आयात',      labelEn: 'Masters import',  Icon: Database },
   { href: 'admin/namuna8',        label: 'नमुना ८',         labelEn: 'Namuna 8',        Icon: ClipboardList, feature: 'tax' as Feature },
   { href: 'admin/namuna9',        label: 'नमुना ९',         labelEn: 'Namuna 9',        Icon: ClipboardList, feature: 'tax' as Feature },
+  { href: 'admin/namuna10',       label: 'नमुना १०',        labelEn: 'Collection',      Icon: BadgeIndianRupee, feature: 'tax' as Feature },
   { href: 'admin/onboarding',     label: 'ऑनबोर्डिंग',     labelEn: 'Onboarding',      Icon: ListChecks },
   { href: 'admin/settings',       label: 'सेटिंग्ज',        labelEn: 'Settings',        Icon: Settings },
 ]

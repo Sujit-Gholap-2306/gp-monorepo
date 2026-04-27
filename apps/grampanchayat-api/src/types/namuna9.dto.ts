@@ -56,6 +56,14 @@ export const namuna9ListQuerySchema = z.object({
   fiscalYear: optionalFiscalYear,
   ward:       optionalString,
   q:          optionalString,
+  propertyId: z.preprocess(
+    (value) => {
+      const v = firstValue(value)
+      if (typeof v === 'string' && v.trim() === '') return undefined
+      return v
+    },
+    z.string().uuid().optional()
+  ),
   status:     z.preprocess(firstValue, namuna9StatusSchema.optional()),
   citizenNo:  optionalPositiveInt,
 })

@@ -3,6 +3,7 @@ import { memoryUploadSingle } from '../common/guards/bulk-upload.guard.ts'
 import { bulkImportRateLimit } from '../common/guards/rate-limit.guard.ts'
 import { requireFeature } from '../common/guards/tier.guard.ts'
 import { namuna8Controller } from '../controllers/namuna8.controller.ts'
+import { namuna10Controller } from '../controllers/namuna10.controller.ts'
 import { namuna9Controller } from '../controllers/namuna9.controller.ts'
 
 const router = Router()
@@ -21,5 +22,8 @@ router.post(
 )
 router.post('/9/generate', requireFeature('tax'), namuna9Controller.generate)
 router.get('/9/:id', requireFeature('tax'), namuna9Controller.getById)
+router.get('/10', requireFeature('tax'), namuna10Controller.list)
+router.get('/10/:id', requireFeature('tax'), namuna10Controller.getById)
+router.post('/10', requireFeature('tax'), namuna10Controller.create)
 
 export default router

@@ -1,4 +1,5 @@
 import { and, eq, inArray, sql } from 'drizzle-orm'
+import { sqlBigintArray, sqlDate, sqlUuidArray } from '../lib/sql-helpers.ts'
 import { db } from '../db/index.ts'
 import { gpNamuna9DemandLines, gpNamuna9Demands, gpProperties } from '../db/schema/index.ts'
 import { ApiError } from '../common/exceptions/http.exception.ts'
@@ -221,10 +222,10 @@ export const namuna9OpeningBalancesService = {
         await tx.execute(sql`
           UPDATE gp_namuna9_demand_lines AS t
           SET previous_paise = v.previous_paise,
-              updated_at     = ${now}
+              updated_at     = ${sqlDate(now)}
           FROM (
-            SELECT UNNEST(${lineIds}::uuid[])   AS id,
-                   UNNEST(${lineValues}::bigint[]) AS previous_paise
+            SELECT UNNEST(${sqlUuidArray(lineIds)})    AS id,
+                   UNNEST(${sqlBigintArray(lineValues)}) AS previous_paise
           ) AS v
           WHERE t.id = v.id
         `)
@@ -237,8 +238,8 @@ export const namuna9OpeningBalancesService = {
                                THEN ${auditLine}
                              ELSE notes || E'\n' || ${auditLine}
                            END,
-              updated_at = ${now}
-          WHERE id = ANY(${demandIdsToUpdate}::uuid[])
+              updated_at = ${sqlDate(now)}
+          WHERE id = ANY(${sqlUuidArray(demandIdsToUpdate)})
         `)
 
       })
