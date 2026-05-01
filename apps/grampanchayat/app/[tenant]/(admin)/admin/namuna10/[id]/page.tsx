@@ -7,6 +7,7 @@ import { getReceipt } from '@/lib/api/namuna10'
 import { taxHeadLabel } from '@/lib/tax/labels'
 import { rupeesFromPaise as rupees } from '@/lib/tax/format'
 import { createSupabaseServerClient, getSupabaseAccessToken } from '@/lib/supabase/server'
+import { Namuna10VoidAction } from '@/components/admin/namuna10-void-action'
 
 type PageProps = {
   params: Promise<{ tenant: string, id: string }>
@@ -80,13 +81,22 @@ export default async function AdminNamuna10DetailPage({ params }: PageProps) {
           <ChevronLeft className="h-4 w-4" aria-hidden="true" />
           <span>वसुली डेस्ककडे परत</span>
         </Link>
-        <Link
-          href={printHref}
-          className="inline-flex h-9 items-center gap-2 rounded-md border border-gp-border bg-card px-3 text-sm transition-colors hover:bg-gp-surface"
-        >
-          <Printer className="h-4 w-4" aria-hidden="true" />
-          <span>Print Receipt</span>
-        </Link>
+        <div className="flex flex-wrap items-center gap-2">
+          {!receipt.isVoid && (
+            <Namuna10VoidAction
+              subdomain={subdomain}
+              receiptId={receipt.id}
+              accessToken={accessToken}
+            />
+          )}
+          <Link
+            href={printHref}
+            className="inline-flex h-9 items-center gap-2 rounded-md border border-gp-border bg-card px-3 text-sm transition-colors hover:bg-gp-surface"
+          >
+            <Printer className="h-4 w-4" aria-hidden="true" />
+            <span>Print Receipt</span>
+          </Link>
+        </div>
       </div>
 
       <div className="rounded-lg border border-gp-border bg-card p-4">

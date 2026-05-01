@@ -42,5 +42,6 @@ export const tenantApiPaths = {
     n10Create: 'namune/10',
     n10List: 'namune/10',
     n10ById: (id: string) => `namune/10/${id}`,
+    n10Void: (id: string) => `namune/10/${id}/void`,
   },
 } as const

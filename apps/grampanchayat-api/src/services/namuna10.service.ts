@@ -67,6 +67,19 @@ type ReceiptListRow = {
   total_paise: number | string | null
 }
 
+type VoidReceiptRow = {
+  id: string
+  gp_id: string
+  is_void: boolean
+}
+
+type VoidReceiptLineRow = {
+  receipt_line_id: string
+  demand_line_id: string
+  amount_paise: number | string
+  paid_paise: number | string
+}
+
 function asNumber(value: number | string | null | undefined): number {
   if (value == null) return 0
   return typeof value === 'number' ? value : Number(value)
@@ -393,5 +406,90 @@ export const namuna10Service = {
       limit,
       offset,
     }
+  },
+
+  async voidReceipt(gpId: string, actorId: string, receiptId: string, reason: string) {
+    await db.transaction(async (tx) => {
+      const [receipt] = await tx.execute<VoidReceiptRow>(sql`
+        SELECT id, gp_id, is_void
+        FROM gp_namuna10_receipts
+        WHERE gp_id = ${gpId}
+          AND id = ${receiptId}
+        FOR UPDATE
+      `)
+
+      if (!receipt) throw new ApiError(404, 'Receipt not found')
+      if (receipt.is_void) throw new ApiError(409, 'Receipt is already voided')
+
+      const [totalCount] = await tx.execute<{ total: number }>(sql`
+        SELECT COUNT(*)::int AS total
+        FROM gp_namuna10_receipt_lines
+        WHERE receipt_id = ${receiptId}
+      `)
+
+      const rows = await tx.execute<VoidReceiptLineRow>(sql`
+        SELECT
+          rl.id AS receipt_line_id,
+          rl.demand_line_id,
+          rl.amount_paise,
+          dl.paid_paise
+        FROM gp_namuna10_receipt_lines rl
+        JOIN gp_namuna9_demand_lines dl ON dl.id = rl.demand_line_id
+        JOIN gp_namuna9_demands d ON d.id = dl.demand_id
+        WHERE rl.receipt_id = ${receiptId}
+          AND d.gp_id = ${gpId}
+        FOR UPDATE OF dl
+      `)
+
+      if (rows.length === 0) {
+        throw new ApiError(409, 'Receipt has no reversible lines')
+      }
+
+      if (rows.length !== totalCount?.total) {
+        throw new ApiError(
+          409,
+          `Partial reversal detected: receipt has ${totalCount?.total} lines but only ${rows.length} are reversible. Data integrity violation — void aborted.`
+        )
+      }
+
+      for (const row of rows) {
+        const amountPaise = asNumber(row.amount_paise)
+        const paidPaise = asNumber(row.paid_paise)
+        if (paidPaise < amountPaise) {
+          throw new ApiError(
+            409,
+            `Cannot void receipt: demand line ${row.demand_line_id} has paid_paise ${paidPaise}, below reversal amount ${amountPaise}`
+          )
+        }
+      }
+
+      const now = new Date()
+      const demandLineIds = rows.map((row) => row.demand_line_id)
+      const amounts = rows.map((row) => asNumber(row.amount_paise))
+
+      await tx.execute(sql`
+        UPDATE gp_namuna9_demand_lines AS t
+        SET paid_paise = t.paid_paise - v.amount_paise,
+            updated_at = ${sqlDate(now)}
+        FROM (
+          SELECT UNNEST(${sqlUuidArray(demandLineIds)}) AS demand_line_id,
+                 UNNEST(${sqlBigintArray(amounts)})     AS amount_paise
+        ) AS v
+        WHERE t.id = v.demand_line_id
+      `)
+
+      await tx
+        .update(gpNamuna10Receipts)
+        .set({
+          isVoid:     true,
+          voidedAt:   now,
+          voidedBy:   actorId,
+          voidReason: reason,
+          updatedAt:  now,
+        })
+        .where(eq(gpNamuna10Receipts.id, receiptId))
+    })
+
+    return namuna10Service.getById(gpId, receiptId)
   },
 }

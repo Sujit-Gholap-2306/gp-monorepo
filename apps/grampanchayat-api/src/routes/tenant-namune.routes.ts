@@ -25,5 +25,6 @@ router.get('/9/:id', requireFeature('tax'), namuna9Controller.getById)
 router.get('/10', requireFeature('tax'), namuna10Controller.list)
 router.get('/10/:id', requireFeature('tax'), namuna10Controller.getById)
 router.post('/10', requireFeature('tax'), namuna10Controller.create)
+router.post('/10/:id/void', requireFeature('tax'), namuna10Controller.voidReceipt)
 
 export default router

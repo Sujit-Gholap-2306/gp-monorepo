@@ -33,3 +33,14 @@ export const namuna10CreateBodySchema = z.object({
   })
 
 export type Namuna10CreateBody = z.infer<typeof namuna10CreateBodySchema>
+
+export const namuna10IdParamsSchema = z.object({
+  id: z.string().uuid('id must be a valid UUID'),
+})
+
+export const namuna10VoidBodySchema = z.object({
+  reason: z.string().trim().min(3, 'Void reason is required').max(500),
+})
+
+export type Namuna10IdParams = z.infer<typeof namuna10IdParamsSchema>
+export type Namuna10VoidBody = z.infer<typeof namuna10VoidBodySchema>

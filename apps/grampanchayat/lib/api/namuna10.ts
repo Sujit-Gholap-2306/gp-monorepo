@@ -67,6 +67,10 @@ export type Namuna10CreateInput = {
   otherReason?: string
 }
 
+export type Namuna10VoidInput = {
+  reason: string
+}
+
 export type Namuna10ReceiptSummary = {
   id: string
   receiptNo: string
@@ -239,6 +243,19 @@ export async function getReceipt(
   const raw = await apiFetch<RawReceiptDetail>(
     buildApiUrl(subdomain, tenantApiPaths.namune.n10ById(id)),
     { method: 'GET', ...init }
+  )
+  return normalizeReceiptDetail(raw)
+}
+
+export async function voidReceipt(
+  subdomain: string,
+  id: string,
+  body: Namuna10VoidInput,
+  init?: RequestInit
+): Promise<Namuna10ReceiptDetail> {
+  const raw = await apiFetch<RawReceiptDetail>(
+    buildApiUrl(subdomain, tenantApiPaths.namune.n10Void(id)),
+    { method: 'POST', body: JSON.stringify(body), ...init }
   )
   return normalizeReceiptDetail(raw)
 }
