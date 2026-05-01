@@ -1455,7 +1455,15 @@ INV-5   Voided N10 → reversal entry in N05 + N06 on the void date
 8. Start the next phase only after the current phase/bundle is pushed or the
    user explicitly says to continue without pushing.
 
-### 12.1 Phase plan
+### 12.1 Recent updates
+
+- **2026-05-01**: Backend utility/helper coverage expanded and verified.
+  Added unit tests for `account-heads` and `spreadsheet` helpers
+  (`tests/unit/account-heads.test.ts`, `tests/unit/spreadsheet.test.ts`).
+  Verification run: `pnpm --filter @gp/grampanchayat-api exec vitest run tests/unit`
+  → `7 files`, `72 tests` passed.
+
+### 12.2 Phase plan
 
 | # | Phase | Gap fixed | Files / scope | Verify gate | Status |
 |---|-------|-----------|---------------|-------------|--------|
@@ -1480,10 +1488,10 @@ INV-5   Voided N10 → reversal entry in N05 + N06 on the void date
 | **18** | N05 cashbook entries (table) + `gp_account_head` enum + `gp_namuna05_view` for running balance | F | `namuna05-cashbook-entries.ts`, migration `0009_sturdy_shocker.sql` (enum + table + view), wired into N10 create/void service tx | Implemented write path: N10 create posts line + adjustment N05 entries; N10 void posts mirror reversal entries on void date. Entry identification fields present (`source_type`, `source_id`, `source_line_id`, `account_head`, `description`). Pending explicit concurrency verification for running balance view under parallel inserts. | 🔄 |
 | **19** | N06 classified register **as a SQL view** (no table, no compile job) | F | `namuna06-view.ts`, generated migration `0011_n06_classified_view.sql` | Implemented view definition and generated migration. Pending verify gate: `INV-3` seeded-month 3-way tie check. | 🔄 |
 | **20** | N05/N06 read UIs (read-only) | — | `admin/namuna5/page.tsx`, `admin/namuna6/page.tsx`, `/namune/5`, `/namune/6` read APIs | Implemented read pages + APIs with FY/month filters, N05 running-balance table, and N06 31-day classified matrix. Pending bundled verify with Phase 21/22 per decision. | 🔄 |
-| **21** | Invariant test harness — INV-1..INV-5 | — | `tests/integration/tax-chain-invariants.test.ts` | All 5 invariants run green on seeded 500-property GP | ☐ |
-| **22** | End-to-end demo seed + smoke test | — | `scripts/seed-demo-gp.ts` — Balsane-shaped data | One-command spin-up: gen N09 → collect → void → reconcile | ☐ |
+| **21** | Invariant test harness — INV-1..INV-5 | — | `tests/integration/tax-chain-invariants.test.ts` (Vitest; per `2026-05-01-tax-chain-test-requirements.md`) | Test cases implemented for INV-1..INV-5; backend utility/helper unit gaps closed (`tests/unit/account-heads.test.ts`, `tests/unit/spreadsheet.test.ts`), and BE unit suite passes (`pnpm --filter @gp/grampanchayat-api exec vitest run tests/unit` → 72/72). Pending execution gate (`pnpm --filter @gp/grampanchayat-api test:invariants`) | 🔄 |
+| **22** | End-to-end demo seed + smoke test | — | `scripts/seed-demo-gp.ts` | Idempotent demo seed implemented (`test-gp`) to support Phase 21 invariants; pending execution gate (`pnpm --filter @gp/grampanchayat-api seed:demo`) | 🔄 |
 
-### 12.2 Deferred (post-launch backlog)
+### 12.3 Deferred (post-launch backlog)
 
 | # | Item | Gap | Trigger to pull in |
 |---|------|-----|-------------------|
@@ -1494,7 +1502,7 @@ INV-5   Voided N10 → reversal entry in N05 + N06 on the void date
 | D5 | Bank reconciliation flow | — | Cheque/NEFT volume becomes painful |
 | D6 | SMS reminders on pending demands | — | After collection-desk volume stable |
 
-### 12.3 Review + push cadence
+### 12.4 Review + push cadence
 
 | Bundle | Phases | Demo checkpoint | User test focus | Push rule | Status |
 |--------|--------|-----------------|-----------------|-----------|--------|
@@ -1508,7 +1516,7 @@ build phases one by one inside a bundle, but we stop at each meaningful test
 point for user review. A bundle never pushes half-finished — invariants must
 hold at every push checkpoint, otherwise the next phase inherits a broken base.
 
-### 12.4 Per-phase verify checklist (apply to every row above)
+### 12.5 Per-phase verify checklist (apply to every row above)
 
 Before flipping a phase to 🟢:
 
