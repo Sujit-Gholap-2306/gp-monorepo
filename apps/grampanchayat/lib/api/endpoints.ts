@@ -39,6 +39,8 @@ export const tenantApiPaths = {
     n09OpeningTemplate: 'namune/9/opening-template',
     n09OpeningBalances: 'namune/9/opening-balances',
     n09ById: (demandId: string) => `namune/9/${demandId}`,
+    n05List: 'namune/5',
+    n06List: 'namune/6',
     n10Create: 'namune/10',
     n10List: 'namune/10',
     n10ById: (id: string) => `namune/10/${id}`,

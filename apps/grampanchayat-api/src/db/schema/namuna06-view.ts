@@ -2,13 +2,13 @@ import { sql } from 'drizzle-orm'
 import { bigint, jsonb, pgView, smallint, text, uuid } from 'drizzle-orm/pg-core'
 
 export const gpNamuna06View = pgView('gp_namuna06_view', {
-  gpId:            uuid('gp_id'),
-  fiscalYear:      text('fiscal_year'),
-  fyMonthNo:       smallint('fy_month_no'),
-  accountHead:     text('account_head'),
+  gpId:            uuid('gp_id').notNull(),
+  fiscalYear:      text('fiscal_year').notNull(),
+  fyMonthNo:       smallint('fy_month_no').notNull(),
+  accountHead:     text('account_head').notNull(),
   dailyTotalsPaise: jsonb('daily_totals_paise').$type<Record<string, number> | null>(),
-  monthTotalPaise: bigint('month_total_paise', { mode: 'number' }),
-  fyRunningPaise:  bigint('fy_running_paise', { mode: 'number' }),
+  monthTotalPaise: bigint('month_total_paise', { mode: 'number' }).notNull(),
+  fyRunningPaise:  bigint('fy_running_paise', { mode: 'number' }).notNull(),
 }).as(sql`
   WITH daily AS (
     SELECT

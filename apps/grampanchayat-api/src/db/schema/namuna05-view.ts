@@ -2,21 +2,21 @@ import { sql } from 'drizzle-orm'
 import { bigint, date, pgView, smallint, text, uuid } from 'drizzle-orm/pg-core'
 
 export const gpNamuna05View = pgView('gp_namuna05_view', {
-  id:               uuid('id'),
-  gpId:             uuid('gp_id'),
-  entryDate:        date('entry_date'),
-  fiscalYear:       text('fiscal_year'),
-  fyMonthNo:        smallint('fy_month_no'),
-  entryType:        text('entry_type'),
-  accountHead:      text('account_head'),
+  id:               uuid('id').notNull(),
+  gpId:             uuid('gp_id').notNull(),
+  entryDate:        date('entry_date').notNull(),
+  fiscalYear:       text('fiscal_year').notNull(),
+  fyMonthNo:        smallint('fy_month_no').notNull(),
+  entryType:        text('entry_type').notNull(),
+  accountHead:      text('account_head').notNull(),
   description:      text('description'),
-  amountPaise:      bigint('amount_paise', { mode: 'number' }),
-  sourceType:       text('source_type'),
+  amountPaise:      bigint('amount_paise', { mode: 'number' }).notNull(),
+  sourceType:       text('source_type').notNull(),
   sourceId:         uuid('source_id'),
   sourceLineId:     uuid('source_line_id'),
-  createdBy:        uuid('created_by'),
+  createdBy:        uuid('created_by').notNull(),
   // SUM(bigint) → numeric in Postgres; cast to bigint in view SQL keeps this safe
-  runningBalancePaise: bigint('running_balance_paise', { mode: 'number' }),
+  runningBalancePaise: bigint('running_balance_paise', { mode: 'number' }).notNull(),
 }).as(sql`
   SELECT
     e.id,

@@ -5,6 +5,7 @@ import { requireFeature } from '../common/guards/tier.guard.ts'
 import { namuna8Controller } from '../controllers/namuna8.controller.ts'
 import { namuna10Controller } from '../controllers/namuna10.controller.ts'
 import { namuna9Controller } from '../controllers/namuna9.controller.ts'
+import { namuna56Controller } from '../controllers/namuna56.controller.ts'
 
 const router = Router()
 
@@ -22,6 +23,8 @@ router.post(
 )
 router.post('/9/generate', requireFeature('tax'), namuna9Controller.generate)
 router.get('/9/:id', requireFeature('tax'), namuna9Controller.getById)
+router.get('/5', requireFeature('tax'), namuna56Controller.listNamuna5)
+router.get('/6', requireFeature('tax'), namuna56Controller.listNamuna6)
 router.get('/10', requireFeature('tax'), namuna10Controller.list)
 router.get('/10/:id', requireFeature('tax'), namuna10Controller.getById)
 router.post('/10', requireFeature('tax'), namuna10Controller.create)
