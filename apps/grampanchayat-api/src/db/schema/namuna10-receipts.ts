@@ -71,6 +71,10 @@ export const gpNamuna10Receipts = pgTable(
       sql`${t.noticeFeePaise} >= 0`
     ),
     otherCheck: check('gp_namuna10_receipts_other_check', sql`${t.otherPaise} >= 0`),
+    fiscalYearFormatCheck: check(
+      'gp_namuna10_receipts_fiscal_year_format_check',
+      sql`${t.fiscalYear} ~ '^\d{4}-\d{2}$'`
+    ),
   })
 )
 

@@ -3,11 +3,13 @@ import { sqlBigintArray, sqlDate, sqlUuidArray } from '../lib/sql-helpers.ts'
 import { ApiError } from '../common/exceptions/http.exception.ts'
 import { db } from '../db/index.ts'
 import {
+  gpNamuna05CashbookEntries,
   gpNamuna10ReceiptLines,
   gpNamuna10Receipts,
   gpTenants,
 } from '../db/schema/index.ts'
-import { currentFiscalYear } from '../lib/fiscal.ts'
+import { accountHeadForTaxHead } from '../lib/account-heads.ts'
+import { currentFiscalYear, fyMonthNo } from '../lib/fiscal.ts'
 import { isTaxHead } from '../lib/tax-head.ts'
 import type { Namuna10CreateBody } from '../types/namuna10.dto.ts'
 
@@ -17,6 +19,7 @@ type LockedDemandLineRow = {
   id: string
   gp_id: string
   property_id: string
+  tax_head: string
   total_due_paise: number
 }
 
@@ -69,15 +72,49 @@ type ReceiptListRow = {
 
 type VoidReceiptRow = {
   id: string
+  receipt_no: string
   gp_id: string
+  discount_paise: number | string
+  late_fee_paise: number | string
+  notice_fee_paise: number | string
+  other_paise: number | string
   is_void: boolean
 }
 
 type VoidReceiptLineRow = {
   receipt_line_id: string
   demand_line_id: string
+  tax_head: string
   amount_paise: number | string
   paid_paise: number | string
+}
+
+type CashbookEntryType = 'credit' | 'debit'
+type CashbookSourceType = 'namuna10' | 'namuna10_void'
+
+type N05AccountHead =
+  | 'property_tax_house'
+  | 'property_tax_lighting'
+  | 'property_tax_sanitation'
+  | 'property_tax_water'
+  | 'discount'
+  | 'late_fee'
+  | 'notice_fee'
+  | 'other'
+
+type N05EntryRow = {
+  gpId: string
+  entryDate: string
+  fiscalYear: string
+  fyMonthNo: number
+  entryType: CashbookEntryType
+  accountHead: N05AccountHead
+  description: string
+  amountPaise: number
+  sourceType: CashbookSourceType
+  sourceId: string
+  sourceLineId: string | null
+  createdBy: string
 }
 
 function asNumber(value: number | string | null | undefined): number {
@@ -92,6 +129,80 @@ function asIsoString(value: Date | string | null | undefined): string | null {
 
 function formatReceiptNo(fiscalYear: string, seq: number): string {
   return `${fiscalYear}/${String(seq).padStart(6, '0')}`
+}
+
+const INDIA_UTC_OFFSET_MS = 5.5 * 60 * 60 * 1000
+
+function indiaDateString(input: Date | string | number): string {
+  const date = input instanceof Date ? input : new Date(input)
+  const india = new Date(date.getTime() + INDIA_UTC_OFFSET_MS)
+  const year = india.getUTCFullYear()
+  const month = String(india.getUTCMonth() + 1).padStart(2, '0')
+  const day = String(india.getUTCDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
+function buildN05Entries(params: {
+  mode: 'create' | 'void'
+  gpId: string
+  entryDate: string
+  fiscalYear: string
+  fyMonthNo: number
+  descriptionBase: string
+  sourceType: CashbookSourceType
+  sourceId: string
+  lines: Array<{ taxHead: string; amountPaise: number; sourceLineId: string }>
+  adjustments: {
+    discountPaise: number
+    lateFeePaise: number
+    noticeFeePaise: number
+    otherPaise: number
+  }
+  createdBy: string
+}): N05EntryRow[] {
+  const { mode, gpId, entryDate, fiscalYear, fyMonthNo: monthNo, descriptionBase, sourceType, sourceId, createdBy } = params
+  const lineEntryType: CashbookEntryType = mode === 'create' ? 'credit' : 'debit'
+  const discountType: CashbookEntryType = mode === 'create' ? 'debit' : 'credit'
+  const feeType: CashbookEntryType = mode === 'create' ? 'credit' : 'debit'
+
+  const ctx = { gpId, entryDate, fiscalYear, fyMonthNo: monthNo, sourceType, sourceId, createdBy }
+
+  const entries: N05EntryRow[] = params.lines.map((line) => {
+    if (!isTaxHead(line.taxHead)) {
+      throw new ApiError(500, `Unknown tax head: ${line.taxHead}`)
+    }
+    return {
+      ...ctx,
+      entryType: lineEntryType,
+      accountHead: accountHeadForTaxHead(line.taxHead),
+      description: `${descriptionBase} line`,
+      amountPaise: line.amountPaise,
+      sourceLineId: line.sourceLineId,
+    }
+  })
+
+  const adj = params.adjustments
+  const adjustmentDefs: Array<[number, 'discount' | 'late_fee' | 'notice_fee' | 'other', CashbookEntryType]> = [
+    [adj.discountPaise,   'discount',    discountType],
+    [adj.lateFeePaise,    'late_fee',    feeType],
+    [adj.noticeFeePaise,  'notice_fee',  feeType],
+    [adj.otherPaise,      'other',       feeType],
+  ]
+
+  for (const [amountPaise, accountHead, entryType] of adjustmentDefs) {
+    if (amountPaise > 0) {
+      entries.push({
+        ...ctx,
+        entryType,
+        accountHead,
+        description: `${descriptionBase} adjustment ${accountHead}`,
+        amountPaise,
+        sourceLineId: null,
+      })
+    }
+  }
+
+  return entries
 }
 
 export const namuna10Service = {
@@ -115,7 +226,15 @@ export const namuna10Service = {
       )
     }
 
-    return db.transaction(async (tx) => {
+    const paidAtDate = new Date(body.paidAt)
+    if (currentFiscalYear(paidAtDate) !== body.fiscalYear) {
+      throw new ApiError(
+        422,
+        `paidAt (${body.paidAt}) आर्थिक वर्ष ${body.fiscalYear} मध्ये येत नाही`
+      )
+    }
+
+    const receiptId = await db.transaction(async (tx) => {
       // Sequence gaps on TX rollback are intentional — receipt numbers are
       // never reused. Gaps are an audit signal, not a bug.
       const [seq] = await tx.execute<AllocatedSeqRow>(sql`
@@ -137,6 +256,7 @@ export const namuna10Service = {
           dl.id,
           d.gp_id,
           d.property_id,
+          dl.tax_head,
           dl.total_due_paise
         FROM gp_namuna9_demand_lines dl
         JOIN gp_namuna9_demands d ON d.id = dl.demand_id
@@ -220,40 +340,40 @@ export const namuna10Service = {
         WHERE t.id = v.demand_line_id
       `)
 
-      const linesTotalPaise = body.lines.reduce((sum, line) => sum + line.amountPaise, 0)
-      // Must match gp_namuna10_receipt_totals view formula exactly.
-      const totalPaise = linesTotalPaise
-        - body.discountPaise
-        + body.lateFeePaise
-        + body.noticeFeePaise
-        + body.otherPaise
-
-      return {
-        id:          receipt.id,
-        receiptNo:   receipt.receiptNo,
-        fiscalYear:  receipt.fiscalYear,
-        propertyId:  receipt.propertyId,
-        payerName:   receipt.payerName,
-        paidAt:      receipt.paidAt.toISOString(),
-        paymentMode: receipt.paymentMode,
-        reference:   receipt.reference ?? null,
-        discountPaise: receipt.discountPaise,
-        lateFeePaise: receipt.lateFeePaise,
-        noticeFeePaise: receipt.noticeFeePaise,
-        otherPaise: receipt.otherPaise,
-        otherReason: receipt.otherReason ?? null,
-        isVoid: receipt.isVoid,
-        lines:       insertedLines.map((line) => ({
-          id:           line.id,
-          demandLineId: line.demandLineId,
-          amountPaise:  line.amountPaise,
-        })),
-        totals: {
-          linesTotalPaise,
-          totalPaise,
+      const paidAt = new Date(receipt.paidAt)
+      const n05Entries = buildN05Entries({
+        mode: 'create',
+        gpId,
+        entryDate: indiaDateString(paidAt),
+        fiscalYear: receipt.fiscalYear,
+        fyMonthNo: fyMonthNo(paidAt),
+        descriptionBase: `N10 receipt ${receipt.receiptNo}`,
+        sourceType: 'namuna10',
+        sourceId: receipt.id,
+        lines: insertedLines.map((line) => {
+          const locked = lockedLineById.get(line.demandLineId)
+          if (!locked || !isTaxHead(locked.tax_head)) {
+            throw new ApiError(500, `Tax head missing for demand line ${line.demandLineId}`)
+          }
+          return { taxHead: locked.tax_head, amountPaise: line.amountPaise, sourceLineId: line.id }
+        }),
+        adjustments: {
+          discountPaise:  receipt.discountPaise,
+          lateFeePaise:   receipt.lateFeePaise,
+          noticeFeePaise: receipt.noticeFeePaise,
+          otherPaise:     receipt.otherPaise,
         },
+        createdBy,
+      })
+
+      if (n05Entries.length > 0) {
+        await tx.insert(gpNamuna05CashbookEntries).values(n05Entries)
       }
+
+      return receipt.id
     })
+
+    return namuna10Service.getById(gpId, receiptId)
   },
 
   async getById(gpId: string, receiptId: string) {
@@ -382,7 +502,7 @@ export const namuna10Service = {
         ${filters.propertyId ? sql`AND r.property_id = ${filters.propertyId}::uuid` : sql``}
         ${filters.fiscalYear ? sql`AND r.fiscal_year = ${filters.fiscalYear}` : sql``}
         ${query ? sql`AND (
-          r.receipt_no ILIKE ${`%${query}%`}
+          r.receipt_no ILIKE ${query + '%'}
           OR p.property_no ILIKE ${`%${query}%`}
           OR r.payer_name ILIKE ${`%${query}%`}
         )` : sql``}
@@ -411,7 +531,15 @@ export const namuna10Service = {
   async voidReceipt(gpId: string, actorId: string, receiptId: string, reason: string) {
     await db.transaction(async (tx) => {
       const [receipt] = await tx.execute<VoidReceiptRow>(sql`
-        SELECT id, gp_id, is_void
+        SELECT
+          id,
+          receipt_no,
+          gp_id,
+          discount_paise,
+          late_fee_paise,
+          notice_fee_paise,
+          other_paise,
+          is_void
         FROM gp_namuna10_receipts
         WHERE gp_id = ${gpId}
           AND id = ${receiptId}
@@ -431,6 +559,7 @@ export const namuna10Service = {
         SELECT
           rl.id AS receipt_line_id,
           rl.demand_line_id,
+          dl.tax_head,
           rl.amount_paise,
           dl.paid_paise
         FROM gp_namuna10_receipt_lines rl
@@ -478,11 +607,40 @@ export const namuna10Service = {
         WHERE t.id = v.demand_line_id
       `)
 
+      const voidedAt = now
+      const n05VoidEntries = buildN05Entries({
+        mode: 'void',
+        gpId,
+        entryDate: indiaDateString(voidedAt),
+        fiscalYear: currentFiscalYear(voidedAt),
+        fyMonthNo: fyMonthNo(voidedAt),
+        descriptionBase: `N10 void ${receipt.receipt_no}`,
+        sourceType: 'namuna10_void',
+        sourceId: receipt.id,
+        lines: rows.map((row) => {
+          if (!isTaxHead(row.tax_head)) {
+            throw new ApiError(500, `Tax head missing for demand line ${row.demand_line_id}`)
+          }
+          return { taxHead: row.tax_head, amountPaise: asNumber(row.amount_paise), sourceLineId: row.receipt_line_id }
+        }),
+        adjustments: {
+          discountPaise:  asNumber(receipt.discount_paise),
+          lateFeePaise:   asNumber(receipt.late_fee_paise),
+          noticeFeePaise: asNumber(receipt.notice_fee_paise),
+          otherPaise:     asNumber(receipt.other_paise),
+        },
+        createdBy: actorId,
+      })
+
+      if (n05VoidEntries.length > 0) {
+        await tx.insert(gpNamuna05CashbookEntries).values(n05VoidEntries)
+      }
+
       await tx
         .update(gpNamuna10Receipts)
         .set({
           isVoid:     true,
-          voidedAt:   now,
+          voidedAt,
           voidedBy:   actorId,
           voidReason: reason,
           updatedAt:  now,

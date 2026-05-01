@@ -13,6 +13,7 @@ export function sqlDate(date: Date) {
  * postgres.js does not reliably serialize string[] as uuid[] in raw queries.
  */
 export function sqlUuidArray(ids: string[]) {
+  if (ids.length === 0) return sql`ARRAY[]::uuid[]`
   return sql`ARRAY[${sql.join(ids.map(id => sql`${id}::uuid`), sql`, `)}]`
 }
 
@@ -20,5 +21,6 @@ export function sqlUuidArray(ids: string[]) {
  * Build ARRAY[val1::bigint, val2::bigint, ...] for use in raw sql`` templates.
  */
 export function sqlBigintArray(values: number[]) {
+  if (values.length === 0) return sql`ARRAY[]::bigint[]`
   return sql`ARRAY[${sql.join(values.map(v => sql`${v}::bigint`), sql`, `)}]`
 }

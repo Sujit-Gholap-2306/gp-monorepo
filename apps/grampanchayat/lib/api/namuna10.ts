@@ -44,9 +44,9 @@ export type Namuna10ReceiptDetail = Namuna10Receipt & {
     nameMr: string
     nameEn: string | null
   }
-  voidedAt?: string | null
-  voidedBy?: string | null
-  voidReason?: string | null
+  voidedAt: string | null
+  voidedBy: string | null
+  voidReason: string | null
 }
 
 export type Namuna10CreateInput = {

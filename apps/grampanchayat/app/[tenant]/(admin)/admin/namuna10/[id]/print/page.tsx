@@ -14,7 +14,7 @@ type PageProps = {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { id } = await params
-  return { title: `नमुना-10-${id}` }
+  return { title: 'नमुना १० — पावती प्रिंट' }
 }
 
 function formatDateTime(value: string): string {
@@ -108,7 +108,7 @@ export default async function AdminNamuna10PrintPage({ params }: PageProps) {
         className="rounded-lg border border-gp-border bg-white p-6 text-[13px] text-black print:rounded-none print:border-0 print:p-0"
       >
         <header className="border-b border-black pb-3 text-center">
-          <p className="text-xs uppercase tracking-[0.18em] text-black/70">Namuna 10</p>
+          <p className="text-xs uppercase tracking-[0.18em] text-black/70">नमुना १०</p>
           <h1 className="mt-1 text-lg font-bold">{tenant.name_mr}</h1>
           <p className="mt-1 text-sm">कर वसुली पावती</p>
         </header>
@@ -118,13 +118,13 @@ export default async function AdminNamuna10PrintPage({ params }: PageProps) {
             <p><span className="font-semibold">पावती क्र.:</span> {receipt.receiptNo}</p>
             <p className="mt-1"><span className="font-semibold">दिनांक:</span> {formatDateTime(receipt.paidAt)}</p>
             <p className="mt-1"><span className="font-semibold">आर्थिक वर्ष:</span> {receipt.fiscalYear}</p>
-            <p className="mt-1"><span className="font-semibold">Payment mode:</span> {receipt.paymentMode.toUpperCase()}</p>
+            <p className="mt-1"><span className="font-semibold">भरण्याची पद्धत:</span> {receipt.paymentMode.toUpperCase()}</p>
           </div>
           <div>
             <p><span className="font-semibold">मालमत्ता क्रमांक:</span> {receipt.property.propertyNo}</p>
             <p className="mt-1"><span className="font-semibold">मालक:</span> {receipt.owner.nameMr}</p>
             <p className="mt-1"><span className="font-semibold">भरणारे नाव:</span> {receipt.payerName}</p>
-            <p className="mt-1"><span className="font-semibold">Reference:</span> {receipt.reference || '—'}</p>
+            <p className="mt-1"><span className="font-semibold">संदर्भ:</span> {receipt.reference || '—'}</p>
           </div>
         </section>
 
@@ -151,25 +151,25 @@ export default async function AdminNamuna10PrintPage({ params }: PageProps) {
               </tr>
               {receipt.discountPaise > 0 && (
                 <tr>
-                  <td className="px-2 py-1">Discount</td>
+                  <td className="px-2 py-1">सूट</td>
                   <td className="px-2 py-1 text-right">- ₹{rupees(receipt.discountPaise)}</td>
                 </tr>
               )}
               {receipt.lateFeePaise > 0 && (
                 <tr>
-                  <td className="px-2 py-1">Late fee</td>
+                  <td className="px-2 py-1">विलंब शुल्क</td>
                   <td className="px-2 py-1 text-right">₹{rupees(receipt.lateFeePaise)}</td>
                 </tr>
               )}
               {receipt.noticeFeePaise > 0 && (
                 <tr>
-                  <td className="px-2 py-1">Notice fee</td>
+                  <td className="px-2 py-1">नोटीस शुल्क</td>
                   <td className="px-2 py-1 text-right">₹{rupees(receipt.noticeFeePaise)}</td>
                 </tr>
               )}
               {receipt.otherPaise > 0 && (
                 <tr>
-                  <td className="px-2 py-1">Other{receipt.otherReason ? ` — ${receipt.otherReason}` : ''}</td>
+                  <td className="px-2 py-1">इतर{receipt.otherReason ? ` — ${receipt.otherReason}` : ''}</td>
                   <td className="px-2 py-1 text-right">₹{rupees(receipt.otherPaise)}</td>
                 </tr>
               )}
@@ -189,7 +189,7 @@ export default async function AdminNamuna10PrintPage({ params }: PageProps) {
             </p>
             {receipt.isVoid && (
               <p className="mt-2 text-xs font-semibold text-red-700">
-                Void: {receipt.voidReason || 'कारण नमूद नाही'}
+                रद्द: {receipt.voidReason || 'कारण नमूद नाही'}
               </p>
             )}
           </div>

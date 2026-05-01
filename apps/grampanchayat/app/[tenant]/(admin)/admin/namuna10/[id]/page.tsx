@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
 import { ChevronLeft, Printer } from 'lucide-react'
+import { cn } from '@/lib/utils'
 import { getTenant } from '@/lib/tenant'
 import { canAccess } from '@/lib/tiers'
 import { getReceipt } from '@/lib/api/namuna10'
@@ -17,7 +18,7 @@ function DetailCard({ label, value, subtle }: { label: string, value: string, su
   return (
     <div className="rounded-md border border-gp-border bg-gp-surface p-3">
       <p className="text-xs text-gp-muted">{label}</p>
-      <p className={`mt-1 ${subtle ? 'text-sm text-foreground' : 'font-medium text-foreground'}`}>{value}</p>
+      <p className={cn('mt-1', subtle ? 'text-sm text-foreground' : 'font-medium text-foreground')}>{value}</p>
     </div>
   )
 }
@@ -94,7 +95,7 @@ export default async function AdminNamuna10DetailPage({ params }: PageProps) {
             className="inline-flex h-9 items-center gap-2 rounded-md border border-gp-border bg-card px-3 text-sm transition-colors hover:bg-gp-surface"
           >
             <Printer className="h-4 w-4" aria-hidden="true" />
-            <span>Print Receipt</span>
+            <span>पावती प्रिंट</span>
           </Link>
         </div>
       </div>
@@ -121,8 +122,8 @@ export default async function AdminNamuna10DetailPage({ params }: PageProps) {
           <DetailCard label="एकूण पावती" value={`₹${rupees(receipt.totals.totalPaise)}`} />
           <DetailCard label="वार्ड" value={receipt.property.wardNumber || '—'} subtle />
           <DetailCard label="मालमत्ता प्रकार" value={receipt.property.propertyType} subtle />
-          <DetailCard label="Payment mode" value={receipt.paymentMode.toUpperCase()} subtle />
-          <DetailCard label="Reference" value={receipt.reference || '—'} subtle />
+          <DetailCard label="भरण्याची पद्धत" value={receipt.paymentMode.toUpperCase()} subtle />
+          <DetailCard label="संदर्भ" value={receipt.reference || '—'} subtle />
         </div>
       </div>
 
@@ -155,26 +156,26 @@ export default async function AdminNamuna10DetailPage({ params }: PageProps) {
 
       <div className="grid gap-3 lg:grid-cols-2">
         <div className="rounded-lg border border-gp-border bg-card p-4">
-          <h2 className="text-sm font-semibold text-foreground">Adjustments</h2>
+          <h2 className="text-sm font-semibold text-foreground">समायोजने</h2>
           <dl className="mt-3 space-y-2 text-sm">
             <div className="flex items-center justify-between gap-4">
-              <dt className="text-gp-muted">Discount</dt>
+              <dt className="text-gp-muted">सूट</dt>
               <dd>₹{rupees(receipt.discountPaise)}</dd>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <dt className="text-gp-muted">Late fee</dt>
+              <dt className="text-gp-muted">विलंब शुल्क</dt>
               <dd>₹{rupees(receipt.lateFeePaise)}</dd>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <dt className="text-gp-muted">Notice fee</dt>
+              <dt className="text-gp-muted">नोटीस शुल्क</dt>
               <dd>₹{rupees(receipt.noticeFeePaise)}</dd>
             </div>
             <div className="flex items-center justify-between gap-4">
-              <dt className="text-gp-muted">Other</dt>
+              <dt className="text-gp-muted">इतर</dt>
               <dd>₹{rupees(receipt.otherPaise)}</dd>
             </div>
             <div className="flex items-center justify-between gap-4 border-t border-gp-border pt-2 font-semibold">
-              <dt>Net total</dt>
+              <dt>निव्वळ एकूण</dt>
               <dd>₹{rupees(receipt.totals.totalPaise)}</dd>
             </div>
           </dl>
@@ -189,13 +190,13 @@ export default async function AdminNamuna10DetailPage({ params }: PageProps) {
             </div>
             {receipt.owner.nameEn && (
               <div>
-                <dt className="text-gp-muted">Owner (English)</dt>
+                <dt className="text-gp-muted">मालक (इंग्रजी)</dt>
                 <dd className="mt-1 text-foreground">{receipt.owner.nameEn}</dd>
               </div>
             )}
             {receipt.isVoid && (
               <div>
-                <dt className="text-gp-muted">Void reason</dt>
+                <dt className="text-gp-muted">रद्द कारण</dt>
                 <dd className="mt-1 text-foreground">{receipt.voidReason || '—'}</dd>
               </div>
             )}

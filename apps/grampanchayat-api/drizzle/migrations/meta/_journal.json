@@ -57,6 +57,55 @@
       "when": 1777211883854,
       "tag": "0008_odd_azazel",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1777620929683,
+      "tag": "0009_abandoned_queen_noir",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1777622805342,
+      "tag": "0011_n06_classified_view",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1777622805343,
+      "tag": "0012_n05_source_integrity",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1777622805344,
+      "tag": "0013_n10_fiscal_year_check",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1777622805345,
+      "tag": "0014_n05_running_balance_view",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1777622805346,
+      "tag": "0015_fix_n05_source_line_check",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1777622805347,
+      "tag": "0016_n06_view_bigint_cast",
+      "breakpoints": true
     }
   ]
 }
