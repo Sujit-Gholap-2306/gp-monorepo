@@ -1,15 +1,13 @@
 import { z } from 'zod'
 import { WATER_CONNECTION_RATE_TYPES } from '../db/schema/water-connection-rates.ts'
+import { fiscalYearZodSchema } from '../lib/fiscal.ts'
 
 const firstValue = (value: unknown): unknown => {
   if (Array.isArray(value)) return value[0]
   return value
 }
 
-const fiscalYearSchema = z
-  .string()
-  .trim()
-  .regex(/^\d{4}-\d{2}$/, 'fiscal_year must be in YYYY-YY format')
+const fiscalYearSchema = fiscalYearZodSchema
 
 export const waterConnectionRateRowSchema = z.object({
   fiscal_year: fiscalYearSchema,

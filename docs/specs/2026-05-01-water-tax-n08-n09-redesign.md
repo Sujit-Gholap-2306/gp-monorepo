@@ -341,7 +341,7 @@ Accounting impact:
 2. **Phase B — Water connections master** ✅ DONE (2026-05-02): Schema + CRUD API (create, list, update, status toggle).
 3. **Phase C — Water rate master** ✅ DONE (2026-05-02): Schema + CRUD API (configure annual rates per FY, connection type, and pipe size).
 4. **Phase D — N09 water demand generation**: Generate annual demand from master, carry arrears, N09 view update.
-5. **Phase E — Water opening arrear import**: Template + import flow that updates `previous_paise` on generated current-FY water demand lines.
+5. **Phase E — Water opening arrear import** ✅ DONE (2026-05-02): Template + import flow that updates `previous_paise` on generated current-FY water demand lines.
 6. **Phase F — N10 water receipt book**: Separate N10 collection for water using shared N10 tables with `book_type`.
 
 ---

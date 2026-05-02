@@ -70,3 +70,20 @@ export function fyMonthNo(input: Date | string | number): number {
   const month = asIndiaCalendarDate(input).getUTCMonth()
   return month >= APRIL_MONTH_INDEX ? month - 2 : month + 10
 }
+
+function fiscalYearZodRefine(val: string): boolean {
+  try {
+    parseFiscalYear(val)
+    return true
+  } catch {
+    return false
+  }
+}
+
+import { z } from 'zod'
+
+/** Zod schema for fiscal year strings. Validates format AND semantic range (2026-27 ✓, 2026-99 ✗). */
+export const fiscalYearZodSchema = z
+  .string()
+  .trim()
+  .refine(fiscalYearZodRefine, 'fiscal_year must be valid YYYY-YY (e.g. 2026-27)')

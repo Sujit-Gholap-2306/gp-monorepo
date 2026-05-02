@@ -1,14 +1,55 @@
 import { BaseController } from '../common/base/base.controller.ts'
 import { ApiError } from '../common/exceptions/http.exception.ts'
+import { assertBulkFile } from '../common/guards/bulk-upload.guard.ts'
 import { asyncHandler } from '../common/guards/async-handler.ts'
+import { waterDemandArrearsImportService } from '../services/water-demand-arrears-import.service.ts'
+import { waterDemandArrearsTemplateService } from '../services/water-demand-arrears-template.service.ts'
 import { waterDemandsService } from '../services/water-demands.service.ts'
 import {
   waterDemandGenerateBodySchema,
   waterDemandListQuerySchema,
   waterDemandRateMasterStatusQuerySchema,
+  waterDemandArrearsImportBodySchema,
 } from '../types/water-demands.dto.ts'
 
 class WaterDemandsController extends BaseController {
+  downloadArrearsTemplate = asyncHandler(async (req, res) => {
+    const tenant = req.gpTenant
+    if (!tenant) throw new ApiError(500, 'Tenant context missing')
+    const parsed = waterDemandRateMasterStatusQuerySchema.safeParse(req.query)
+    if (!parsed.success) throw new ApiError(422, 'Invalid query params', parsed.error.issues)
+    const buf = await waterDemandArrearsTemplateService.buildTemplateXlsx({
+      gpId: tenant.id,
+      fiscalYear: parsed.data.fiscal_year,
+    })
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    const fy = parsed.data.fiscal_year ?? 'current'
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="gp-water-demand-opening-arrears-${fy}.xlsx"`
+    )
+    return res.status(200).send(buf)
+  })
+
+  importArrears = asyncHandler(async (req, res) => {
+    assertBulkFile(req)
+    const tenant = req.gpTenant
+    if (!tenant) throw new ApiError(500, 'Tenant context missing')
+    const parsedBody = waterDemandArrearsImportBodySchema.safeParse(req.body ?? {})
+    if (!parsedBody.success) throw new ApiError(422, 'Invalid request body', parsedBody.error.issues)
+
+    const out = await waterDemandArrearsImportService.importFile({
+      gpId: tenant.id,
+      buffer: req.file!.buffer,
+      generatedBy: req.supabaseUser?.id ?? null,
+      fiscalYear: parsedBody.data.fiscal_year,
+    })
+    return this.ok(res, out, 'Water opening arrears import processed')
+  })
+
   rateMasterStatus = asyncHandler(async (req, res) => {
     const tenant = req.gpTenant
     if (!tenant) throw new ApiError(500, 'Tenant context missing')

@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { fiscalYearZodSchema } from '../lib/fiscal.ts'
 
 const firstValue = (value: unknown): unknown => {
   if (Array.isArray(value)) return value[0]
@@ -11,7 +12,7 @@ const optionalFiscalYear = z.preprocess(
     if (typeof v === 'string' && v.trim() === '') return undefined
     return v
   },
-  z.string().trim().regex(/^\d{4}-\d{2}$/, 'fiscal_year must be in YYYY-YY format').optional()
+  fiscalYearZodSchema.optional()
 )
 
 const optionalString = z.preprocess(
@@ -44,6 +45,11 @@ export const waterDemandRateMasterStatusQuerySchema = z.object({
   fiscal_year: optionalFiscalYear,
 })
 
+export const waterDemandArrearsImportBodySchema = z.object({
+  fiscal_year: optionalFiscalYear,
+})
+
 export type WaterDemandListQuery = z.infer<typeof waterDemandListQuerySchema>
 export type WaterDemandGenerateBody = z.infer<typeof waterDemandGenerateBodySchema>
 export type WaterDemandRateMasterStatusQuery = z.infer<typeof waterDemandRateMasterStatusQuerySchema>
+export type WaterDemandArrearsImportBody = z.infer<typeof waterDemandArrearsImportBodySchema>

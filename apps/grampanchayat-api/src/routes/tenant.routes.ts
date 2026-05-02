@@ -1,5 +1,6 @@
 import { Router } from 'express'
 import { tenantController } from '../controllers/tenant.controller.ts'
+import { memoryUploadSingle } from '../common/guards/bulk-upload.guard.ts'
 import { supabaseTenantAdminGuard } from '../common/guards/supabase-tenant.guard.ts'
 import { tenantGuard } from '../common/guards/tenant.guard.ts'
 import { gpAdminsController } from '../controllers/gp-admins.controller.ts'
@@ -130,6 +131,20 @@ router.get(
   supabaseTenantAdminGuard,
   requireFeature('tax'),
   waterDemandsController.list
+)
+router.get(
+  '/:subdomain/water/demands/arrears/template',
+  supabaseTenantAdminGuard,
+  requireFeature('tax'),
+  waterDemandsController.downloadArrearsTemplate
+)
+router.post(
+  '/:subdomain/water/demands/arrears/import',
+  bulkImportRateLimit,
+  supabaseTenantAdminGuard,
+  requireFeature('tax'),
+  memoryUploadSingle.single('file'),
+  waterDemandsController.importArrears
 )
 
 // Protected - Update tenant settings (used by admin)
