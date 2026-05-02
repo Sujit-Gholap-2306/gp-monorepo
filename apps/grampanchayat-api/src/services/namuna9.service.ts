@@ -11,6 +11,7 @@ import {
 import { currentFiscalYear } from '../lib/fiscal.ts'
 import { calcPropertyTax } from '../lib/tax-calc.ts'
 import { TAX_HEADS, type TaxHead } from '../lib/tax-head.ts'
+import { waterDemandsService } from './water-demands.service.ts'
 import type { Namuna9ListQuery, Namuna9Status } from '../types/namuna9.dto.ts'
 
 type GenerateDemandArgs = {
@@ -414,20 +415,91 @@ export const namuna9Service = {
 
     const rows = await selectDemandRows(gpId, fiscalYear, { ...filters, demandIds })
     const items = groupDemandRows(rows, fiscalYear)
+    const propertyTotals = items.reduce<DemandTotals>(
+      (acc, item) => ({
+        previousPaise: acc.previousPaise + item.totals.previousPaise,
+        currentPaise: acc.currentPaise + item.totals.currentPaise,
+        paidPaise: acc.paidPaise + item.totals.paidPaise,
+        totalDuePaise: acc.totalDuePaise + item.totals.totalDuePaise,
+      }),
+      emptyTotals
+    )
+
+    const waterRaw = filters.propertyId
+      ? { items: [], count: 0, totals: emptyTotals }
+      : await waterDemandsService.list(gpId, {
+        fiscal_year: fiscalYear,
+        status: filters.status,
+        q: filters.q,
+        ward: filters.ward,
+        citizen_no: filters.citizenNo,
+      })
+
+    const waterItems = waterRaw.items
+    const waterTotals = waterItems.reduce<DemandTotals>(
+      (acc, row) => ({
+        previousPaise: acc.previousPaise + row.line.previousPaise,
+        currentPaise: acc.currentPaise + row.line.currentPaise,
+        paidPaise: acc.paidPaise + row.line.paidPaise,
+        totalDuePaise: acc.totalDuePaise + row.line.totalDuePaise,
+      }),
+      emptyTotals
+    )
+
+    const propertyReportRows = items.map((item) => ({
+      demandKind: 'property' as const,
+      demandId: item.id,
+      fiscalYear: item.fiscalYear,
+      generatedAt: item.generatedAt,
+      propertyId: item.property.id,
+      propertyNo: item.property.propertyNo,
+      wardNumber: item.property.wardNumber,
+      owner: item.owner,
+      lines: item.lines,
+      totals: item.totals,
+      status: item.status,
+    }))
+    const waterReportRows = waterItems.map((item) => ({
+      demandKind: 'water' as const,
+      demandId: item.id,
+      fiscalYear: item.fiscalYear,
+      generatedAt: item.generatedAt,
+      waterConnectionId: item.waterConnection.id,
+      consumerNo: item.waterConnection.consumerNo,
+      connectionType: item.waterConnection.connectionType,
+      pipeSizeMm: item.waterConnection.pipeSizeMm,
+      citizen: item.citizen,
+      line: item.line,
+      status: item.status,
+    }))
+    const reportRows = [...propertyReportRows, ...waterReportRows].sort((a, b) => {
+      const citizenA = a.demandKind === 'property' ? a.owner.citizenNo : a.citizen.citizenNo
+      const citizenB = b.demandKind === 'property' ? b.owner.citizenNo : b.citizen.citizenNo
+      if (citizenA !== citizenB) return citizenA - citizenB
+      const refA = a.demandKind === 'property' ? a.propertyNo : a.consumerNo
+      const refB = b.demandKind === 'property' ? b.propertyNo : b.consumerNo
+      return refA.localeCompare(refB)
+    })
+    const reportTotals: DemandTotals = {
+      previousPaise: propertyTotals.previousPaise + waterTotals.previousPaise,
+      currentPaise: propertyTotals.currentPaise + waterTotals.currentPaise,
+      paidPaise: propertyTotals.paidPaise + waterTotals.paidPaise,
+      totalDuePaise: propertyTotals.totalDuePaise + waterTotals.totalDuePaise,
+    }
 
     return {
       fiscalYear,
       items,
       count: items.length,
-      totals: items.reduce<DemandTotals>(
-        (acc, item) => ({
-          previousPaise: acc.previousPaise + item.totals.previousPaise,
-          currentPaise: acc.currentPaise + item.totals.currentPaise,
-          paidPaise: acc.paidPaise + item.totals.paidPaise,
-          totalDuePaise: acc.totalDuePaise + item.totals.totalDuePaise,
-        }),
-        emptyTotals
-      ),
+      totals: propertyTotals,
+      water: {
+        items: waterItems,
+        count: waterItems.length,
+        totals: waterTotals,
+      },
+      reportRows,
+      reportCount: reportRows.length,
+      reportTotals,
     }
   },
 

@@ -15,6 +15,7 @@ import { propertyTypeRatesController } from '../controllers/property-type-rates.
 import { onboardingController } from '../controllers/onboarding.controller.ts'
 import { waterConnectionRatesController } from '../controllers/water-connection-rates.controller.ts'
 import { waterConnectionsController } from '../controllers/water-connections.controller.ts'
+import { waterDemandsController } from '../controllers/water-demands.controller.ts'
 import { requireFeature } from '../common/guards/tier.guard.ts'
 import tenantNamuneRouter from './tenant-namune.routes.ts'
 
@@ -111,6 +112,24 @@ router.patch(
   supabaseTenantAdminGuard,
   requireFeature('tax'),
   waterConnectionsController.setStatus
+)
+router.get(
+  '/:subdomain/water/demands/rate-master-status',
+  supabaseTenantAdminGuard,
+  requireFeature('tax'),
+  waterDemandsController.rateMasterStatus
+)
+router.post(
+  '/:subdomain/water/demands/generate',
+  supabaseTenantAdminGuard,
+  requireFeature('tax'),
+  waterDemandsController.generate
+)
+router.get(
+  '/:subdomain/water/demands',
+  supabaseTenantAdminGuard,
+  requireFeature('tax'),
+  waterDemandsController.list
 )
 
 // Protected - Update tenant settings (used by admin)
