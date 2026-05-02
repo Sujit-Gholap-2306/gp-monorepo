@@ -6,7 +6,6 @@ const BASE_RATES = {
   constructionRatePerSqft: 180,
   defaultLightingPaise: 2500,
   defaultSanitationPaise: 2500,
-  defaultWaterPaise: 36000,
 }
 
 const BASE_OPTIONS = {
@@ -34,14 +33,13 @@ describe('calcPropertyTax — golden master (Balsane row 10-12)', () => {
     expect(result.houseTaxPaise).toBe(12600)
     expect(result.lightingPaise).toBe(2500)
     expect(result.sanitationPaise).toBe(2500)
-    expect(result.waterPaise).toBe(36000)
-    expect(result.totalPaise).toBe(12600 + 2500 + 2500 + 36000)
+    expect(result.totalPaise).toBe(12600 + 2500 + 2500)
   })
 
-  it('totalPaise equals sum of all 4 heads', () => {
+  it('totalPaise equals sum of house + lighting + sanitation', () => {
     const result = calcPropertyTax({ lengthFt: 15, widthFt: 25 }, BASE_RATES, BASE_OPTIONS)
     expect(result.totalPaise).toBe(
-      result.houseTaxPaise + result.lightingPaise + result.sanitationPaise + result.waterPaise
+      result.houseTaxPaise + result.lightingPaise + result.sanitationPaise
     )
   })
 })
@@ -58,11 +56,11 @@ describe('calcPropertyTax — property-level override wins over GP default', () 
 
   it('property override 0 wins (not coerced to default)', () => {
     const result = calcPropertyTax(
-      { lengthFt: 10, widthFt: 10, waterTaxPaise: 0 },
-      { ...BASE_RATES, defaultWaterPaise: 500 },
+      { lengthFt: 10, widthFt: 10, sanitationTaxPaise: 0 },
+      { ...BASE_RATES, defaultSanitationPaise: 500 },
       BASE_OPTIONS,
     )
-    expect(result.waterPaise).toBe(0)
+    expect(result.sanitationPaise).toBe(0)
   })
 
   it('null property override falls back to GP default', () => {
@@ -75,11 +73,88 @@ describe('calcPropertyTax — property-level override wins over GP default', () 
   })
 })
 
-describe('calcPropertyTax — edge cases', () => {
-  it('zero area gives zero house tax', () => {
+describe('calcPropertyTax — property type rate selection', () => {
+  it('standard type uses constructionRatePerSqft', () => {
+    const result = calcPropertyTax(
+      { lengthFt: 10, widthFt: 10 },
+      { ...BASE_RATES, newConstructionRatePerSqft: 300 },
+      { ...BASE_OPTIONS, useNewConstructionRate: false },
+    )
+    // buildingValue = 100 × 180 = 18000; capitalValue = 100×120 + 18000 = 30000
+    expect(result.buildingValueRupees).toBe(18000)
+    expect(result.capitalValueRupees).toBe(30000)
+  })
+
+  it('navi_rcc (useNewConstructionRate) uses newConstructionRatePerSqft', () => {
+    const result = calcPropertyTax(
+      { lengthFt: 10, widthFt: 10 },
+      { ...BASE_RATES, newConstructionRatePerSqft: 300 },
+      { ...BASE_OPTIONS, useNewConstructionRate: true },
+    )
+    // buildingValue = 100 × 300 = 30000; capitalValue = 12000 + 30000 = 42000
+    expect(result.buildingValueRupees).toBe(30000)
+    expect(result.capitalValueRupees).toBe(42000)
+  })
+
+  it('navi_rcc house tax is higher than standard for same area', () => {
+    const standard = calcPropertyTax(
+      { lengthFt: 10, widthFt: 10 },
+      { ...BASE_RATES, newConstructionRatePerSqft: 300 },
+      { ...BASE_OPTIONS, useNewConstructionRate: false },
+    )
+    const naviRcc = calcPropertyTax(
+      { lengthFt: 10, widthFt: 10 },
+      { ...BASE_RATES, newConstructionRatePerSqft: 300 },
+      { ...BASE_OPTIONS, useNewConstructionRate: true },
+    )
+    expect(naviRcc.houseTaxPaise).toBeGreaterThan(standard.houseTaxPaise)
+  })
+
+  it('missing newConstructionRatePerSqft falls back to 0 building value for that path', () => {
+    const result = calcPropertyTax(
+      { lengthFt: 10, widthFt: 10 },
+      { ...BASE_RATES, newConstructionRatePerSqft: null },
+      { ...BASE_OPTIONS, useNewConstructionRate: true },
+    )
+    // newConstructionRatePerSqft null → toNumber returns 0 → buildingValue = 0
+    expect(result.buildingValueRupees).toBe(0)
+    expect(result.capitalValueRupees).toBe(100 * 120) // land only
+  })
+})
+
+describe('calcPropertyTax — depreciation + usage weightage', () => {
+  it('depreciation factor reduces building value proportionally', () => {
+    const full = calcPropertyTax({ lengthFt: 10, widthFt: 10 }, BASE_RATES, { ...BASE_OPTIONS, depreciationFactor: 1 })
+    const half = calcPropertyTax({ lengthFt: 10, widthFt: 10 }, BASE_RATES, { ...BASE_OPTIONS, depreciationFactor: 0.5 })
+    // building value halved; land value unchanged
+    expect(half.buildingValueRupees).toBeCloseTo(full.buildingValueRupees * 0.5, 2)
+    expect(half.landValueRupees).toBe(full.landValueRupees)
+    expect(half.houseTaxPaise).toBeLessThan(full.houseTaxPaise)
+  })
+
+  it('usageWeightage scales building value like depreciation', () => {
+    const full = calcPropertyTax({ lengthFt: 10, widthFt: 10 }, BASE_RATES, { ...BASE_OPTIONS, usageWeightage: 1 })
+    const commercial = calcPropertyTax({ lengthFt: 10, widthFt: 10 }, BASE_RATES, { ...BASE_OPTIONS, usageWeightage: 1.5 })
+    expect(commercial.buildingValueRupees).toBeCloseTo(full.buildingValueRupees * 1.5, 2)
+    expect(commercial.houseTaxPaise).toBeGreaterThan(full.houseTaxPaise)
+  })
+
+  it('depreciation × usageWeightage both apply to building value', () => {
+    const result = calcPropertyTax(
+      { lengthFt: 10, widthFt: 10 },
+      BASE_RATES,
+      { ...BASE_OPTIONS, depreciationFactor: 0.8, usageWeightage: 1.25 },
+    )
+    // buildingValue = 100 × 180 × 0.8 × 1.25 = 18000 (factors cancel out to 1)
+    expect(result.buildingValueRupees).toBeCloseTo(18000, 2)
+  })
+})
+
+describe('calcPropertyTax — area boundary cases', () => {
+  it('zero length gives zero house tax', () => {
     const result = calcPropertyTax({ lengthFt: 0, widthFt: 30 }, BASE_RATES, BASE_OPTIONS)
-    expect(result.houseTaxPaise).toBe(0)
     expect(result.areaSqFt).toBe(0)
+    expect(result.houseTaxPaise).toBe(0)
   })
 
   it('null dimensions treated as 0', () => {
@@ -88,7 +163,29 @@ describe('calcPropertyTax — edge cases', () => {
     expect(result.houseTaxPaise).toBe(0)
   })
 
-  it('string numeric inputs accepted', () => {
+  it('negative dimensions treated as 0 area', () => {
+    const result = calcPropertyTax({ lengthFt: -10, widthFt: 20 }, BASE_RATES, BASE_OPTIONS)
+    // -10 × 20 = -200; Math.max(0, ...) clamps to 0
+    expect(result.areaSqFt).toBe(0)
+    expect(result.houseTaxPaise).toBe(0)
+  })
+
+  it('very small area (1×1 ft) computes without throwing', () => {
+    expect(() =>
+      calcPropertyTax({ lengthFt: 1, widthFt: 1 }, BASE_RATES, BASE_OPTIONS)
+    ).not.toThrow()
+  })
+
+  it('large area (1000×1000 ft) computes without overflow', () => {
+    const result = calcPropertyTax({ lengthFt: 1000, widthFt: 1000 }, BASE_RATES, BASE_OPTIONS)
+    expect(result.areaSqFt).toBe(1_000_000)
+    expect(result.houseTaxPaise).toBeGreaterThan(0)
+    expect(Number.isFinite(result.houseTaxPaise)).toBe(true)
+  })
+})
+
+describe('calcPropertyTax — string + invalid inputs', () => {
+  it('string numeric dimensions accepted', () => {
     const result = calcPropertyTax(
       { lengthFt: '20', widthFt: '30' },
       { ...BASE_RATES, landRatePerSqft: '120', constructionRatePerSqft: '180' },
@@ -97,27 +194,12 @@ describe('calcPropertyTax — edge cases', () => {
     expect(result.houseTaxPaise).toBe(12600)
   })
 
-  it('useNewConstructionRate option switches rate', () => {
-    const standard = calcPropertyTax(
-      { lengthFt: 10, widthFt: 10 },
-      { ...BASE_RATES, newConstructionRatePerSqft: 300 },
-      { ...BASE_OPTIONS, useNewConstructionRate: false },
-    )
-    const newConst = calcPropertyTax(
-      { lengthFt: 10, widthFt: 10 },
-      { ...BASE_RATES, newConstructionRatePerSqft: 300 },
-      { ...BASE_OPTIONS, useNewConstructionRate: true },
-    )
-    expect(newConst.houseTaxPaise).toBeGreaterThan(standard.houseTaxPaise)
+  it('NaN dimension treated as 0', () => {
+    const result = calcPropertyTax({ lengthFt: NaN, widthFt: 20 }, BASE_RATES, BASE_OPTIONS)
+    expect(result.areaSqFt).toBe(0)
   })
 
-  it('depreciation factor reduces building value', () => {
-    const full = calcPropertyTax({ lengthFt: 10, widthFt: 10 }, BASE_RATES, { ...BASE_OPTIONS, depreciationFactor: 1 })
-    const half = calcPropertyTax({ lengthFt: 10, widthFt: 10 }, BASE_RATES, { ...BASE_OPTIONS, depreciationFactor: 0.5 })
-    expect(half.houseTaxPaise).toBeLessThan(full.houseTaxPaise)
-  })
-
-  it('defaults: missing rates treated as 0 (no throw)', () => {
+  it('undefined rates treated as 0 (no throw)', () => {
     expect(() => calcPropertyTax(
       { lengthFt: 10, widthFt: 10 },
       { landRatePerSqft: null, constructionRatePerSqft: null },
@@ -139,14 +221,23 @@ describe('calcPropertyTax — returned shape', () => {
       houseTaxPaise: expect.any(Number),
       lightingPaise: expect.any(Number),
       sanitationPaise: expect.any(Number),
-      waterPaise: expect.any(Number),
       totalPaise: expect.any(Number),
       totalRupees: expect.any(Number),
     })
   })
 
+  it('waterPaise absent from result after Phase A', () => {
+    const result = calcPropertyTax({ lengthFt: 10, widthFt: 10 }, BASE_RATES, BASE_OPTIONS)
+    expect(result).not.toHaveProperty('waterPaise')
+  })
+
   it('totalRupees = totalPaise / 100', () => {
     const result = calcPropertyTax({ lengthFt: 20, widthFt: 30 }, BASE_RATES, BASE_OPTIONS)
     expect(result.totalRupees).toBeCloseTo(result.totalPaise / 100, 5)
+  })
+
+  it('houseTaxRupees consistent with houseTaxPaise', () => {
+    const result = calcPropertyTax({ lengthFt: 20, widthFt: 30 }, BASE_RATES, BASE_OPTIONS)
+    expect(result.houseTaxRupees).toBeCloseTo(result.houseTaxPaise / 100, 5)
   })
 })

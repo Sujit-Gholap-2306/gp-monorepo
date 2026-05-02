@@ -57,7 +57,6 @@ export const mastersBulkService = {
         assessmentDate: gpProperties.assessmentDate,
         lightingTaxPaise: gpProperties.lightingTaxPaise,
         sanitationTaxPaise: gpProperties.sanitationTaxPaise,
-        waterTaxPaise: gpProperties.waterTaxPaise,
         createdAt:     gpProperties.createdAt,
       })
       .from(gpProperties)
@@ -144,7 +143,6 @@ export const mastersBulkService = {
       assessmentDate: r.assessment_date ?? null,
       lightingTaxPaise: r.lighting_tax_paise ?? null,
       sanitationTaxPaise: r.sanitation_tax_paise ?? null,
-      waterTaxPaise: r.water_tax_paise ?? null,
       createdAt:      now,
       updatedAt:      now,
     }))

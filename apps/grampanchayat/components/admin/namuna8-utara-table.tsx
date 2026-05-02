@@ -309,12 +309,10 @@ export function Namuna8UtaraTable({
               <SubHead>घरपट्टी</SubHead>
               <SubHead>दिवाबत्ती</SubHead>
               <SubHead>आरोग्य</SubHead>
-              <SubHead>पाणीपट्टी</SubHead>
               <SubHead>एकूण</SubHead>
               <SubHead>घरपट्टी</SubHead>
               <SubHead>दिवाबत्ती</SubHead>
               <SubHead>आरोग्य</SubHead>
-              <SubHead>पाणीपट्टी</SubHead>
               <SubHead>एकूण</SubHead>
               <SubHeadEmpty />
             </tr>
@@ -345,7 +343,6 @@ export function Namuna8UtaraTable({
               <Cell valueRowHeight={valueRowHeight} className="text-right">{inr(data.heads.housePaise)}</Cell>
               <Cell valueRowHeight={valueRowHeight} className="text-right">{inr(data.heads.lightingPaise)}</Cell>
               <Cell valueRowHeight={valueRowHeight} className="text-right">{inr(data.heads.sanitationPaise)}</Cell>
-              <Cell valueRowHeight={valueRowHeight} className="text-right">{inr(data.heads.waterPaise)}</Cell>
               <Cell valueRowHeight={valueRowHeight} className="text-right font-semibold">{inr(data.heads.totalPaise)}</Cell>
               <Cell valueRowHeight={valueRowHeight} className="text-right text-slate-500">{appealDash}</Cell>
               <Cell valueRowHeight={valueRowHeight} className="text-right text-slate-500">{appealDash}</Cell>

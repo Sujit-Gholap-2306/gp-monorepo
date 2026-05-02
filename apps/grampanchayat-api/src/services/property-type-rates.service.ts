@@ -23,7 +23,6 @@ export const propertyTypeRateRowSchema = z
     new_construction_rate_per_sqft: rateValue,
     default_lighting_paise:         paiseValue,
     default_sanitation_paise:       paiseValue,
-    default_water_paise:            paiseValue,
   })
   .superRefine((r, ctx) => {
     const { min_rate: min, max_rate: max } = r
@@ -86,7 +85,6 @@ export const propertyTypeRatesService = {
       newConstructionRatePerSqft: r.new_construction_rate_per_sqft != null ? String(r.new_construction_rate_per_sqft) : null,
       defaultLightingPaise:      r.default_lighting_paise != null ? r.default_lighting_paise : null,
       defaultSanitationPaise:    r.default_sanitation_paise != null ? r.default_sanitation_paise : null,
-      defaultWaterPaise:         r.default_water_paise != null ? r.default_water_paise : null,
     }))
 
     await db
@@ -102,7 +100,6 @@ export const propertyTypeRatesService = {
           newConstructionRatePerSqft: sql`excluded.new_construction_rate_per_sqft`,
           defaultLightingPaise:       sql`excluded.default_lighting_paise`,
           defaultSanitationPaise:     sql`excluded.default_sanitation_paise`,
-          defaultWaterPaise:          sql`excluded.default_water_paise`,
           updatedAt:                  sql`now()`,
         },
       })

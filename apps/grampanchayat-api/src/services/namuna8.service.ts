@@ -20,7 +20,6 @@ type PropertyRateRow = {
   assessmentDate: string | null
   lightingTaxPaise: number | null
   sanitationTaxPaise: number | null
-  waterTaxPaise: number | null
   ownerCitizenId: string
   ownerNameMr: string
   ownerNameEn: string | null
@@ -32,7 +31,6 @@ type PropertyRateRow = {
   newConstructionRatePerSqft: string | null
   defaultLightingPaise: number | null
   defaultSanitationPaise: number | null
-  defaultWaterPaise: number | null
 }
 
 const RECOMMENDED_TAX_RATE_PAISE = 0.7
@@ -61,7 +59,6 @@ function mapNamuna8Row(row: PropertyRateRow) {
       widthFt: row.widthFt,
       lightingTaxPaise: row.lightingTaxPaise,
       sanitationTaxPaise: row.sanitationTaxPaise,
-      waterTaxPaise: row.waterTaxPaise,
     },
     {
       landRatePerSqft: row.landRatePerSqft,
@@ -69,7 +66,6 @@ function mapNamuna8Row(row: PropertyRateRow) {
       newConstructionRatePerSqft: row.newConstructionRatePerSqft,
       defaultLightingPaise: row.defaultLightingPaise,
       defaultSanitationPaise: row.defaultSanitationPaise,
-      defaultWaterPaise: row.defaultWaterPaise,
     },
     {
       useNewConstructionRate: row.propertyType === 'navi_rcc',
@@ -125,7 +121,6 @@ function mapNamuna8Row(row: PropertyRateRow) {
       housePaise: breakdown.houseTaxPaise,
       lightingPaise: breakdown.lightingPaise,
       sanitationPaise: breakdown.sanitationPaise,
-      waterPaise: breakdown.waterPaise,
       totalPaise: breakdown.totalPaise,
       houseRupees: breakdown.houseTaxRupees,
       totalRupees: breakdown.totalRupees,
@@ -145,7 +140,6 @@ type RateRowForStatus = {
   newConstructionRatePerSqft: string | null
   defaultLightingPaise: number | null
   defaultSanitationPaise: number | null
-  defaultWaterPaise: number | null
 }
 
 /** True when a rate-master row is missing a field required for that property type. */
@@ -155,7 +149,6 @@ function isIncompleteRateRow(r: RateRowForStatus): boolean {
     || isNullish(r.constructionRatePerSqft)
     || isNullish(r.defaultLightingPaise)
     || isNullish(r.defaultSanitationPaise)
-    || isNullish(r.defaultWaterPaise)
   ) {
     return true
   }
@@ -176,7 +169,6 @@ async function getRateMasterStatus(gpId: string): Promise<RateMasterStatus> {
       newConstructionRatePerSqft: gpPropertyTypeRates.newConstructionRatePerSqft,
       defaultLightingPaise: gpPropertyTypeRates.defaultLightingPaise,
       defaultSanitationPaise: gpPropertyTypeRates.defaultSanitationPaise,
-      defaultWaterPaise: gpPropertyTypeRates.defaultWaterPaise,
     })
     .from(gpPropertyTypeRates)
     .where(eq(gpPropertyTypeRates.gpId, gpId))
@@ -209,7 +201,6 @@ const baseSelect = {
   assessmentDate: gpProperties.assessmentDate,
   lightingTaxPaise: gpProperties.lightingTaxPaise,
   sanitationTaxPaise: gpProperties.sanitationTaxPaise,
-  waterTaxPaise: gpProperties.waterTaxPaise,
   ownerCitizenId: gpCitizens.id,
   ownerNameMr: gpCitizens.nameMr,
   ownerNameEn: gpCitizens.nameEn,
@@ -221,7 +212,6 @@ const baseSelect = {
   newConstructionRatePerSqft: gpPropertyTypeRates.newConstructionRatePerSqft,
   defaultLightingPaise: gpPropertyTypeRates.defaultLightingPaise,
   defaultSanitationPaise: gpPropertyTypeRates.defaultSanitationPaise,
-  defaultWaterPaise: gpPropertyTypeRates.defaultWaterPaise,
 }
 
 export const namuna8Service = {

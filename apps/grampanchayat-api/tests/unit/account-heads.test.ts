@@ -21,7 +21,6 @@ describe('account-heads', () => {
     expect(accountHeadForTaxHead('house')).toBe('property_tax_house')
     expect(accountHeadForTaxHead('lighting')).toBe('property_tax_lighting')
     expect(accountHeadForTaxHead('sanitation')).toBe('property_tax_sanitation')
-    expect(accountHeadForTaxHead('water')).toBe('property_tax_water')
   })
 
   it('has ledger code for every account head', () => {

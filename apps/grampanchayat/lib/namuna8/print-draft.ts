@@ -7,7 +7,6 @@ export type Namuna8PrintDraft = {
   housePaise?: number
   lightingPaise?: number
   sanitationPaise?: number
-  waterPaise?: number
   notes?: string
 }
 
@@ -30,8 +29,7 @@ export function applyNamuna8Draft(base: Namuna8ListItem, draft: Namuna8PrintDraf
   const housePaise = parseNumber(draft.housePaise, base.heads.housePaise)
   const lightingPaise = parseNumber(draft.lightingPaise, base.heads.lightingPaise)
   const sanitationPaise = parseNumber(draft.sanitationPaise, base.heads.sanitationPaise)
-  const waterPaise = parseNumber(draft.waterPaise, base.heads.waterPaise)
-  const totalPaise = housePaise + lightingPaise + sanitationPaise + waterPaise
+  const totalPaise = housePaise + lightingPaise + sanitationPaise
 
   return {
     ...base,
@@ -46,7 +44,6 @@ export function applyNamuna8Draft(base: Namuna8ListItem, draft: Namuna8PrintDraf
       housePaise,
       lightingPaise,
       sanitationPaise,
-      waterPaise,
       totalPaise,
       houseRupees: housePaise / 100,
       totalRupees: totalPaise / 100,

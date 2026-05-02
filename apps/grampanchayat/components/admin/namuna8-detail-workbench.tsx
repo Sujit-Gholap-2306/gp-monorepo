@@ -30,7 +30,6 @@ type DraftForm = {
   houseRupees: string
   lightingRupees: string
   sanitationRupees: string
-  waterRupees: string
   notes: string
 }
 
@@ -52,7 +51,6 @@ function initialDraftForm(property: Namuna8ListItem): DraftForm {
     houseRupees: toRupeesInput(property.heads.housePaise),
     lightingRupees: toRupeesInput(property.heads.lightingPaise),
     sanitationRupees: toRupeesInput(property.heads.sanitationPaise),
-    waterRupees: toRupeesInput(property.heads.waterPaise),
     notes: '',
   }
 }
@@ -81,7 +79,6 @@ export function Namuna8DetailWorkbench({ subdomain, property, rateMaster, tenant
     housePaise: toPaiseFromInput(form.houseRupees, property.heads.housePaise),
     lightingPaise: toPaiseFromInput(form.lightingRupees, property.heads.lightingPaise),
     sanitationPaise: toPaiseFromInput(form.sanitationRupees, property.heads.sanitationPaise),
-    waterPaise: toPaiseFromInput(form.waterRupees, property.heads.waterPaise),
     notes: form.notes || undefined,
   }), [form, property])
 
@@ -147,9 +144,6 @@ export function Namuna8DetailWorkbench({ subdomain, property, rateMaster, tenant
               </Field>
               <Field label="स्वच्छता">
                 <input value={form.sanitationRupees} onChange={(e) => setForm((p) => ({ ...p, sanitationRupees: e.target.value }))} className={fieldClass} inputMode="decimal" />
-              </Field>
-              <Field label="पाणीपट्टी">
-                <input value={form.waterRupees} onChange={(e) => setForm((p) => ({ ...p, waterRupees: e.target.value }))} className={fieldClass} inputMode="decimal" />
               </Field>
             </div>
           </div>

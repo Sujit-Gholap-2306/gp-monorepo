@@ -1,6 +1,6 @@
 /**
  * gp_namuna9_demand_lines — Namuna 9 per-tax-head demand rows.
- * Exactly four rows per header: house, lighting, sanitation, water.
+ * Exactly three rows per header: house, lighting, sanitation.
  */
 import { sql } from 'drizzle-orm'
 import {
@@ -49,7 +49,7 @@ export const gpNamuna9DemandLines = pgTable(
     demandIdx: index('gp_namuna9_demand_lines_demand_idx').on(t.demandId),
     taxHeadCheck: check(
       'gp_namuna9_demand_lines_tax_head_check',
-      sql`${t.taxHead} IN ('house', 'lighting', 'sanitation', 'water')`
+      sql`${t.taxHead} IN ('house', 'lighting', 'sanitation')`
     ),
     nonNegativePaiseCheck: check(
       'gp_namuna9_demand_lines_nonnegative_paise_check',

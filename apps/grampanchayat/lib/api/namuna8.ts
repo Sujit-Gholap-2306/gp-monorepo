@@ -58,7 +58,6 @@ export type Namuna8ListItem = {
     housePaise: number
     lightingPaise: number
     sanitationPaise: number
-    waterPaise: number
     totalPaise: number
     houseRupees: number
     totalRupees: number
@@ -122,7 +121,6 @@ type RawNamuna8ListItem = {
     house_paise: number
     lighting_paise: number
     sanitation_paise: number
-    water_paise: number
     total_paise: number
     house_rupees: number
     total_rupees: number
@@ -195,7 +193,6 @@ function normalizeItem(raw: RawNamuna8ListItem): Namuna8ListItem {
       housePaise: raw.heads.house_paise,
       lightingPaise: raw.heads.lighting_paise,
       sanitationPaise: raw.heads.sanitation_paise,
-      waterPaise: raw.heads.water_paise,
       totalPaise: raw.heads.total_paise,
       houseRupees: raw.heads.house_rupees,
       totalRupees: raw.heads.total_rupees,

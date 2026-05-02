@@ -50,7 +50,6 @@ export function ReceiptForm({ subdomain, accessToken, initialPropertyId }: Props
     house: '',
     lighting: '',
     sanitation: '',
-    water: '',
   })
   const [amountErrors, setAmountErrors] = useState<AmountErrors>({})
   const [payerName, setPayerName] = useState('')
@@ -84,7 +83,6 @@ export function ReceiptForm({ subdomain, accessToken, initialPropertyId }: Props
       house: formatPaiseInput(demand.lines.find((line) => line.taxHead === 'house')?.totalDuePaise ?? 0),
       lighting: formatPaiseInput(demand.lines.find((line) => line.taxHead === 'lighting')?.totalDuePaise ?? 0),
       sanitation: formatPaiseInput(demand.lines.find((line) => line.taxHead === 'sanitation')?.totalDuePaise ?? 0),
-      water: formatPaiseInput(demand.lines.find((line) => line.taxHead === 'water')?.totalDuePaise ?? 0),
     })
   }
 

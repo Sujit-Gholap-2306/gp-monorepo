@@ -17,7 +17,7 @@ export const gpAccountHeadEnum = pgEnum('gp_account_head', [
   'property_tax_house',
   'property_tax_lighting',
   'property_tax_sanitation',
-  'property_tax_water',
+  'water_tax',
   'discount',
   'late_fee',
   'notice_fee',
@@ -82,7 +82,7 @@ export const gpNamuna05CashbookEntries = pgTable(
     ),
     taxLineSourceLineCheck: check(
       'gp_namuna05_cashbook_entries_tax_line_source_line_check',
-      sql`${t.sourceType} = 'manual' OR ${t.accountHead} NOT IN ('property_tax_house', 'property_tax_lighting', 'property_tax_sanitation', 'property_tax_water') OR ${t.sourceLineId} IS NOT NULL`
+      sql`${t.sourceType} = 'manual' OR ${t.accountHead} NOT IN ('property_tax_house', 'property_tax_lighting', 'property_tax_sanitation', 'water_tax') OR ${t.sourceLineId} IS NOT NULL`
     ),
     adjustmentNoSourceLineCheck: check(
       'gp_namuna05_cashbook_entries_adjustment_no_source_line_check',

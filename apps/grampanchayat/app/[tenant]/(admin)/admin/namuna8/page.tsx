@@ -187,7 +187,6 @@ export default async function AdminNamuna8Page({ params, searchParams }: Namuna8
                 <th className="px-3 py-2 font-medium">घरपट्टी</th>
                 <th className="px-3 py-2 font-medium">दिवाबत्ती</th>
                 <th className="px-3 py-2 font-medium">स्वच्छता</th>
-                <th className="px-3 py-2 font-medium">पाणीपट्टी</th>
                 <th className="px-3 py-2 font-medium">एकूण</th>
               </tr>
             </thead>
@@ -212,7 +211,6 @@ export default async function AdminNamuna8Page({ params, searchParams }: Namuna8
                   <td className="px-3 py-2">{fromPaise(row.heads.housePaise).toLocaleString('en-IN')}</td>
                   <td className="px-3 py-2">{fromPaise(row.heads.lightingPaise).toLocaleString('en-IN')}</td>
                   <td className="px-3 py-2">{fromPaise(row.heads.sanitationPaise).toLocaleString('en-IN')}</td>
-                  <td className="px-3 py-2">{fromPaise(row.heads.waterPaise).toLocaleString('en-IN')}</td>
                   <td className="px-3 py-2 font-semibold">{fromPaise(row.heads.totalPaise).toLocaleString('en-IN')}</td>
                 </tr>
               ))}

@@ -55,21 +55,6 @@ export const NAMUNA9_OPENING_TEMPLATE_COLUMNS = [
     required: false,
     hint:     'स्वच्छता एकूण (reference only). Upload ignores this column.',
   },
-  {
-    key:      'water_arrears_rupees',
-    required: true,
-    hint:     'पाणीपट्टी मागील थकबाकी (₹). Non-negative. Max 2 decimals.',
-  },
-  {
-    key:      'water_demand_rupees',
-    required: false,
-    hint:     'पाणीपट्टी चालू मागणी (reference only). Upload ignores this column.',
-  },
-  {
-    key:      'water_total_rupees',
-    required: false,
-    hint:     'पाणीपट्टी एकूण (reference only). Upload ignores this column.',
-  },
 ] as const
 
 function parseMoneyCell(value: unknown, field: string): number {
@@ -93,14 +78,6 @@ function parseOptionalMoneyCell(value: unknown, field: string): number | null {
   return parseMoneyCell(raw, field)
 }
 
-function parseLegacyPaidCell(value: unknown): number | null {
-  if (value == null) return null
-  const raw = String(value).trim()
-  if (!raw) return null
-  const n = Number(raw)
-  if (!Number.isFinite(n)) return null
-  return n
-}
 
 const openingRowSchema = z.object({
   property_no: z.string().trim().min(1, 'property_no is required'),
@@ -128,14 +105,6 @@ const openingRowSchema = z.object({
       return false
     }
   }, { message: 'sanitation_arrears_rupees must be non-negative with max 2 decimals' }),
-  water_arrears_rupees: z.custom<number>((v) => {
-    try {
-      parseMoneyCell(v, 'water_arrears_rupees')
-      return true
-    } catch {
-      return false
-    }
-  }, { message: 'water_arrears_rupees must be non-negative with max 2 decimals' }),
 })
 
 type ArrearsByHead = Record<TaxHead, number>
@@ -150,7 +119,6 @@ function emptyArrearsByHead(): ArrearsByHead {
     house: 0,
     lighting: 0,
     sanitation: 0,
-    water: 0,
   }
 }
 
@@ -159,7 +127,6 @@ function headArrearsFromRow(row: Record<string, string>): ArrearsByHead {
   arrears.house = parseMoneyCell(row.house_arrears_rupees, 'house_arrears_rupees')
   arrears.lighting = parseMoneyCell(row.lighting_arrears_rupees, 'lighting_arrears_rupees')
   arrears.sanitation = parseMoneyCell(row.sanitation_arrears_rupees, 'sanitation_arrears_rupees')
-  arrears.water = parseMoneyCell(row.water_arrears_rupees, 'water_arrears_rupees')
   return arrears
 }
 
@@ -195,16 +162,6 @@ export function collectNamuna9OpeningRowErrors(
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i]!
     const rowNo = i + 2
-    const legacyPaid = parseLegacyPaidCell(row.current_year_paid_rupees)
-    if (legacyPaid != null && legacyPaid !== 0) {
-      errors.push({
-        row: rowNo,
-        message:
-          'current_year_paid_rupees is not supported in N09 opening import. Record paid collections via N10 receipt flow.',
-      })
-      continue
-    }
-
     const parsed = openingRowSchema.safeParse(row)
     if (!parsed.success) {
       errors.push({
@@ -227,11 +184,9 @@ export function collectNamuna9OpeningRowErrors(
       'house_demand_rupees',
       'lighting_demand_rupees',
       'sanitation_demand_rupees',
-      'water_demand_rupees',
       'house_total_rupees',
       'lighting_total_rupees',
       'sanitation_total_rupees',
-      'water_total_rupees',
     ])
     if (refColumnErrors.length > 0) {
       errors.push({

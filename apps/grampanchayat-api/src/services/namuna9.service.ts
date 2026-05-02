@@ -26,13 +26,11 @@ type PropertyRateRow = {
   widthFt: number | null
   lightingTaxPaise: number | null
   sanitationTaxPaise: number | null
-  waterTaxPaise: number | null
   landRatePerSqft: string | null
   constructionRatePerSqft: string | null
   newConstructionRatePerSqft: string | null
   defaultLightingPaise: number | null
   defaultSanitationPaise: number | null
-  defaultWaterPaise: number | null
 }
 
 type DemandLineRow = {
@@ -489,13 +487,11 @@ export const namuna9Service = {
           widthFt: gpProperties.widthFt,
           lightingTaxPaise: gpProperties.lightingTaxPaise,
           sanitationTaxPaise: gpProperties.sanitationTaxPaise,
-          waterTaxPaise: gpProperties.waterTaxPaise,
           landRatePerSqft: gpPropertyTypeRates.landRatePerSqft,
           constructionRatePerSqft: gpPropertyTypeRates.constructionRatePerSqft,
           newConstructionRatePerSqft: gpPropertyTypeRates.newConstructionRatePerSqft,
           defaultLightingPaise: gpPropertyTypeRates.defaultLightingPaise,
           defaultSanitationPaise: gpPropertyTypeRates.defaultSanitationPaise,
-          defaultWaterPaise: gpPropertyTypeRates.defaultWaterPaise,
         })
         .from(gpProperties)
         .leftJoin(
@@ -558,7 +554,6 @@ export const namuna9Service = {
             widthFt: row.widthFt,
             lightingTaxPaise: row.lightingTaxPaise,
             sanitationTaxPaise: row.sanitationTaxPaise,
-            waterTaxPaise: row.waterTaxPaise,
           },
           {
             landRatePerSqft: row.landRatePerSqft,
@@ -566,7 +561,6 @@ export const namuna9Service = {
             newConstructionRatePerSqft: row.newConstructionRatePerSqft,
             defaultLightingPaise: row.defaultLightingPaise,
             defaultSanitationPaise: row.defaultSanitationPaise,
-            defaultWaterPaise: row.defaultWaterPaise,
           },
           { useNewConstructionRate: row.propertyType === 'navi_rcc' }
         )
@@ -576,7 +570,6 @@ export const namuna9Service = {
           { demandId, taxHead: TAX_HEADS[0], previousPaise: 0, currentPaise: breakdown.houseTaxPaise, paidPaise: 0 },
           { demandId, taxHead: TAX_HEADS[1], previousPaise: 0, currentPaise: breakdown.lightingPaise, paidPaise: 0 },
           { demandId, taxHead: TAX_HEADS[2], previousPaise: 0, currentPaise: breakdown.sanitationPaise, paidPaise: 0 },
-          { demandId, taxHead: TAX_HEADS[3], previousPaise: 0, currentPaise: breakdown.waterPaise, paidPaise: 0 },
         )
       }
 

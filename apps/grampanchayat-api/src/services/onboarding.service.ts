@@ -50,7 +50,6 @@ async function getRateMasterStatus(gpId: string) {
       newConstructionRatePerSqft: gpPropertyTypeRates.newConstructionRatePerSqft,
       defaultLightingPaise: gpPropertyTypeRates.defaultLightingPaise,
       defaultSanitationPaise: gpPropertyTypeRates.defaultSanitationPaise,
-      defaultWaterPaise: gpPropertyTypeRates.defaultWaterPaise,
     })
     .from(gpPropertyTypeRates)
     .where(eq(gpPropertyTypeRates.gpId, gpId))
@@ -64,8 +63,7 @@ async function getRateMasterStatus(gpId: string) {
       row.landRatePerSqft == null ||
       row.constructionRatePerSqft == null ||
       row.defaultLightingPaise == null ||
-      row.defaultSanitationPaise == null ||
-      row.defaultWaterPaise == null
+      row.defaultSanitationPaise == null
     )
     if (baseIncomplete) return true
     return type === 'navi_rcc' && row.newConstructionRatePerSqft == null

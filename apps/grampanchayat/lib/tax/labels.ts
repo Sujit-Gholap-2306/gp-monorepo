@@ -21,12 +21,6 @@ export const TAX_HEAD_LABELS: Record<TaxHead, Record<TaxHeadLabelContext, string
     bill: 'ज. सफाई कर',
     report: 'आरोग्य कर',
   },
-  water: {
-    n08: 'पाणीपट्टी',
-    n09: 'पाणीपट्टी',
-    bill: 'पाणीपट्टी कर',
-    report: 'पाणीपट्टी कर',
-  },
 }
 
 export function taxHeadLabel(taxHead: TaxHead, context: TaxHeadLabelContext): string {
@@ -37,7 +31,7 @@ export const ACCOUNT_HEAD_LABELS: Record<GpAccountHead, string> = {
   property_tax_house:      'घरपट्टी',
   property_tax_lighting:   'दिवाबत्ती',
   property_tax_sanitation: 'सफाईपट्टी',
-  property_tax_water:      'पाणीपट्टी',
+  water_tax:               'पाणीकर',
   discount:                'सवलत',
   late_fee:                'विलंब शुल्क',
   notice_fee:              'नोटीस शुल्क',
@@ -62,4 +56,3 @@ export const FY_MONTH_OPTIONS = [
   { no: 11, mr: 'फेब्रुवारी', en: 'February' },
   { no: 12, mr: 'मार्च',     en: 'March' },
 ] as const
-

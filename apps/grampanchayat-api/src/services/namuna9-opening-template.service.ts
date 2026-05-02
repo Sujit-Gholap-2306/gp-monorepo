@@ -132,7 +132,6 @@ async function loadImportablePropertiesForFiscalYear(
         house: byHead.get('house') ?? 0,
         lighting: byHead.get('lighting') ?? 0,
         sanitation: byHead.get('sanitation') ?? 0,
-        water: byHead.get('water') ?? 0,
       },
     })
   }
@@ -178,9 +177,6 @@ export const namuna9OpeningTemplateService = {
           '0',
           paiseToRupees(row.currentByHead.sanitation),
           paiseToRupees(row.currentByHead.sanitation),
-          '0',
-          paiseToRupees(row.currentByHead.water),
-          paiseToRupees(row.currentByHead.water),
         ])
       }
     } else {
@@ -196,9 +192,6 @@ export const namuna9OpeningTemplateService = {
         '0',
         '25.00',
         '25.00',
-        '0',
-        '360.00',
-        '360.00',
       ])
     }
 

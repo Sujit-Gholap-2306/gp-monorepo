@@ -10,7 +10,6 @@ export type TaxCalcPropertyInput = {
   widthFt: NumberLike
   lightingTaxPaise?: NumberLike
   sanitationTaxPaise?: NumberLike
-  waterTaxPaise?: NumberLike
 }
 
 export type TaxCalcRateInput = {
@@ -19,7 +18,6 @@ export type TaxCalcRateInput = {
   newConstructionRatePerSqft?: NumberLike
   defaultLightingPaise?: NumberLike
   defaultSanitationPaise?: NumberLike
-  defaultWaterPaise?: NumberLike
 }
 
 export type TaxCalcOptions = {
@@ -39,7 +37,6 @@ export type PropertyTaxBreakdown = {
   houseTaxPaise: number
   lightingPaise: number
   sanitationPaise: number
-  waterPaise: number
   totalPaise: number
   totalRupees: number
 }
@@ -92,9 +89,8 @@ export function calcPropertyTax(
   const sanitationPaise = nonNegativeInt(
     property.sanitationTaxPaise ?? rates.defaultSanitationPaise ?? 0
   )
-  const waterPaise = nonNegativeInt(property.waterTaxPaise ?? rates.defaultWaterPaise ?? 0)
 
-  const totalPaise = houseTaxPaise + lightingPaise + sanitationPaise + waterPaise
+  const totalPaise = houseTaxPaise + lightingPaise + sanitationPaise
 
   return {
     areaSqFt,
@@ -106,9 +102,7 @@ export function calcPropertyTax(
     houseTaxPaise,
     lightingPaise,
     sanitationPaise,
-    waterPaise,
     totalPaise,
     totalRupees: fromPaise(totalPaise),
   }
 }
-

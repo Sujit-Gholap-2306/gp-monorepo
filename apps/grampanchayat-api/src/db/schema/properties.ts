@@ -39,7 +39,6 @@ export const gpProperties = pgTable(
     assessmentDate:   date('assessment_date'),
     lightingTaxPaise: bigint('lighting_tax_paise', { mode: 'number' }),
     sanitationTaxPaise: bigint('sanitation_tax_paise', { mode: 'number' }),
-    waterTaxPaise:    bigint('water_tax_paise', { mode: 'number' }),
     createdAt:        timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt:        timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },

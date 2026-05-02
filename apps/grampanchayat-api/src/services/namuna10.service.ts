@@ -96,7 +96,7 @@ type N05AccountHead =
   | 'property_tax_house'
   | 'property_tax_lighting'
   | 'property_tax_sanitation'
-  | 'property_tax_water'
+  | 'water_tax'
   | 'discount'
   | 'late_fee'
   | 'notice_fee'

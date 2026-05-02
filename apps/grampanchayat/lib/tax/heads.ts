@@ -2,7 +2,6 @@ export const TAX_HEADS = [
   'house',
   'lighting',
   'sanitation',
-  'water',
 ] as const
 
 export type TaxHead = (typeof TAX_HEADS)[number]
@@ -17,7 +16,7 @@ export const GP_ACCOUNT_HEADS = [
   'property_tax_house',
   'property_tax_lighting',
   'property_tax_sanitation',
-  'property_tax_water',
+  'water_tax',
   'discount',
   'late_fee',
   'notice_fee',
@@ -31,4 +30,3 @@ const GP_ACCOUNT_HEAD_SET = new Set<string>(GP_ACCOUNT_HEADS)
 export function isAccountHead(value: string): value is GpAccountHead {
   return GP_ACCOUNT_HEAD_SET.has(value)
 }
-

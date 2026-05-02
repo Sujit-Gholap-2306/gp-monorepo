@@ -39,7 +39,6 @@ export const gpPropertyTypeRates = pgTable(
     newConstructionRatePerSqft: numeric('new_construction_rate_per_sqft', { precision: 12, scale: 4 }),
     defaultLightingPaise:      bigint('default_lighting_paise', { mode: 'number' }),
     defaultSanitationPaise:    bigint('default_sanitation_paise', { mode: 'number' }),
-    defaultWaterPaise:         bigint('default_water_paise', { mode: 'number' }),
     createdAt:                 timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt:                 timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
