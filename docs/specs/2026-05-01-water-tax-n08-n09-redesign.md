@@ -116,6 +116,31 @@ connection per GP for now.
 - UIDX: `(gp_id, citizen_id)` — one connection per citizen per GP for now
 - CHECK: `pipe_size_mm > 0`
 
+### Phase B implementation plan (locked)
+
+1. Add schema module `gp_water_connections` with strict constraints.
+2. Add tenant-admin CRUD APIs under `/:subdomain/masters/water-connections`.
+3. Keep migration generation/execution in normal Drizzle flow (no manual SQL apply in this phase).
+
+### Phase B implementation delivered (2026-05-02)
+
+- Backend schema file added:
+  - `apps/grampanchayat-api/src/db/schema/water-connections.ts`
+- Schema export wired:
+  - `apps/grampanchayat-api/src/db/schema/index.ts`
+- DTOs added:
+  - `apps/grampanchayat-api/src/types/water-connections.dto.ts`
+- Service added:
+  - `apps/grampanchayat-api/src/services/water-connections.service.ts`
+- Controller added:
+  - `apps/grampanchayat-api/src/controllers/water-connections.controller.ts`
+- Routes mounted (tenant admin):
+  - `GET /:subdomain/masters/water-connections`
+  - `GET /:subdomain/masters/water-connections/:id`
+  - `POST /:subdomain/masters/water-connections`
+  - `PATCH /:subdomain/masters/water-connections/:id`
+  - `PATCH /:subdomain/masters/water-connections/:id/status`
+
 ### New table: `gp_water_connection_rates`
 
 Rate master per GP, per fiscal year, per connection type, per pipe size. GP

@@ -13,6 +13,8 @@ import { mastersBulkController, mastersBulkUpload } from '../controllers/masters
 import { bulkImportRateLimit } from '../common/guards/rate-limit.guard.ts'
 import { propertyTypeRatesController } from '../controllers/property-type-rates.controller.ts'
 import { onboardingController } from '../controllers/onboarding.controller.ts'
+import { waterConnectionsController } from '../controllers/water-connections.controller.ts'
+import { requireFeature } from '../common/guards/tier.guard.ts'
 import tenantNamuneRouter from './tenant-namune.routes.ts'
 
 const router = Router()
@@ -66,6 +68,31 @@ router.put(
   '/:subdomain/masters/property-type-rates',
   supabaseTenantAdminGuard,
   propertyTypeRatesController.upsert
+)
+router.get(
+  '/:subdomain/masters/water-connections',
+  supabaseTenantAdminGuard, requireFeature('tax'),
+  waterConnectionsController.list
+)
+router.get(
+  '/:subdomain/masters/water-connections/:id',
+  supabaseTenantAdminGuard, requireFeature('tax'),
+  waterConnectionsController.getById
+)
+router.post(
+  '/:subdomain/masters/water-connections',
+  supabaseTenantAdminGuard, requireFeature('tax'),
+  waterConnectionsController.create
+)
+router.patch(
+  '/:subdomain/masters/water-connections/:id',
+  supabaseTenantAdminGuard, requireFeature('tax'),
+  waterConnectionsController.update
+)
+router.patch(
+  '/:subdomain/masters/water-connections/:id/status',
+  supabaseTenantAdminGuard, requireFeature('tax'),
+  waterConnectionsController.setStatus
 )
 
 // Protected - Update tenant settings (used by admin)
