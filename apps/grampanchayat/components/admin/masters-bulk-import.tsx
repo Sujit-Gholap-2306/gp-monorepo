@@ -592,7 +592,7 @@ export function MastersBulkImport({ subdomain }: Props) {
                             {[r.resolutionRef, r.assessmentDate].filter(Boolean).join(' / ') || '—'}
                           </td>
                           <td className="p-1.5 font-mono text-[10px]">
-                            {formatPaise(r.lightingTaxPaise)} / {formatPaise(r.sanitationTaxPaise)} / {formatPaise(r.waterTaxPaise)}
+                            {formatPaise(r.lightingTaxPaise)} / {formatPaise(r.sanitationTaxPaise)}
                           </td>
                           <td className="p-1.5 text-gp-muted whitespace-nowrap">{formatDate(r.createdAt)}</td>
                         </tr>
@@ -734,7 +734,7 @@ export function MastersBulkImport({ subdomain }: Props) {
                           <td className="p-1.5 font-mono text-[10px]">{formatRate(r.constructionRatePerSqft)}</td>
                           <td className="p-1.5 font-mono text-[10px]">{formatRate(r.newConstructionRatePerSqft)}</td>
                           <td className="p-1.5 font-mono text-[10px]">
-                            {formatPaise(r.defaultLightingPaise)} / {formatPaise(r.defaultSanitationPaise)} / {formatPaise(r.defaultWaterPaise)}
+                            {formatPaise(r.defaultLightingPaise)} / {formatPaise(r.defaultSanitationPaise)}
                           </td>
                           <td className="p-1.5 text-gp-muted whitespace-nowrap">{formatDate(r.updatedAt)}</td>
                         </tr>

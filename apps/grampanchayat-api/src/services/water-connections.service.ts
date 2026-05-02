@@ -142,8 +142,6 @@ export const waterConnectionsService = {
         .update(gpWaterConnections)
         .set({
           consumerNo: body.consumerNo,
-          connectionType: body.connectionType,
-          pipeSizeMm: body.pipeSizeMm,
           connectedAt: body.connectedAt,
           notes: body.notes,
           updatedAt: new Date(),

@@ -3,6 +3,7 @@ import { db } from '../db/index.ts'
 import { postHolders } from '../db/schema/post-holders.ts'
 import { CreatePostHolder, UpdatePostHolder } from '../types/post-holders.dto.ts'
 import { ApiError } from '../common/exceptions/http.exception.ts'
+import { stripUndefined } from '../lib/db-helpers.ts'
 
 export const postHoldersService = {
   async list(gpId: string) {
@@ -33,7 +34,7 @@ export const postHoldersService = {
   async update(gpId: string, id: string, input: UpdatePostHolder) {
     const [updated] = await db
       .update(postHolders)
-      .set({ ...input, updatedAt: new Date() })
+      .set({ ...stripUndefined(input), updatedAt: new Date() })
       .where(and(eq(postHolders.id, id), eq(postHolders.gpId, gpId)))
       .returning()
     if (!updated) throw new ApiError(404, 'Post holder not found')

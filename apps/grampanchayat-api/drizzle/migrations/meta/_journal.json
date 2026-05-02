@@ -120,6 +120,13 @@
       "when": 1777721295920,
       "tag": "0018_water_connections",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1777721823701,
+      "tag": "0019_water_connection_rates",
+      "breakpoints": true
     }
   ]
 }

@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm'
 import { db } from '../db/index.ts'
 import { gpTenants } from '../db/schema/index.ts'
 import type { GpTenant, NewGpTenant } from '../db/schema/tenants.ts'
+import { stripUndefined } from '../lib/db-helpers.ts'
 
 export const tenantModel = {
   async findBySubdomain(subdomain: string): Promise<GpTenant | undefined> {
@@ -25,7 +26,7 @@ export const tenantModel = {
   async update(id: string, data: Partial<NewGpTenant>): Promise<GpTenant | undefined> {
     const [updated] = await db
       .update(gpTenants)
-      .set({ ...data, updatedAt: new Date() })
+      .set({ ...stripUndefined(data), updatedAt: new Date() })
       .where(eq(gpTenants.id, id))
       .returning()
     return updated

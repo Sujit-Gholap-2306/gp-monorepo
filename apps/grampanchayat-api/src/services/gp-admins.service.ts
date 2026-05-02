@@ -48,7 +48,7 @@ export const gpAdminsService = {
   async update(gpId: string, id: string, input: UpdateGpAdmin) {
     const [updated] = await db
       .update(gpAdmins)
-      .set({ ...input, updatedAt: new Date() })
+      .set({ role: input.role, isActive: input.isActive, updatedAt: new Date() })
       .where(and(eq(gpAdmins.id, id), eq(gpAdmins.gpId, gpId), isNull(gpAdmins.deletedAt)))
       .returning()
     if (!updated) throw new ApiError(404, 'Admin not found')

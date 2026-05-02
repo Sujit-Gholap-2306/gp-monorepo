@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm'
 import type { PgTable, PgColumn } from 'drizzle-orm/pg-core'
 import { db } from '../../db/index.ts'
+import { stripUndefined } from '../../lib/db-helpers.ts'
 
 export abstract class BaseRepository<TSelect, TInsert> {
   protected abstract readonly table: PgTable
@@ -23,7 +24,7 @@ export abstract class BaseRepository<TSelect, TInsert> {
   async update(id: string, data: Partial<TInsert>): Promise<TSelect | undefined> {
     const [row] = await db
       .update(this.table)
-      .set({ ...(data as Record<string, unknown>), updatedAt: new Date() })
+      .set({ ...stripUndefined(data as Record<string, unknown>), updatedAt: new Date() })
       .where(eq(this.idColumn, id))
       .returning()
     return row as TSelect | undefined

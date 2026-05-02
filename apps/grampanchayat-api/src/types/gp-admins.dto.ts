@@ -7,7 +7,7 @@ export const createGpAdminSchema = z.object({
   isActive: z.boolean().default(true),
 })
 
-export const updateGpAdminSchema = createGpAdminSchema.partial()
+export const updateGpAdminSchema = createGpAdminSchema.omit({ userId: true }).partial()
 
 export type CreateGpAdmin = z.infer<typeof createGpAdminSchema>
 export type UpdateGpAdmin = z.infer<typeof updateGpAdminSchema>

@@ -66,7 +66,6 @@ export type MastersPropertyListRow = {
   assessmentDate: string | null
   lightingTaxPaise: number | null
   sanitationTaxPaise: number | null
-  waterTaxPaise: number | null
   createdAt: string
 }
 
@@ -85,7 +84,6 @@ type RawMastersPropertyListRow = {
   assessment_date: string | null
   lighting_tax_paise: number | null
   sanitation_tax_paise: number | null
-  water_tax_paise: number | null
   created_at: string
 }
 
@@ -151,7 +149,6 @@ function normalizePropertyRow(raw: RawMastersPropertyListRow): MastersPropertyLi
     assessmentDate: raw.assessment_date,
     lightingTaxPaise: raw.lighting_tax_paise,
     sanitationTaxPaise: raw.sanitation_tax_paise,
-    waterTaxPaise: raw.water_tax_paise,
     createdAt: raw.created_at,
   }
 }
@@ -219,7 +216,6 @@ export type MastersPropertyTypeRateRow = {
   newConstructionRatePerSqft: string | null
   defaultLightingPaise: number | null
   defaultSanitationPaise: number | null
-  defaultWaterPaise: number | null
   createdAt: string
   updatedAt: string
 }
@@ -235,7 +231,6 @@ type RawMastersPropertyTypeRateRow = {
   new_construction_rate_per_sqft: string | null
   default_lighting_paise: number | null
   default_sanitation_paise: number | null
-  default_water_paise: number | null
   created_at: string
   updated_at: string
 }
@@ -252,7 +247,6 @@ function normalizePropertyTypeRateRow(raw: RawMastersPropertyTypeRateRow): Maste
     newConstructionRatePerSqft: raw.new_construction_rate_per_sqft,
     defaultLightingPaise: raw.default_lighting_paise,
     defaultSanitationPaise: raw.default_sanitation_paise,
-    defaultWaterPaise: raw.default_water_paise,
     createdAt: raw.created_at,
     updatedAt: raw.updated_at,
   }

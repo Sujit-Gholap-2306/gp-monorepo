@@ -338,8 +338,8 @@ Accounting impact:
 ## Implementation Order
 
 1. **Phase A — N08 cleanup** ✅ DONE (2026-05-02): Water removed from properties, rates, tax-calc, TAX_HEADS, N09 demand lines, account-heads. Migration `0017_remove_water_from_n08_n09.sql` applied.
-2. **Phase B — Water connections master**: Schema + CRUD API (create, list, update, status toggle).
-3. **Phase C — Water rate master**: Schema + CRUD API (configure annual rates per FY, connection type, and pipe size).
+2. **Phase B — Water connections master** ✅ DONE (2026-05-02): Schema + CRUD API (create, list, update, status toggle).
+3. **Phase C — Water rate master** ✅ DONE (2026-05-02): Schema + CRUD API (configure annual rates per FY, connection type, and pipe size).
 4. **Phase D — N09 water demand generation**: Generate annual demand from master, carry arrears, N09 view update.
 5. **Phase E — Water opening arrear import**: Template + import flow that updates `previous_paise` on generated current-FY water demand lines.
 6. **Phase F — N10 water receipt book**: Separate N10 collection for water using shared N10 tables with `book_type`.
@@ -351,10 +351,11 @@ Accounting impact:
 ### Phase B — Water Connections
 
 ```
-GET    /:subdomain/water/connections               list all connections for GP
-POST   /:subdomain/water/connections               create single connection
-PATCH  /:subdomain/water/connections/:id           update connection (name/notes/pipe_size)
-PATCH  /:subdomain/water/connections/:id/status    toggle active ↔ disconnected
+GET    /:subdomain/masters/water-connections
+GET    /:subdomain/masters/water-connections/:id
+POST   /:subdomain/masters/water-connections
+PATCH  /:subdomain/masters/water-connections/:id
+PATCH  /:subdomain/masters/water-connections/:id/status
 ```
 
 **POST body:**
@@ -386,25 +387,16 @@ PATCH  /:subdomain/water/connections/:id/status    toggle active ↔ disconnecte
 ### Phase C — Water Connection Rates
 
 ```
-GET    /:subdomain/water/rates?fiscal_year=2026-27   list rates for FY
-PUT    /:subdomain/water/rates                        upsert rate rows (array)
-GET    /:subdomain/water/rates/status?fiscal_year=2026-27   completeness check
+GET    /:subdomain/masters/water-connection-rates
+PUT    /:subdomain/masters/water-connection-rates
 ```
 
 **PUT body:**
 ```json
-[
-  { "fiscal_year": "2026-27", "connection_type": "regular", "pipe_size_mm": 15, "annual_paise": 36000 },
-  { "fiscal_year": "2026-27", "connection_type": "specialized", "pipe_size_mm": 25, "annual_paise": 72000 }
-]
-```
-
-**Rate status response:**
-```json
 {
-  "is_complete": false,
-  "missing_combinations": [
-    { "connection_type": "regular", "pipe_size_mm": 20 }
+  "rates": [
+    { "fiscal_year": "2026-27", "connection_type": "regular", "pipe_size_mm": 15, "annual_paise": 36000 },
+    { "fiscal_year": "2026-27", "connection_type": "specialized", "pipe_size_mm": 25, "annual_paise": 72000 }
   ]
 }
 ```

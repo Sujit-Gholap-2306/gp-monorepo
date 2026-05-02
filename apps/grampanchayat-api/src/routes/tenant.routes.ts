@@ -13,6 +13,7 @@ import { mastersBulkController, mastersBulkUpload } from '../controllers/masters
 import { bulkImportRateLimit } from '../common/guards/rate-limit.guard.ts'
 import { propertyTypeRatesController } from '../controllers/property-type-rates.controller.ts'
 import { onboardingController } from '../controllers/onboarding.controller.ts'
+import { waterConnectionRatesController } from '../controllers/water-connection-rates.controller.ts'
 import { waterConnectionsController } from '../controllers/water-connections.controller.ts'
 import { requireFeature } from '../common/guards/tier.guard.ts'
 import tenantNamuneRouter from './tenant-namune.routes.ts'
@@ -70,28 +71,45 @@ router.put(
   propertyTypeRatesController.upsert
 )
 router.get(
+  '/:subdomain/masters/water-connection-rates',
+  supabaseTenantAdminGuard,
+  requireFeature('tax'),
+  waterConnectionRatesController.list
+)
+router.put(
+  '/:subdomain/masters/water-connection-rates',
+  supabaseTenantAdminGuard,
+  requireFeature('tax'),
+  waterConnectionRatesController.upsert
+)
+router.get(
   '/:subdomain/masters/water-connections',
-  supabaseTenantAdminGuard, requireFeature('tax'),
+  supabaseTenantAdminGuard,
+  requireFeature('tax'),
   waterConnectionsController.list
 )
 router.get(
   '/:subdomain/masters/water-connections/:id',
-  supabaseTenantAdminGuard, requireFeature('tax'),
+  supabaseTenantAdminGuard,
+  requireFeature('tax'),
   waterConnectionsController.getById
 )
 router.post(
   '/:subdomain/masters/water-connections',
-  supabaseTenantAdminGuard, requireFeature('tax'),
+  supabaseTenantAdminGuard,
+  requireFeature('tax'),
   waterConnectionsController.create
 )
 router.patch(
   '/:subdomain/masters/water-connections/:id',
-  supabaseTenantAdminGuard, requireFeature('tax'),
+  supabaseTenantAdminGuard,
+  requireFeature('tax'),
   waterConnectionsController.update
 )
 router.patch(
   '/:subdomain/masters/water-connections/:id/status',
-  supabaseTenantAdminGuard, requireFeature('tax'),
+  supabaseTenantAdminGuard,
+  requireFeature('tax'),
   waterConnectionsController.setStatus
 )
 

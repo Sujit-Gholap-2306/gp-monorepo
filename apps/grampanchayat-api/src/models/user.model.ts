@@ -2,6 +2,7 @@ import { eq, or } from 'drizzle-orm'
 import { db } from '../db/index.ts'
 import { users } from '../db/schema/index.ts'
 import type { User, NewUser } from '../db/schema/users.ts'
+import { stripUndefined } from '../lib/db-helpers.ts'
 
 export const userModel = {
   async findById(id: string): Promise<User | undefined> {
@@ -30,7 +31,7 @@ export const userModel = {
   async update(id: string, data: Partial<NewUser>): Promise<User | undefined> {
     const [updated] = await db
       .update(users)
-      .set({ ...data, updatedAt: new Date() })
+      .set({ ...stripUndefined(data), updatedAt: new Date() })
       .where(eq(users.id, id))
       .returning()
     return updated

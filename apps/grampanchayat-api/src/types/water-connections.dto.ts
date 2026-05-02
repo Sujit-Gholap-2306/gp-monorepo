@@ -45,7 +45,7 @@ export const createWaterConnectionSchema = z.object({
 })
 
 export const updateWaterConnectionSchema = createWaterConnectionSchema
-  .omit({ citizenId: true })
+  .omit({ citizenId: true, connectionType: true, pipeSizeMm: true })
   .partial()
 
 export const setWaterConnectionStatusSchema = z.object({
