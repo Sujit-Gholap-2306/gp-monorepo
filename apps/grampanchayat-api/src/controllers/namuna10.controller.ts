@@ -2,27 +2,26 @@ import { BaseController } from '../common/base/base.controller.ts'
 import { ApiError } from '../common/exceptions/http.exception.ts'
 import { asyncHandler } from '../common/guards/async-handler.ts'
 import { namuna10Service } from '../services/namuna10.service.ts'
-import { namuna10CreateBodySchema, namuna10IdParamsSchema, namuna10VoidBodySchema } from '../types/namuna10.dto.ts'
+import { namuna10CreateBodySchema, namuna10IdParamsSchema, namuna10ListQuerySchema, namuna10VoidBodySchema } from '../types/namuna10.dto.ts'
 
 class Namuna10Controller extends BaseController {
   list = asyncHandler(async (req, res) => {
     const tenant = req.gpTenant
     if (!tenant) throw new ApiError(500, 'Tenant context missing')
 
-    const q = typeof req.query.q === 'string' ? req.query.q : undefined
-    const fiscalYear = typeof req.query.fiscal_year === 'string' ? req.query.fiscal_year : undefined
-    const limitRaw = typeof req.query.limit === 'string' ? Number(req.query.limit) : undefined
-    const offsetRaw = typeof req.query.offset === 'string' ? Number(req.query.offset) : undefined
-    const limit = Number.isFinite(limitRaw) ? limitRaw : undefined
-    const offset = Number.isFinite(offsetRaw) ? offsetRaw : undefined
+    const parsed = namuna10ListQuerySchema.safeParse(req.query)
+    if (!parsed.success) throw new ApiError(422, 'Invalid query params', parsed.error.issues)
+    const { q, fiscal_year: fiscalYear, property_id: propertyId, water_connection_id: waterConnectionId, book_type: bookType, limit, offset } = parsed.data
 
-    const propertyIdRaw = typeof req.query.property_id === 'string' ? req.query.property_id : undefined
-    if (propertyIdRaw !== undefined && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(propertyIdRaw)) {
-      throw new ApiError(422, 'property_id must be a valid UUID')
-    }
-    const propertyId = propertyIdRaw
-
-    const data = await namuna10Service.list(tenant.id, { q, propertyId, fiscalYear, limit, offset })
+    const data = await namuna10Service.list(tenant.id, {
+      q,
+      propertyId,
+      waterConnectionId,
+      bookType,
+      fiscalYear,
+      limit,
+      offset,
+    })
     return this.ok(res, data, 'Receipts loaded')
   })
 

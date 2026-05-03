@@ -12,6 +12,10 @@ import {
 } from 'drizzle-orm/pg-core'
 import { gpProperties } from './properties.ts'
 import { gpTenants } from './tenants.ts'
+import { gpWaterConnections } from './water-connections.ts'
+
+export const NAMUNA10_BOOK_TYPES = ['property', 'water'] as const
+export type Namuna10BookType = (typeof NAMUNA10_BOOK_TYPES)[number]
 
 export const gpNamuna10Receipts = pgTable(
   'gp_namuna10_receipts',
@@ -20,9 +24,11 @@ export const gpNamuna10Receipts = pgTable(
     gpId:              uuid('gp_id')
       .notNull()
       .references(() => gpTenants.id, { onDelete: 'cascade' }),
+    bookType:          text('book_type').notNull().default('property'),
     propertyId:        uuid('property_id')
-      .notNull()
       .references(() => gpProperties.id, { onDelete: 'restrict' }),
+    waterConnectionId: uuid('water_connection_id')
+      .references(() => gpWaterConnections.id, { onDelete: 'restrict' }),
     payerName: text('payer_name').notNull(),
     fiscalYear:        text('fiscal_year').notNull(),
     receiptNo:         text('receipt_no').notNull(),
@@ -43,8 +49,9 @@ export const gpNamuna10Receipts = pgTable(
     updatedAt:         timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (t) => ({
-    gpReceiptNoUidx: uniqueIndex('gp_namuna10_receipts_gp_receipt_no_uidx').on(
+    gpBookReceiptNoUidx: uniqueIndex('gp_namuna10_receipts_gp_book_receipt_no_uidx').on(
       t.gpId,
+      t.bookType,
       t.receiptNo
     ),
     gpFyPaidAtIdx: index('gp_namuna10_receipts_gp_fy_paid_at_idx').on(
@@ -56,6 +63,25 @@ export const gpNamuna10Receipts = pgTable(
       t.gpId,
       t.propertyId,
       t.paidAt
+    ),
+    gpWaterConnectionPaidAtIdx: index('gp_namuna10_receipts_gp_water_connection_paid_at_idx').on(
+      t.gpId,
+      t.waterConnectionId,
+      t.paidAt
+    ),
+    bookTypeCheck: check(
+      'gp_namuna10_receipts_book_type_check',
+      sql`${t.bookType} IN ('property', 'water')`
+    ),
+    targetFkXorCheck: check(
+      'gp_namuna10_receipts_target_fk_xor_check',
+      sql`
+        (
+          (${t.bookType} = 'property' AND ${t.propertyId} IS NOT NULL AND ${t.waterConnectionId} IS NULL)
+          OR
+          (${t.bookType} = 'water' AND ${t.waterConnectionId} IS NOT NULL AND ${t.propertyId} IS NULL)
+        )
+      `
     ),
     paymentModeCheck: check(
       'gp_namuna10_receipts_payment_mode_check',

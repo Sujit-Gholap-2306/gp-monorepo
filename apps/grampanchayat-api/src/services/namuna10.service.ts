@@ -8,6 +8,7 @@ import {
   gpNamuna10Receipts,
   gpTenants,
 } from '../db/schema/index.ts'
+import type { Namuna10BookType } from '../db/schema/namuna10-receipts.ts'
 import { accountHeadForTaxHead } from '../lib/account-heads.ts'
 import { currentFiscalYear, fyMonthNo } from '../lib/fiscal.ts'
 import { isTaxHead } from '../lib/tax-head.ts'
@@ -15,11 +16,20 @@ import type { Namuna10CreateBody } from '../types/namuna10.dto.ts'
 
 type AllocatedSeqRow = { allocated: number }
 
-type LockedDemandLineRow = {
+type LockedPropertyDemandLineRow = {
   id: string
   gp_id: string
   property_id: string
+  fiscal_year: string
   tax_head: string
+  total_due_paise: number
+}
+
+type LockedWaterDemandLineRow = {
+  id: string
+  gp_id: string
+  water_connection_id: string
+  fiscal_year: string
   total_due_paise: number
 }
 
@@ -27,12 +37,21 @@ type ReceiptHeaderRow = {
   id: string
   receipt_no: string
   fiscal_year: string
-  property_id: string
-  property_no: string
-  property_type: string
-  ward_number: string
-  owner_name_mr: string
+  book_type: Namuna10BookType
+  property_id: string | null
+  water_connection_id: string | null
+  property_no: string | null
+  property_type: string | null
+  property_ward_number: string | null
+  owner_name_mr: string | null
   owner_name_en: string | null
+  consumer_no: string | null
+  connection_type: string | null
+  pipe_size_mm: number | null
+  water_ward_number: string | null
+  water_citizen_no: number | null
+  water_name_mr: string | null
+  water_name_en: string | null
   payer_name: string
   paid_at: Date | string
   payment_mode: string
@@ -52,7 +71,8 @@ type ReceiptHeaderRow = {
 
 type ReceiptLineRow = {
   id: string
-  demand_line_id: string
+  demand_line_id: string | null
+  water_demand_line_id: string | null
   tax_head: string
   amount_paise: number | string
 }
@@ -61,8 +81,11 @@ type ReceiptListRow = {
   id: string
   receipt_no: string
   fiscal_year: string
-  property_id: string
-  property_no: string
+  book_type: Namuna10BookType
+  property_id: string | null
+  property_no: string | null
+  water_connection_id: string | null
+  consumer_no: string | null
   payer_name: string
   paid_at: Date | string
   payment_mode: string
@@ -74,6 +97,7 @@ type VoidReceiptRow = {
   id: string
   receipt_no: string
   gp_id: string
+  book_type: Namuna10BookType
   discount_paise: number | string
   late_fee_paise: number | string
   notice_fee_paise: number | string
@@ -81,10 +105,17 @@ type VoidReceiptRow = {
   is_void: boolean
 }
 
-type VoidReceiptLineRow = {
+type VoidPropertyReceiptLineRow = {
   receipt_line_id: string
   demand_line_id: string
   tax_head: string
+  amount_paise: number | string
+  paid_paise: number | string
+}
+
+type VoidWaterReceiptLineRow = {
+  receipt_line_id: string
+  water_demand_line_id: string
   amount_paise: number | string
   paid_paise: number | string
 }
@@ -151,7 +182,7 @@ function buildN05Entries(params: {
   descriptionBase: string
   sourceType: CashbookSourceType
   sourceId: string
-  lines: Array<{ taxHead: string; amountPaise: number; sourceLineId: string }>
+  lines: Array<{ accountHead: N05AccountHead; amountPaise: number; sourceLineId: string }>
   adjustments: {
     discountPaise: number
     lateFeePaise: number
@@ -167,26 +198,21 @@ function buildN05Entries(params: {
 
   const ctx = { gpId, entryDate, fiscalYear, fyMonthNo: monthNo, sourceType, sourceId, createdBy }
 
-  const entries: N05EntryRow[] = params.lines.map((line) => {
-    if (!isTaxHead(line.taxHead)) {
-      throw new ApiError(500, `Unknown tax head: ${line.taxHead}`)
-    }
-    return {
-      ...ctx,
-      entryType: lineEntryType,
-      accountHead: accountHeadForTaxHead(line.taxHead),
-      description: `${descriptionBase} line`,
-      amountPaise: line.amountPaise,
-      sourceLineId: line.sourceLineId,
-    }
-  })
+  const entries: N05EntryRow[] = params.lines.map((line) => ({
+    ...ctx,
+    entryType: lineEntryType,
+    accountHead: line.accountHead,
+    description: `${descriptionBase} line`,
+    amountPaise: line.amountPaise,
+    sourceLineId: line.sourceLineId,
+  }))
 
   const adj = params.adjustments
   const adjustmentDefs: Array<[number, 'discount' | 'late_fee' | 'notice_fee' | 'other', CashbookEntryType]> = [
-    [adj.discountPaise,   'discount',    discountType],
-    [adj.lateFeePaise,    'late_fee',    feeType],
-    [adj.noticeFeePaise,  'notice_fee',  feeType],
-    [adj.otherPaise,      'other',       feeType],
+    [adj.discountPaise, 'discount', discountType],
+    [adj.lateFeePaise, 'late_fee', feeType],
+    [adj.noticeFeePaise, 'notice_fee', feeType],
+    [adj.otherPaise, 'other', feeType],
   ]
 
   for (const [amountPaise, accountHead, entryType] of adjustmentDefs) {
@@ -235,59 +261,186 @@ export const namuna10Service = {
     }
 
     const receiptId = await db.transaction(async (tx) => {
-      // Sequence gaps on TX rollback are intentional — receipt numbers are
-      // never reused. Gaps are an audit signal, not a bug.
       const [seq] = await tx.execute<AllocatedSeqRow>(sql`
-        INSERT INTO gp_receipt_sequences (gp_id, fiscal_year, next_no)
-        VALUES (${gpId}, ${body.fiscalYear}, 2)
-        ON CONFLICT (gp_id, fiscal_year) DO UPDATE
+        INSERT INTO gp_receipt_sequences (gp_id, fiscal_year, book_type, next_no)
+        VALUES (${gpId}, ${body.fiscalYear}, ${body.bookType}, 2)
+        ON CONFLICT (gp_id, fiscal_year, book_type) DO UPDATE
           SET next_no = gp_receipt_sequences.next_no + 1,
               updated_at = now()
         RETURNING next_no - 1 AS allocated
       `)
 
       if (!seq) throw new ApiError(500, 'Receipt sequence allocation failed')
-
       const receiptNo = formatReceiptNo(body.fiscalYear, seq.allocated)
-      const demandLineIds = body.lines.map((line) => line.demandLineId)
+      const now = new Date()
 
-      const lockedLines = await tx.execute<LockedDemandLineRow>(sql`
+      if (body.bookType === 'property') {
+        const propertyId = body.propertyId
+        if (!propertyId) throw new ApiError(422, 'propertyId is required for property book')
+
+        const demandLineIds = body.lines.map((line) => line.demandLineId!).filter(Boolean)
+        const lockedLines = await tx.execute<LockedPropertyDemandLineRow>(sql`
+          SELECT
+            dl.id,
+            d.gp_id,
+            d.property_id,
+            d.fiscal_year,
+            dl.tax_head,
+            dl.total_due_paise
+          FROM gp_namuna9_demand_lines dl
+          JOIN gp_namuna9_demands d ON d.id = dl.demand_id
+          WHERE dl.id = ANY(${sqlUuidArray(demandLineIds)})
+            AND d.fiscal_year = ${body.fiscalYear}
+          FOR UPDATE
+        `)
+
+        if (lockedLines.length !== demandLineIds.length) {
+          throw new ApiError(422, 'One or more demand lines not found')
+        }
+
+        const lockedLineById = new Map(lockedLines.map((row) => [row.id, row]))
+        for (const line of body.lines) {
+          const demandLineId = line.demandLineId
+          if (!demandLineId) throw new ApiError(422, 'demandLineId required for property line')
+          const locked = lockedLineById.get(demandLineId)
+          if (!locked) throw new ApiError(422, `Demand line ${demandLineId} not found`)
+          if (locked.gp_id !== gpId) throw new ApiError(403, 'Demand line belongs to another GP')
+          if (locked.property_id !== propertyId) {
+            throw new ApiError(422, `Demand line ${demandLineId} does not belong to property ${propertyId}`)
+          }
+          if (line.amountPaise > locked.total_due_paise) {
+            throw new ApiError(
+              422,
+              `amountPaise ${line.amountPaise} exceeds total_due_paise ${locked.total_due_paise} for line ${demandLineId}`
+            )
+          }
+        }
+
+        const [receipt] = await tx
+          .insert(gpNamuna10Receipts)
+          .values({
+            gpId,
+            bookType: body.bookType,
+            propertyId,
+            waterConnectionId: null,
+            payerName: body.payerName,
+            fiscalYear: body.fiscalYear,
+            receiptNo,
+            paidAt: new Date(body.paidAt),
+            paymentMode: body.paymentMode,
+            reference: body.reference,
+            discountPaise: body.discountPaise,
+            lateFeePaise: body.lateFeePaise,
+            noticeFeePaise: body.noticeFeePaise,
+            otherPaise: body.otherPaise,
+            otherReason: body.otherReason,
+            createdBy,
+          })
+          .returning()
+
+        if (!receipt) throw new ApiError(500, 'Receipt insert failed')
+
+        const insertedLines = await tx
+          .insert(gpNamuna10ReceiptLines)
+          .values(
+            body.lines.map((line) => ({
+              receiptId: receipt.id,
+              demandLineId: line.demandLineId!,
+              waterDemandLineId: null,
+              amountPaise: line.amountPaise,
+            }))
+          )
+          .returning()
+
+        const lineIds = body.lines.map((line) => line.demandLineId!)
+        const lineAmounts = body.lines.map((line) => line.amountPaise)
+
+        await tx.execute(sql`
+          UPDATE gp_namuna9_demand_lines AS t
+          SET paid_paise = t.paid_paise + v.amount_paise,
+              updated_at = ${sqlDate(now)}
+          FROM (
+            SELECT UNNEST(${sqlUuidArray(lineIds)}) AS demand_line_id,
+                   UNNEST(${sqlBigintArray(lineAmounts)}) AS amount_paise
+          ) AS v
+          WHERE t.id = v.demand_line_id
+        `)
+
+        const paidAt = new Date(receipt.paidAt)
+        const n05Entries = buildN05Entries({
+          mode: 'create',
+          gpId,
+          entryDate: indiaDateString(paidAt),
+          fiscalYear: receipt.fiscalYear,
+          fyMonthNo: fyMonthNo(paidAt),
+          descriptionBase: `N10 receipt ${receipt.receiptNo}`,
+          sourceType: 'namuna10',
+          sourceId: receipt.id,
+          lines: insertedLines.map((line) => {
+            const locked = lockedLineById.get(line.demandLineId!)
+            if (!locked || !isTaxHead(locked.tax_head)) {
+              throw new ApiError(500, `Tax head missing for demand line ${line.demandLineId}`)
+            }
+            return {
+              accountHead: accountHeadForTaxHead(locked.tax_head),
+              amountPaise: line.amountPaise,
+              sourceLineId: line.id,
+            }
+          }),
+          adjustments: {
+            discountPaise: receipt.discountPaise,
+            lateFeePaise: receipt.lateFeePaise,
+            noticeFeePaise: receipt.noticeFeePaise,
+            otherPaise: receipt.otherPaise,
+          },
+          createdBy,
+        })
+
+        if (n05Entries.length > 0) {
+          await tx.insert(gpNamuna05CashbookEntries).values(n05Entries)
+        }
+        return receipt.id
+      }
+
+      const waterConnectionId = body.waterConnectionId
+      if (!waterConnectionId) throw new ApiError(422, 'waterConnectionId is required for water book')
+
+      const waterDemandLineIds = body.lines.map((line) => line.waterDemandLineId!).filter(Boolean)
+      const lockedWaterLines = await tx.execute<LockedWaterDemandLineRow>(sql`
         SELECT
-          dl.id,
-          d.gp_id,
-          d.property_id,
-          dl.tax_head,
-          dl.total_due_paise
-        FROM gp_namuna9_demand_lines dl
-        JOIN gp_namuna9_demands d ON d.id = dl.demand_id
-        WHERE dl.id = ANY(${sqlUuidArray(demandLineIds)})
+          wdl.id,
+          wd.gp_id,
+          wd.water_connection_id,
+          wd.fiscal_year,
+          wdl.total_due_paise
+        FROM gp_water_connection_demand_lines wdl
+        JOIN gp_water_connection_demands wd ON wd.id = wdl.demand_id
+        WHERE wdl.id = ANY(${sqlUuidArray(waterDemandLineIds)})
+          AND wd.fiscal_year = ${body.fiscalYear}
         FOR UPDATE
       `)
 
-      if (lockedLines.length !== demandLineIds.length) {
-        throw new ApiError(422, 'One or more demand lines not found')
+      if (lockedWaterLines.length !== waterDemandLineIds.length) {
+        throw new ApiError(422, 'One or more water demand lines not found')
       }
 
-      const lockedLineById = new Map(lockedLines.map((row) => [row.id, row]))
-
+      const lockedWaterLineById = new Map(lockedWaterLines.map((row) => [row.id, row]))
       for (const line of body.lines) {
-        const locked = lockedLineById.get(line.demandLineId)
-        if (!locked) {
-          throw new ApiError(422, `Demand line ${line.demandLineId} not found`)
-        }
-        if (locked.gp_id !== gpId) {
-          throw new ApiError(403, 'Demand line belongs to another GP')
-        }
-        if (locked.property_id !== body.propertyId) {
+        const waterDemandLineId = line.waterDemandLineId
+        if (!waterDemandLineId) throw new ApiError(422, 'waterDemandLineId required for water line')
+        const locked = lockedWaterLineById.get(waterDemandLineId)
+        if (!locked) throw new ApiError(422, `Water demand line ${waterDemandLineId} not found`)
+        if (locked.gp_id !== gpId) throw new ApiError(403, 'Water demand line belongs to another GP')
+        if (locked.water_connection_id !== waterConnectionId) {
           throw new ApiError(
             422,
-            `Demand line ${line.demandLineId} does not belong to property ${body.propertyId}`
+            `Water demand line ${waterDemandLineId} does not belong to water connection ${waterConnectionId}`
           )
         }
         if (line.amountPaise > locked.total_due_paise) {
           throw new ApiError(
             422,
-            `amountPaise ${line.amountPaise} exceeds total_due_paise ${locked.total_due_paise} for line ${line.demandLineId}`
+            `amountPaise ${line.amountPaise} exceeds total_due_paise ${locked.total_due_paise} for line ${waterDemandLineId}`
           )
         }
       }
@@ -296,18 +449,20 @@ export const namuna10Service = {
         .insert(gpNamuna10Receipts)
         .values({
           gpId,
-          propertyId:     body.propertyId,
-          payerName:      body.payerName,
-          fiscalYear:     body.fiscalYear,
+          bookType: body.bookType,
+          propertyId: null,
+          waterConnectionId,
+          payerName: body.payerName,
+          fiscalYear: body.fiscalYear,
           receiptNo,
-          paidAt:         new Date(body.paidAt),
-          paymentMode:    body.paymentMode,
-          reference:      body.reference,
-          discountPaise:  body.discountPaise,
-          lateFeePaise:   body.lateFeePaise,
+          paidAt: new Date(body.paidAt),
+          paymentMode: body.paymentMode,
+          reference: body.reference,
+          discountPaise: body.discountPaise,
+          lateFeePaise: body.lateFeePaise,
           noticeFeePaise: body.noticeFeePaise,
-          otherPaise:     body.otherPaise,
-          otherReason:    body.otherReason,
+          otherPaise: body.otherPaise,
+          otherReason: body.otherReason,
           createdBy,
         })
         .returning()
@@ -318,26 +473,26 @@ export const namuna10Service = {
         .insert(gpNamuna10ReceiptLines)
         .values(
           body.lines.map((line) => ({
-            receiptId:    receipt.id,
-            demandLineId: line.demandLineId,
-            amountPaise:  line.amountPaise,
+            receiptId: receipt.id,
+            demandLineId: null,
+            waterDemandLineId: line.waterDemandLineId!,
+            amountPaise: line.amountPaise,
           }))
         )
         .returning()
 
-      const lineIds = body.lines.map((line) => line.demandLineId)
+      const lineIds = body.lines.map((line) => line.waterDemandLineId!)
       const lineAmounts = body.lines.map((line) => line.amountPaise)
-      const now = new Date()
 
       await tx.execute(sql`
-        UPDATE gp_namuna9_demand_lines AS t
+        UPDATE gp_water_connection_demand_lines AS t
         SET paid_paise = t.paid_paise + v.amount_paise,
             updated_at = ${sqlDate(now)}
         FROM (
-          SELECT UNNEST(${sqlUuidArray(lineIds)})    AS demand_line_id,
+          SELECT UNNEST(${sqlUuidArray(lineIds)}) AS water_demand_line_id,
                  UNNEST(${sqlBigintArray(lineAmounts)}) AS amount_paise
         ) AS v
-        WHERE t.id = v.demand_line_id
+        WHERE t.id = v.water_demand_line_id
       `)
 
       const paidAt = new Date(receipt.paidAt)
@@ -350,18 +505,16 @@ export const namuna10Service = {
         descriptionBase: `N10 receipt ${receipt.receiptNo}`,
         sourceType: 'namuna10',
         sourceId: receipt.id,
-        lines: insertedLines.map((line) => {
-          const locked = lockedLineById.get(line.demandLineId)
-          if (!locked || !isTaxHead(locked.tax_head)) {
-            throw new ApiError(500, `Tax head missing for demand line ${line.demandLineId}`)
-          }
-          return { taxHead: locked.tax_head, amountPaise: line.amountPaise, sourceLineId: line.id }
-        }),
+        lines: insertedLines.map((line) => ({
+          accountHead: 'water_tax',
+          amountPaise: line.amountPaise,
+          sourceLineId: line.id,
+        })),
         adjustments: {
-          discountPaise:  receipt.discountPaise,
-          lateFeePaise:   receipt.lateFeePaise,
+          discountPaise: receipt.discountPaise,
+          lateFeePaise: receipt.lateFeePaise,
           noticeFeePaise: receipt.noticeFeePaise,
-          otherPaise:     receipt.otherPaise,
+          otherPaise: receipt.otherPaise,
         },
         createdBy,
       })
@@ -369,7 +522,6 @@ export const namuna10Service = {
       if (n05Entries.length > 0) {
         await tx.insert(gpNamuna05CashbookEntries).values(n05Entries)
       }
-
       return receipt.id
     })
 
@@ -382,12 +534,21 @@ export const namuna10Service = {
         r.id,
         r.receipt_no,
         r.fiscal_year,
+        r.book_type,
         r.property_id,
+        r.water_connection_id,
         p.property_no,
         p.property_type,
-        c.ward_number,
-        c.name_mr AS owner_name_mr,
-        c.name_en AS owner_name_en,
+        cp.ward_number AS property_ward_number,
+        cp.name_mr AS owner_name_mr,
+        cp.name_en AS owner_name_en,
+        wc.consumer_no,
+        wc.connection_type,
+        wc.pipe_size_mm,
+        cw.ward_number AS water_ward_number,
+        cw.citizen_no AS water_citizen_no,
+        cw.name_mr AS water_name_mr,
+        cw.name_en AS water_name_en,
         r.payer_name,
         r.paid_at,
         r.payment_mode,
@@ -404,8 +565,10 @@ export const namuna10Service = {
         t.lines_total_paise,
         t.total_paise
       FROM gp_namuna10_receipts r
-      JOIN gp_properties p ON p.id = r.property_id
-      JOIN gp_citizens c ON c.id = p.owner_citizen_id
+      LEFT JOIN gp_properties p ON p.id = r.property_id
+      LEFT JOIN gp_citizens cp ON cp.id = p.owner_citizen_id
+      LEFT JOIN gp_water_connections wc ON wc.id = r.water_connection_id
+      LEFT JOIN gp_citizens cw ON cw.id = wc.citizen_id
       LEFT JOIN gp_namuna10_receipt_totals t ON t.receipt_id = r.id
       WHERE r.gp_id = ${gpId}
         AND r.id = ${receiptId}
@@ -418,29 +581,48 @@ export const namuna10Service = {
       SELECT
         rl.id,
         rl.demand_line_id,
-        dl.tax_head,
+        rl.water_demand_line_id,
+        COALESCE(dl.tax_head, 'water') AS tax_head,
         rl.amount_paise
       FROM gp_namuna10_receipt_lines rl
-      JOIN gp_namuna9_demand_lines dl ON dl.id = rl.demand_line_id
+      LEFT JOIN gp_namuna9_demand_lines dl ON dl.id = rl.demand_line_id
       WHERE rl.receipt_id = ${receiptId}
       ORDER BY rl.created_at, rl.id
     `)
 
     return {
-      id:         header.id,
-      receiptNo:  header.receipt_no,
+      id: header.id,
+      receiptNo: header.receipt_no,
       fiscalYear: header.fiscal_year,
+      bookType: header.book_type,
       propertyId: header.property_id,
-      property: {
-        id: header.property_id,
-        propertyNo: header.property_no,
-        propertyType: header.property_type,
-        wardNumber: header.ward_number,
-      },
-      owner: {
-        nameMr: header.owner_name_mr,
-        nameEn: header.owner_name_en,
-      },
+      waterConnectionId: header.water_connection_id,
+      property: header.property_id
+        ? {
+          id: header.property_id,
+          propertyNo: header.property_no,
+          propertyType: header.property_type,
+          wardNumber: header.property_ward_number,
+        }
+        : null,
+      waterConnection: header.water_connection_id
+        ? {
+          id: header.water_connection_id,
+          consumerNo: header.consumer_no,
+          connectionType: header.connection_type,
+          pipeSizeMm: header.pipe_size_mm,
+          citizenNo: header.water_citizen_no,
+          wardNumber: header.water_ward_number,
+          nameMr: header.water_name_mr,
+          nameEn: header.water_name_en,
+        }
+        : null,
+      owner: header.property_id
+        ? {
+          nameMr: header.owner_name_mr,
+          nameEn: header.owner_name_en,
+        }
+        : null,
       payerName: header.payer_name,
       paidAt: asIsoString(header.paid_at),
       paymentMode: header.payment_mode,
@@ -454,14 +636,13 @@ export const namuna10Service = {
       voidedAt: asIsoString(header.voided_at),
       voidedBy: header.voided_by,
       voidReason: header.void_reason,
-      lines: rows
-        .filter((row) => isTaxHead(row.tax_head))
-        .map((row) => ({
-          id: row.id,
-          demandLineId: row.demand_line_id,
-          taxHead: row.tax_head,
-          amountPaise: asNumber(row.amount_paise),
-        })),
+      lines: rows.map((row) => ({
+        id: row.id,
+        demandLineId: row.demand_line_id,
+        waterDemandLineId: row.water_demand_line_id,
+        taxHead: row.tax_head,
+        amountPaise: asNumber(row.amount_paise),
+      })),
       totals: {
         linesTotalPaise: asNumber(header.lines_total_paise),
         totalPaise: asNumber(header.total_paise),
@@ -474,6 +655,8 @@ export const namuna10Service = {
     filters: {
       q?: string
       propertyId?: string
+      waterConnectionId?: string
+      bookType?: Namuna10BookType
       fiscalYear?: string
       limit?: number
       offset?: number
@@ -488,22 +671,29 @@ export const namuna10Service = {
         r.id,
         r.receipt_no,
         r.fiscal_year,
+        r.book_type,
         r.property_id,
         p.property_no,
+        r.water_connection_id,
+        wc.consumer_no,
         r.payer_name,
         r.paid_at,
         r.payment_mode,
         r.is_void,
         t.total_paise
       FROM gp_namuna10_receipts r
-      JOIN gp_properties p ON p.id = r.property_id
+      LEFT JOIN gp_properties p ON p.id = r.property_id
+      LEFT JOIN gp_water_connections wc ON wc.id = r.water_connection_id
       LEFT JOIN gp_namuna10_receipt_totals t ON t.receipt_id = r.id
       WHERE r.gp_id = ${gpId}
         ${filters.propertyId ? sql`AND r.property_id = ${filters.propertyId}::uuid` : sql``}
+        ${filters.waterConnectionId ? sql`AND r.water_connection_id = ${filters.waterConnectionId}::uuid` : sql``}
+        ${filters.bookType ? sql`AND r.book_type = ${filters.bookType}` : sql``}
         ${filters.fiscalYear ? sql`AND r.fiscal_year = ${filters.fiscalYear}` : sql``}
         ${query ? sql`AND (
           r.receipt_no ILIKE ${query + '%'}
           OR p.property_no ILIKE ${`%${query}%`}
+          OR wc.consumer_no ILIKE ${`%${query}%`}
           OR r.payer_name ILIKE ${`%${query}%`}
         )` : sql``}
       ORDER BY r.paid_at DESC, r.created_at DESC
@@ -515,10 +705,13 @@ export const namuna10Service = {
         id: row.id,
         receiptNo: row.receipt_no,
         fiscalYear: row.fiscal_year,
+        bookType: row.book_type,
         propertyId: row.property_id,
         propertyNo: row.property_no,
+        waterConnectionId: row.water_connection_id,
+        consumerNo: row.consumer_no,
         payerName: row.payer_name,
-        paidAt: asIsoString(row.paid_at) ?? new Date().toISOString(),
+        paidAt: asIsoString(row.paid_at),
         paymentMode: row.payment_mode,
         isVoid: row.is_void,
         totalPaise: asNumber(row.total_paise),
@@ -535,6 +728,7 @@ export const namuna10Service = {
           id,
           receipt_no,
           gp_id,
+          book_type,
           discount_paise,
           late_fee_paise,
           notice_fee_paise,
@@ -549,101 +743,186 @@ export const namuna10Service = {
       if (!receipt) throw new ApiError(404, 'Receipt not found')
       if (receipt.is_void) throw new ApiError(409, 'Receipt is already voided')
 
-      const [totalCount] = await tx.execute<{ total: number }>(sql`
-        SELECT COUNT(*)::int AS total
-        FROM gp_namuna10_receipt_lines
-        WHERE receipt_id = ${receiptId}
-      `)
+      const now = new Date()
 
-      const rows = await tx.execute<VoidReceiptLineRow>(sql`
-        SELECT
-          rl.id AS receipt_line_id,
-          rl.demand_line_id,
-          dl.tax_head,
-          rl.amount_paise,
-          dl.paid_paise
-        FROM gp_namuna10_receipt_lines rl
-        JOIN gp_namuna9_demand_lines dl ON dl.id = rl.demand_line_id
-        JOIN gp_namuna9_demands d ON d.id = dl.demand_id
-        WHERE rl.receipt_id = ${receiptId}
-          AND d.gp_id = ${gpId}
-        FOR UPDATE OF dl
-      `)
+      if (receipt.book_type === 'property') {
+        const [totalCount] = await tx.execute<{ total: number }>(sql`
+          SELECT COUNT(*)::int AS total
+          FROM gp_namuna10_receipt_lines
+          WHERE receipt_id = ${receiptId}
+            AND demand_line_id IS NOT NULL
+        `)
 
-      if (rows.length === 0) {
-        throw new ApiError(409, 'Receipt has no reversible lines')
-      }
+        const rows = await tx.execute<VoidPropertyReceiptLineRow>(sql`
+          SELECT
+            rl.id AS receipt_line_id,
+            rl.demand_line_id,
+            dl.tax_head,
+            rl.amount_paise,
+            dl.paid_paise
+          FROM gp_namuna10_receipt_lines rl
+          JOIN gp_namuna9_demand_lines dl ON dl.id = rl.demand_line_id
+          JOIN gp_namuna9_demands d ON d.id = dl.demand_id
+          WHERE rl.receipt_id = ${receiptId}
+            AND d.gp_id = ${gpId}
+          FOR UPDATE OF dl
+        `)
 
-      if (rows.length !== totalCount?.total) {
-        throw new ApiError(
-          409,
-          `Partial reversal detected: receipt has ${totalCount?.total} lines but only ${rows.length} are reversible. Data integrity violation — void aborted.`
-        )
-      }
-
-      for (const row of rows) {
-        const amountPaise = asNumber(row.amount_paise)
-        const paidPaise = asNumber(row.paid_paise)
-        if (paidPaise < amountPaise) {
+        if (rows.length === 0) throw new ApiError(409, 'Receipt has no reversible lines')
+        if (rows.length !== totalCount?.total) {
           throw new ApiError(
             409,
-            `Cannot void receipt: demand line ${row.demand_line_id} has paid_paise ${paidPaise}, below reversal amount ${amountPaise}`
+            `Partial reversal detected: receipt has ${totalCount?.total} lines but only ${rows.length} are reversible. Data integrity violation — void aborted.`
           )
         }
-      }
 
-      const now = new Date()
-      const demandLineIds = rows.map((row) => row.demand_line_id)
-      const amounts = rows.map((row) => asNumber(row.amount_paise))
-
-      await tx.execute(sql`
-        UPDATE gp_namuna9_demand_lines AS t
-        SET paid_paise = t.paid_paise - v.amount_paise,
-            updated_at = ${sqlDate(now)}
-        FROM (
-          SELECT UNNEST(${sqlUuidArray(demandLineIds)}) AS demand_line_id,
-                 UNNEST(${sqlBigintArray(amounts)})     AS amount_paise
-        ) AS v
-        WHERE t.id = v.demand_line_id
-      `)
-
-      const voidedAt = now
-      const n05VoidEntries = buildN05Entries({
-        mode: 'void',
-        gpId,
-        entryDate: indiaDateString(voidedAt),
-        fiscalYear: currentFiscalYear(voidedAt),
-        fyMonthNo: fyMonthNo(voidedAt),
-        descriptionBase: `N10 void ${receipt.receipt_no}`,
-        sourceType: 'namuna10_void',
-        sourceId: receipt.id,
-        lines: rows.map((row) => {
-          if (!isTaxHead(row.tax_head)) {
-            throw new ApiError(500, `Tax head missing for demand line ${row.demand_line_id}`)
+        for (const row of rows) {
+          const amountPaise = asNumber(row.amount_paise)
+          const paidPaise = asNumber(row.paid_paise)
+          if (paidPaise < amountPaise) {
+            throw new ApiError(
+              409,
+              `Cannot void receipt: demand line ${row.demand_line_id} has paid_paise ${paidPaise}, below reversal amount ${amountPaise}`
+            )
           }
-          return { taxHead: row.tax_head, amountPaise: asNumber(row.amount_paise), sourceLineId: row.receipt_line_id }
-        }),
-        adjustments: {
-          discountPaise:  asNumber(receipt.discount_paise),
-          lateFeePaise:   asNumber(receipt.late_fee_paise),
-          noticeFeePaise: asNumber(receipt.notice_fee_paise),
-          otherPaise:     asNumber(receipt.other_paise),
-        },
-        createdBy: actorId,
-      })
+        }
 
-      if (n05VoidEntries.length > 0) {
-        await tx.insert(gpNamuna05CashbookEntries).values(n05VoidEntries)
+        const demandLineIds = rows.map((row) => row.demand_line_id)
+        const amounts = rows.map((row) => asNumber(row.amount_paise))
+
+        await tx.execute(sql`
+          UPDATE gp_namuna9_demand_lines AS t
+          SET paid_paise = t.paid_paise - v.amount_paise,
+              updated_at = ${sqlDate(now)}
+          FROM (
+            SELECT UNNEST(${sqlUuidArray(demandLineIds)}) AS demand_line_id,
+                   UNNEST(${sqlBigintArray(amounts)}) AS amount_paise
+          ) AS v
+          WHERE t.id = v.demand_line_id
+        `)
+
+        const n05VoidEntries = buildN05Entries({
+          mode: 'void',
+          gpId,
+          entryDate: indiaDateString(now),
+          fiscalYear: currentFiscalYear(now),
+          fyMonthNo: fyMonthNo(now),
+          descriptionBase: `N10 void ${receipt.receipt_no}`,
+          sourceType: 'namuna10_void',
+          sourceId: receipt.id,
+          lines: rows.map((row) => {
+            if (!isTaxHead(row.tax_head)) {
+              throw new ApiError(500, `Tax head missing for demand line ${row.demand_line_id}`)
+            }
+            return {
+              accountHead: accountHeadForTaxHead(row.tax_head),
+              amountPaise: asNumber(row.amount_paise),
+              sourceLineId: row.receipt_line_id,
+            }
+          }),
+          adjustments: {
+            discountPaise: asNumber(receipt.discount_paise),
+            lateFeePaise: asNumber(receipt.late_fee_paise),
+            noticeFeePaise: asNumber(receipt.notice_fee_paise),
+            otherPaise: asNumber(receipt.other_paise),
+          },
+          createdBy: actorId,
+        })
+
+        if (n05VoidEntries.length > 0) {
+          await tx.insert(gpNamuna05CashbookEntries).values(n05VoidEntries)
+        }
+      } else {
+        const [totalCount] = await tx.execute<{ total: number }>(sql`
+          SELECT COUNT(*)::int AS total
+          FROM gp_namuna10_receipt_lines
+          WHERE receipt_id = ${receiptId}
+            AND water_demand_line_id IS NOT NULL
+        `)
+
+        const rows = await tx.execute<VoidWaterReceiptLineRow>(sql`
+          SELECT
+            rl.id AS receipt_line_id,
+            rl.water_demand_line_id,
+            rl.amount_paise,
+            wdl.paid_paise
+          FROM gp_namuna10_receipt_lines rl
+          JOIN gp_water_connection_demand_lines wdl ON wdl.id = rl.water_demand_line_id
+          JOIN gp_water_connection_demands wd ON wd.id = wdl.demand_id
+          WHERE rl.receipt_id = ${receiptId}
+            AND wd.gp_id = ${gpId}
+          FOR UPDATE OF wdl
+        `)
+
+        if (rows.length === 0) throw new ApiError(409, 'Receipt has no reversible lines')
+        if (rows.length !== totalCount?.total) {
+          throw new ApiError(
+            409,
+            `Partial reversal detected: receipt has ${totalCount?.total} lines but only ${rows.length} are reversible. Data integrity violation — void aborted.`
+          )
+        }
+
+        for (const row of rows) {
+          const amountPaise = asNumber(row.amount_paise)
+          const paidPaise = asNumber(row.paid_paise)
+          if (paidPaise < amountPaise) {
+            throw new ApiError(
+              409,
+              `Cannot void receipt: water demand line ${row.water_demand_line_id} has paid_paise ${paidPaise}, below reversal amount ${amountPaise}`
+            )
+          }
+        }
+
+        const waterDemandLineIds = rows.map((row) => row.water_demand_line_id)
+        const amounts = rows.map((row) => asNumber(row.amount_paise))
+
+        await tx.execute(sql`
+          UPDATE gp_water_connection_demand_lines AS t
+          SET paid_paise = t.paid_paise - v.amount_paise,
+              updated_at = ${sqlDate(now)}
+          FROM (
+            SELECT UNNEST(${sqlUuidArray(waterDemandLineIds)}) AS water_demand_line_id,
+                   UNNEST(${sqlBigintArray(amounts)}) AS amount_paise
+          ) AS v
+          WHERE t.id = v.water_demand_line_id
+        `)
+
+        const n05VoidEntries = buildN05Entries({
+          mode: 'void',
+          gpId,
+          entryDate: indiaDateString(now),
+          fiscalYear: currentFiscalYear(now),
+          fyMonthNo: fyMonthNo(now),
+          descriptionBase: `N10 void ${receipt.receipt_no}`,
+          sourceType: 'namuna10_void',
+          sourceId: receipt.id,
+          lines: rows.map((row) => ({
+            accountHead: 'water_tax',
+            amountPaise: asNumber(row.amount_paise),
+            sourceLineId: row.receipt_line_id,
+          })),
+          adjustments: {
+            discountPaise: asNumber(receipt.discount_paise),
+            lateFeePaise: asNumber(receipt.late_fee_paise),
+            noticeFeePaise: asNumber(receipt.notice_fee_paise),
+            otherPaise: asNumber(receipt.other_paise),
+          },
+          createdBy: actorId,
+        })
+
+        if (n05VoidEntries.length > 0) {
+          await tx.insert(gpNamuna05CashbookEntries).values(n05VoidEntries)
+        }
       }
 
       await tx
         .update(gpNamuna10Receipts)
         .set({
-          isVoid:     true,
-          voidedAt,
-          voidedBy:   actorId,
+          isVoid: true,
+          voidedAt: now,
+          voidedBy: actorId,
           voidReason: reason,
-          updatedAt:  now,
+          updatedAt: now,
         })
         .where(eq(gpNamuna10Receipts.id, receiptId))
     })
