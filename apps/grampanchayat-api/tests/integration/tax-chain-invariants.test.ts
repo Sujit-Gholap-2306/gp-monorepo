@@ -59,13 +59,11 @@ describe('INV-1 — N08 ↔ N09 demand totals match', () => {
       width_ft: number | null
       lighting_tax_paise: number | string | null
       sanitation_tax_paise: number | string | null
-      water_tax_paise: number | string | null
       land_rate_per_sqft: string | null
       construction_rate_per_sqft: string | null
       new_construction_rate_per_sqft: string | null
       default_lighting_paise: number | string | null
       default_sanitation_paise: number | string | null
-      default_water_paise: number | string | null
       tax_head: string
       current_paise: number | string
     }>(sql`
@@ -77,13 +75,11 @@ describe('INV-1 — N08 ↔ N09 demand totals match', () => {
         p.width_ft,
         p.lighting_tax_paise,
         p.sanitation_tax_paise,
-        p.water_tax_paise,
         r.land_rate_per_sqft,
         r.construction_rate_per_sqft,
         r.new_construction_rate_per_sqft,
         r.default_lighting_paise,
         r.default_sanitation_paise,
-        r.default_water_paise,
         dl.tax_head,
         dl.current_paise
       FROM gp_properties p
@@ -120,7 +116,6 @@ describe('INV-1 — N08 ↔ N09 demand totals match', () => {
           widthFt: base.width_ft,
           lightingTaxPaise: base.lighting_tax_paise,
           sanitationTaxPaise: base.sanitation_tax_paise,
-          waterTaxPaise: base.water_tax_paise,
         },
         {
           landRatePerSqft: base.land_rate_per_sqft,
@@ -128,7 +123,6 @@ describe('INV-1 — N08 ↔ N09 demand totals match', () => {
           newConstructionRatePerSqft: base.new_construction_rate_per_sqft,
           defaultLightingPaise: base.default_lighting_paise,
           defaultSanitationPaise: base.default_sanitation_paise,
-          defaultWaterPaise: base.default_water_paise,
         },
         { useNewConstructionRate: base.property_type === 'navi_rcc' }
       )
@@ -141,13 +135,11 @@ describe('INV-1 — N08 ↔ N09 demand totals match', () => {
         house: Math.abs((actualByHead.get('house') ?? -1) - expected.houseTaxPaise),
         lighting: Math.abs((actualByHead.get('lighting') ?? -1) - expected.lightingPaise),
         sanitation: Math.abs((actualByHead.get('sanitation') ?? -1) - expected.sanitationPaise),
-        water: Math.abs((actualByHead.get('water') ?? -1) - expected.waterPaise),
       }
 
       expect(diffs.house, `${base.property_no} house diff`).toBeLessThanOrEqual(1)
       expect(diffs.lighting, `${base.property_no} lighting diff`).toBeLessThanOrEqual(1)
       expect(diffs.sanitation, `${base.property_no} sanitation diff`).toBeLessThanOrEqual(1)
-      expect(diffs.water, `${base.property_no} water diff`).toBeLessThanOrEqual(1)
 
       if (base.lighting_tax_paise != null) {
         sawOverrideLighting = true
@@ -349,10 +341,12 @@ describe('INV-4 — N10 receipt math integrity', () => {
       SELECT COUNT(*)::int AS orphan_count
       FROM gp_namuna10_receipt_lines rl
       LEFT JOIN gp_namuna9_demand_lines dl ON dl.id = rl.demand_line_id
+      LEFT JOIN gp_water_connection_demand_lines wdl ON wdl.id = rl.water_demand_line_id
       LEFT JOIN gp_namuna10_receipts r ON r.id = rl.receipt_id
       WHERE r.gp_id = ${gpId}
         AND r.fiscal_year = ${fiscalYear}
         AND dl.id IS NULL
+        AND wdl.id IS NULL
     `)
     expect(orphans.orphan_count).toBe(0)
   })

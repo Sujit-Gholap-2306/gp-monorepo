@@ -562,7 +562,7 @@ export function MastersBulkImport({ subdomain }: Props) {
                         </th>
                         <th className="p-1.5 text-left align-bottom">
                           <span className="block font-medium">सेवा कर</span>
-                          <span className="mt-0.5 block text-[10px] font-normal leading-tight text-gp-muted">lighting / sanitation / water</span>
+                          <span className="mt-0.5 block text-[10px] font-normal leading-tight text-gp-muted">lighting / sanitation</span>
                         </th>
                         <th className="p-1.5 text-left align-bottom">
                           <span className="block font-medium">नोंद</span>
@@ -716,7 +716,7 @@ export function MastersBulkImport({ subdomain }: Props) {
                         </th>
                         <th className="p-1.5 text-left align-bottom">
                           <span className="block font-medium">डिफॉल्ट सेवा कर</span>
-                          <span className="mt-0.5 block text-[10px] font-normal leading-tight text-gp-muted">lighting / sanitation / water</span>
+                          <span className="mt-0.5 block text-[10px] font-normal leading-tight text-gp-muted">lighting / sanitation</span>
                         </th>
                         <th className="p-1.5 text-left align-bottom">
                           <span className="block font-medium">अद्यतन</span>

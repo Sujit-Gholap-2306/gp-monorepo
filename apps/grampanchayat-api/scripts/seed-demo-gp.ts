@@ -48,7 +48,6 @@ type SeedProperty = {
   occupantName: string
   lightingTaxPaise?: number | null
   sanitationTaxPaise?: number | null
-  waterTaxPaise?: number | null
 }
 
 const SEED_CITIZENS: SeedCitizen[] = [
@@ -123,11 +122,11 @@ async function ensureTenant() {
 
 async function ensureRates(gpId: string) {
   const rates = [
-    { propertyType: 'jhopdi_mati', land: '0.90', construction: '0.95', newConstruction: '1.10', lighting: 120, sanitation: 100, water: 90 },
-    { propertyType: 'dagad_vit_mati', land: '1.10', construction: '1.20', newConstruction: '1.35', lighting: 140, sanitation: 120, water: 110 },
-    { propertyType: 'dagad_vit_pucca', land: '1.30', construction: '1.55', newConstruction: '1.75', lighting: 160, sanitation: 135, water: 125 },
-    { propertyType: 'navi_rcc', land: '1.65', construction: '2.10', newConstruction: '2.35', lighting: 180, sanitation: 150, water: 140 },
-    { propertyType: 'bakhal', land: '0.80', construction: '0.85', newConstruction: '1.00', lighting: null, sanitation: 80, water: 70 },
+    { propertyType: 'jhopdi_mati', land: '0.90', construction: '0.95', newConstruction: '1.10', lighting: 120, sanitation: 100 },
+    { propertyType: 'dagad_vit_mati', land: '1.10', construction: '1.20', newConstruction: '1.35', lighting: 140, sanitation: 120 },
+    { propertyType: 'dagad_vit_pucca', land: '1.30', construction: '1.55', newConstruction: '1.75', lighting: 160, sanitation: 135 },
+    { propertyType: 'navi_rcc', land: '1.65', construction: '2.10', newConstruction: '2.35', lighting: 180, sanitation: 150 },
+    { propertyType: 'bakhal', land: '0.80', construction: '0.85', newConstruction: '1.00', lighting: null, sanitation: 80 },
   ] as const
 
   for (const row of rates) {
@@ -143,7 +142,6 @@ async function ensureRates(gpId: string) {
         newConstructionRatePerSqft: row.newConstruction,
         defaultLightingPaise: row.lighting,
         defaultSanitationPaise: row.sanitation,
-        defaultWaterPaise: row.water,
       })
       .onConflictDoUpdate({
         target: [gpPropertyTypeRates.gpId, gpPropertyTypeRates.propertyType],
@@ -155,7 +153,6 @@ async function ensureRates(gpId: string) {
           newConstructionRatePerSqft: row.newConstruction,
           defaultLightingPaise: row.lighting,
           defaultSanitationPaise: row.sanitation,
-          defaultWaterPaise: row.water,
           updatedAt: NOW,
         },
       })
@@ -228,7 +225,6 @@ async function ensureProperties(
         assessmentDate: '2026-04-01',
         lightingTaxPaise: row.lightingTaxPaise ?? null,
         sanitationTaxPaise: row.sanitationTaxPaise ?? null,
-        waterTaxPaise: row.waterTaxPaise ?? null,
       })
       .onConflictDoUpdate({
         target: [gpProperties.gpId, gpProperties.propertyNo],
@@ -240,7 +236,6 @@ async function ensureProperties(
           occupantName: row.occupantName,
           lightingTaxPaise: row.lightingTaxPaise ?? null,
           sanitationTaxPaise: row.sanitationTaxPaise ?? null,
-          waterTaxPaise: row.waterTaxPaise ?? null,
           updatedAt: NOW,
         },
       })
