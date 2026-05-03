@@ -35,7 +35,7 @@ type DemandState = {
   citizenNameMr: string
   citizenNameEn: string | null
   connectionType: string
-  pipeSizeMm: number
+  pipeSizeInch: number
   currentPaise: number
   paidPaise: number
 }
@@ -95,7 +95,7 @@ export const waterDemandArrearsImportService = {
           citizenNameMr: gpCitizens.nameMr,
           citizenNameEn: gpCitizens.nameEn,
           connectionType: gpWaterConnections.connectionType,
-          pipeSizeMm: gpWaterConnections.pipeSizeMm,
+          pipeSizeInch: sql<number>`${gpWaterConnections.pipeSizeInch}::float8`,
           lineId: gpWaterConnectionDemandLines.id,
           currentPaise: gpWaterConnectionDemandLines.currentPaise,
           paidPaise: gpWaterConnectionDemandLines.paidPaise,
@@ -128,7 +128,7 @@ export const waterDemandArrearsImportService = {
           citizenNameMr: row.citizenNameMr,
           citizenNameEn: row.citizenNameEn,
           connectionType: row.connectionType,
-          pipeSizeMm: row.pipeSizeMm,
+          pipeSizeInch: row.pipeSizeInch,
           currentPaise: row.currentPaise,
           paidPaise: row.paidPaise,
         },
@@ -157,8 +157,8 @@ export const waterDemandArrearsImportService = {
         addFailure(row.consumerNo, 'connection_type does not match this consumer connection')
         continue
       }
-      if (state.pipeSizeMm !== row.pipeSizeMm) {
-        addFailure(row.consumerNo, 'pipe_size_mm does not match this consumer connection')
+      if (state.pipeSizeInch !== row.pipeSizeInch) {
+        addFailure(row.consumerNo, 'pipe_size_inch does not match this consumer connection')
         continue
       }
       if (state.paidPaise > row.previousPaise + state.currentPaise) {

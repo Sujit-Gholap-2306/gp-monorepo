@@ -40,9 +40,7 @@ export function MastersBulkImport({ subdomain }: Props) {
   const [propertiesFile, setPropertiesFile] = useState<File | null>(null)
   const [propertyTypeRatesFile, setPropertyTypeRatesFile] = useState<File | null>(null)
   const [lastError, setLastError] = useState<string | null>(null)
-  const [errorDetails, setErrorDetails] = useState<
-    { row: number; message: string; fields?: { field: string; message: string }[] }[] | null
-  >(null)
+  const [errorDetails, setErrorDetails] = useState<{ row: number; field?: string; message: string }[] | null>(null)
   const [activeTab, setActiveTab] = useState<'citizens' | 'properties' | 'propertyTypeRates'>('citizens')
 
   const getToken = async () => {
@@ -97,6 +95,34 @@ export function MastersBulkImport({ subdomain }: Props) {
   const propertiesCols = metaQuery.data?.properties.columns ?? []
   const propertyTypeRatesCols = metaQuery.data?.propertyTypeRates?.columns ?? []
 
+  function applyBulkResult(
+    kind: 'citizens' | 'properties' | 'propertyTypeRates',
+    inserted: number,
+    errors: { row: number; field?: string; message: string }[] = []
+  ) {
+    setLastError(errors.length > 0 ? `${String(inserted)} inserted, ${String(errors.length)} failed` : null)
+    setErrorDetails(errors.length > 0 ? errors : null)
+
+    const label =
+      kind === 'citizens'
+        ? 'नागरिक'
+        : kind === 'properties'
+          ? 'मालमत्ता'
+          : 'दर ओळी'
+
+    if (inserted > 0 && errors.length === 0) {
+      gpToast.success(`${String(inserted)} ${label} आयात झाले`)
+      return
+    }
+    if (inserted > 0 && errors.length > 0) {
+      gpToast.warning(`${String(inserted)} आयात झाले, ${String(errors.length)} अयशस्वी`)
+      return
+    }
+    if (errors.length > 0) {
+      gpToast.error('Import failed')
+    }
+  }
+
   const downloadCit = useMutation({
     mutationFn: async () => {
       const token = await getToken()
@@ -132,11 +158,11 @@ export function MastersBulkImport({ subdomain }: Props) {
     },
     onSuccess: (res) => {
       void queryClient.invalidateQueries({ queryKey: ['masters-citizens', subdomain] })
-      gpToast.success(`${String(res.data?.inserted ?? 0)} नागरिक आयात झाले`, { id: 'masters-upload-citizens' })
+      applyBulkResult('citizens', res.data?.inserted ?? 0, res.data?.errors ?? [])
     },
     onError: (e) => {
       const err = e as Error & {
-        body?: { errors?: { row: number; message: string; fields?: { field: string; message: string }[] }[] }
+        body?: { errors?: { row: number; field?: string; message: string }[] }
       }
       setLastError(err.message)
       setErrorDetails(err.body?.errors ?? null)
@@ -154,11 +180,11 @@ export function MastersBulkImport({ subdomain }: Props) {
     },
     onSuccess: (res) => {
       void queryClient.invalidateQueries({ queryKey: ['masters-properties', subdomain] })
-      gpToast.success(`${String(res.data?.inserted ?? 0)} मालमत्ता आयात झाल्या`, { id: 'masters-upload-properties' })
+      applyBulkResult('properties', res.data?.inserted ?? 0, res.data?.errors ?? [])
     },
     onError: (e) => {
       const err = e as Error & {
-        body?: { errors?: { row: number; message: string; fields?: { field: string; message: string }[] }[] }
+        body?: { errors?: { row: number; field?: string; message: string }[] }
       }
       setLastError(err.message)
       setErrorDetails(err.body?.errors ?? null)
@@ -209,7 +235,7 @@ export function MastersBulkImport({ subdomain }: Props) {
           <span className="text-gp-muted">
             {' '}
             (फाइल कमाल {String(limits.maxFileMb)} MB, {String(limits.maxRows)} ओळी; दरात कमाल{' '}
-            {String(metaQuery.data?.propertyTypeRates?.maxRows ?? 5)} ओळी; चूक झाल्यास पूर्ण फाइल नाकार)
+            {String(metaQuery.data?.propertyTypeRates?.maxRows ?? 5)} ओळी; चुका row-wise दाखवल्या जातील)
           </span>
         )}
       </p>
@@ -222,9 +248,7 @@ export function MastersBulkImport({ subdomain }: Props) {
               {errorDetails.map((e, i) => (
                 <li key={i} className="border-t border-destructive/20 pt-1">
                   <span className="font-medium">Row {String(e.row)}:</span>{' '}
-                  {e.fields && e.fields.length > 0
-                    ? e.fields.map((f) => `${f.field}: ${f.message}`).join(' · ')
-                    : e.message}
+                  {e.field ? `${e.field}: ${e.message}` : e.message}
                 </li>
               ))}
             </ul>
@@ -574,7 +598,7 @@ export function MastersBulkImport({ subdomain }: Props) {
                       {propertiesListQuery.data.map((r) => (
                         <tr key={r.id} className="border-b border-gp-border/40">
                           <td className="p-1.5 font-mono text-[11px]">{r.propertyNo}</td>
-                          <td className="p-1.5 font-mono text-[11px]">{r.ownerCitizenNo}</td>
+                          <td className="p-1.5 font-mono text-[11px]">{r.owner.citizenNo}</td>
                           <td className="p-1.5 max-w-32 truncate" title={r.propertyType}>
                             {r.propertyType}
                           </td>

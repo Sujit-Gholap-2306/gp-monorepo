@@ -1,4 +1,5 @@
 import { z } from 'zod'
+import { PIPE_SIZES_INCH } from '../db/schema/water-connections.ts'
 import { WATER_CONNECTION_RATE_TYPES } from '../db/schema/water-connection-rates.ts'
 import { fiscalYearZodSchema } from '../lib/fiscal.ts'
 
@@ -8,11 +9,15 @@ const firstValue = (value: unknown): unknown => {
 }
 
 const fiscalYearSchema = fiscalYearZodSchema
+const pipeSizeInchSchema = z.coerce.number().refine(
+  (value) => PIPE_SIZES_INCH.includes(value as (typeof PIPE_SIZES_INCH)[number]),
+  `pipe_size_inch must be one of ${PIPE_SIZES_INCH.join(', ')}`
+)
 
 export const waterConnectionRateRowSchema = z.object({
   fiscal_year: fiscalYearSchema,
   connection_type: z.enum(WATER_CONNECTION_RATE_TYPES),
-  pipe_size_mm: z.coerce.number().int().positive('pipe_size_mm must be >= 1'),
+  pipe_size_inch: z.preprocess(firstValue, pipeSizeInchSchema),
   annual_paise: z.coerce.number().int().positive('annual_paise must be >= 1'),
 })
 

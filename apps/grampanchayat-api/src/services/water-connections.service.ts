@@ -1,20 +1,15 @@
-import { and, asc, eq, ilike, or } from 'drizzle-orm'
+import { and, asc, eq, ilike, or, sql } from 'drizzle-orm'
 import { ApiError } from '../common/exceptions/http.exception.ts'
 import { db } from '../db/index.ts'
 import { gpCitizens, gpWaterConnections } from '../db/schema/index.ts'
+import { allocateMasterNumber } from '../lib/master-sequences.ts'
+import { isPostgresUniqueViolation } from '../lib/db-helpers.ts'
 import type {
   CreateWaterConnectionBody,
   SetWaterConnectionStatusBody,
   UpdateWaterConnectionBody,
   WaterConnectionListQuery,
 } from '../types/water-connections.dto.ts'
-
-function isPostgresUniqueViolation(e: unknown): boolean {
-  if (e && typeof e === 'object' && 'code' in e) {
-    return (e as { code: string }).code === '23505'
-  }
-  return false
-}
 
 async function assertCitizenBelongsToGp(gpId: string, citizenId: string): Promise<void> {
   const [citizen] = await db
@@ -54,7 +49,7 @@ export const waterConnectionsService = {
         id: gpWaterConnections.id,
         consumerNo: gpWaterConnections.consumerNo,
         connectionType: gpWaterConnections.connectionType,
-        pipeSizeMm: gpWaterConnections.pipeSizeMm,
+        pipeSizeInch: sql<number>`${gpWaterConnections.pipeSizeInch}::float8`,
         status: gpWaterConnections.status,
         connectedAt: gpWaterConnections.connectedAt,
         notes: gpWaterConnections.notes,
@@ -82,7 +77,7 @@ export const waterConnectionsService = {
         id: gpWaterConnections.id,
         consumerNo: gpWaterConnections.consumerNo,
         connectionType: gpWaterConnections.connectionType,
-        pipeSizeMm: gpWaterConnections.pipeSizeMm,
+        pipeSizeInch: sql<number>`${gpWaterConnections.pipeSizeInch}::float8`,
         status: gpWaterConnections.status,
         connectedAt: gpWaterConnections.connectedAt,
         notes: gpWaterConnections.notes,
@@ -108,25 +103,30 @@ export const waterConnectionsService = {
   async create(gpId: string, body: CreateWaterConnectionBody) {
     await assertCitizenBelongsToGp(gpId, body.citizenId)
     try {
-      const [created] = await db
-        .insert(gpWaterConnections)
-        .values({
-          gpId,
-          citizenId: body.citizenId,
-          consumerNo: body.consumerNo,
-          connectionType: body.connectionType,
-          pipeSizeMm: body.pipeSizeMm,
-          status: 'active',
-          connectedAt: body.connectedAt ?? null,
-          notes: body.notes ?? null,
-        })
-        .returning({ id: gpWaterConnections.id })
+      const createdId = await db.transaction(async (tx) => {
+        const consumerNo = await allocateMasterNumber(tx, gpId, 'water_connection')
+        const [created] = await tx
+          .insert(gpWaterConnections)
+          .values({
+            gpId,
+            citizenId: body.citizenId,
+            consumerNo: String(consumerNo),
+            connectionType: body.connectionType,
+            pipeSizeInch: String(body.pipeSizeInch),
+            status: 'active',
+            connectedAt: body.connectedAt ?? null,
+            notes: body.notes ?? null,
+          })
+          .returning({ id: gpWaterConnections.id })
 
-      if (!created) throw new ApiError(500, 'Failed to create water connection')
-      return this.getById(gpId, created.id)
+        if (!created) throw new ApiError(500, 'Failed to create water connection')
+        return created.id
+      })
+
+      return this.getById(gpId, createdId)
     } catch (e) {
       if (isPostgresUniqueViolation(e)) {
-        throw new ApiError(409, 'consumer_no or citizen already has a water connection in this GP')
+        throw new ApiError(409, 'Water connection already exists for this citizen or consumer number')
       }
       throw e
     }
@@ -141,7 +141,6 @@ export const waterConnectionsService = {
       const [updated] = await db
         .update(gpWaterConnections)
         .set({
-          consumerNo: body.consumerNo,
           connectedAt: body.connectedAt,
           notes: body.notes,
           updatedAt: new Date(),
@@ -153,7 +152,7 @@ export const waterConnectionsService = {
       return this.getById(gpId, updated.id)
     } catch (e) {
       if (isPostgresUniqueViolation(e)) {
-        throw new ApiError(409, 'consumer_no already exists in this GP')
+        throw new ApiError(409, 'Water connection update conflicted with an existing record')
       }
       throw e
     }

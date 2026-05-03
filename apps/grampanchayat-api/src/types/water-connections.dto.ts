@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { WATER_CONNECTION_STATUSES, WATER_CONNECTION_TYPES } from '../db/schema/water-connections.ts'
+import { PIPE_SIZES_INCH, WATER_CONNECTION_STATUSES, WATER_CONNECTION_TYPES } from '../db/schema/water-connections.ts'
 
 const firstValue = (value: unknown): unknown => {
   if (Array.isArray(value)) return value[0]
@@ -24,6 +24,11 @@ const optionalIsoDate = z.preprocess(
   z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use ISO date YYYY-MM-DD').optional()
 )
 
+const pipeSizeInchSchema = z.coerce.number().refine(
+  (value) => PIPE_SIZES_INCH.includes(value as (typeof PIPE_SIZES_INCH)[number]),
+  `pipeSizeInch must be one of ${PIPE_SIZES_INCH.join(', ')}`
+)
+
 export const waterConnectionListQuerySchema = z.object({
   status: z.preprocess(firstValue, z.enum(WATER_CONNECTION_STATUSES).optional()),
   connectionType: z.preprocess(firstValue, z.enum(WATER_CONNECTION_TYPES).optional()),
@@ -37,15 +42,14 @@ export const waterConnectionIdParamsSchema = z.object({
 
 export const createWaterConnectionSchema = z.object({
   citizenId: z.string().uuid('citizenId must be a valid UUID'),
-  consumerNo: z.string().trim().min(1, 'consumerNo is required'),
   connectionType: z.enum(WATER_CONNECTION_TYPES),
-  pipeSizeMm: z.coerce.number().int().positive('pipeSizeMm must be >= 1'),
+  pipeSizeInch: z.preprocess(firstValue, pipeSizeInchSchema),
   connectedAt: optionalIsoDate,
   notes: optionalString.nullable(),
 })
 
 export const updateWaterConnectionSchema = createWaterConnectionSchema
-  .omit({ citizenId: true, connectionType: true, pipeSizeMm: true })
+  .omit({ citizenId: true, connectionType: true, pipeSizeInch: true })
   .partial()
 
 export const setWaterConnectionStatusSchema = z.object({

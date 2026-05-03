@@ -1,5 +1,6 @@
 export * from './users.ts'
 export * from './tenants.ts'
+export * from './master-sequences.ts'
 export * from './citizens.ts'
 export * from './properties.ts'
 export * from './property-type-rates.ts'

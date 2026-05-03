@@ -26,7 +26,7 @@ Current state — all masters are bulk-import only (Excel upload). Issues:
 1. **Insert-only bulk** — bulk upload never overwrites existing rows. Conflicts are reported per row, valid rows continue.
 2. **Explicit individual CRUD** — add/edit one record at a time via form. No batch side-effects.
 3. **No silent overrides** — every destructive or mutating action returns explicit feedback (toast + error list).
-4. **DB-level auto-increment** — `citizen_no` and `property_no` assigned via atomic DB counter table (same pattern as `gp_receipt_sequences`). No `MAX() + 1` at app level.
+4. **DB-level auto-increment (single-add only)** — `citizen_no` and `property_no` auto-assigned via atomic DB counter on single-add. Bulk import lets user provide their own numbers (needed for cross-sheet FK linking). Neither is ever used as an API update key — UUID `id` is always the record identifier.
 5. **Standardised dropdowns** — `pipe_size_inch` stored as `numeric(3,1)`, displayed as "1 इंच", "1.5 इंच" etc. `property_type`, `connection_type` always dropdowns, never free text.
 
 ---
@@ -35,7 +35,7 @@ Current state — all masters are bulk-import only (Excel upload). Issues:
 
 ### 1. `gp_master_sequences` — new table
 
-Atomic per-GP counters for citizen_no and property_no.
+Atomic per-GP counters for `citizen_no`, `property_no`, and `consumer_no` (single-add only — bulk uses user-provided values).
 
 ```sql
 CREATE TABLE gp_master_sequences (
@@ -43,25 +43,35 @@ CREATE TABLE gp_master_sequences (
   entity      text NOT NULL,   -- 'citizen' | 'property'
   next_no     bigint NOT NULL DEFAULT 1,
   PRIMARY KEY (gp_id, entity),
-  CONSTRAINT entity_check CHECK (entity IN ('citizen', 'property'))
+  CONSTRAINT entity_check CHECK (entity IN ('citizen', 'property', 'water_connection'))
 );
 ```
 
-**Allocation (same pattern as N10 receipt sequences):**
+**Allocation — always re-anchors from MAX:**
 ```sql
 INSERT INTO gp_master_sequences (gp_id, entity, next_no)
-VALUES ($gpId, 'citizen', 2)
+  SELECT $gpId, 'citizen', COALESCE(MAX(citizen_no), 0) + 2
+  FROM gp_citizens WHERE gp_id = $gpId
 ON CONFLICT (gp_id, entity)
-DO UPDATE SET next_no = gp_master_sequences.next_no + 1
+DO UPDATE SET next_no = GREATEST(
+  gp_master_sequences.next_no + 1,
+  excluded.next_no
+)
 RETURNING next_no - 1 AS allocated;
 ```
-Returns the allocated number atomically. If two concurrent inserts race, each gets a unique number.
 
-**Seeding:** On first `POST /masters/citizens`, if no sequence row exists, initialize from `MAX(citizen_no)` for that GP (handles existing data).
+- **First use (empty table):** inserts `0 + 2 = 2`, `RETURNING 2 - 1 = 1`. ✓  
+- **Normal increment:** `excluded.next_no = MAX+2 ≤ next_no+1` → `GREATEST` picks `next_no+1`, returns next sequential. ✓  
+- **After bulk import (sequence stale):** `excluded.next_no = new_MAX+2 > next_no+1` → `GREATEST` resets to `new_MAX+2`, returns `new_MAX+1`. No collision. ✓  
+- **Concurrent inserts:** `ON CONFLICT DO UPDATE` serializes; second thread sees updated `next_no`, gets a distinct number. `(gp_id, citizen_no)` UNIQUE is the final guard.
+
+Bulk import does NOT touch `gp_master_sequences`. The `GREATEST` pattern self-corrects on the next single-add.
 
 ### 2. `gp_water_connections.pipe_size_mm` → `pipe_size_inch`
 
 **Column rename + type change:**
+
+> Note: These tables were created in Phase B/C migrations with `pipe_size_mm` as integer. GP data was cleared before this spec (demo reset). Migration assumes no data — if rows exist, add a `UPDATE` step to convert integer mm values to inch before the CHECK constraint is added (e.g., `UPDATE gp_water_connections SET pipe_size_mm = CASE WHEN pipe_size_mm = 25 THEN 1 ...`).
 
 ```sql
 ALTER TABLE gp_water_connections
@@ -112,7 +122,22 @@ export const PIPE_SIZE_LABELS: Record<number, string> = {
 **Current:** Fail entire batch on first unique constraint violation.  
 **New:** Per-row error collection. Valid rows inserted. Conflicts reported individually.
 
-**New response shape:**
+### Why user provides citizen_no / property_no in bulk
+
+GPs prepare all 3 master sheets in one Excel file. Properties and water connections reference citizens via `citizen_no` (not UUID). Import service resolves these cross-references to UUIDs during the import transaction:
+
+```
+Citizens sheet:    citizen_no | name | ward | ...
+Properties sheet:  property_no | owner_citizen_no | property_type | ...
+Water sheet:       citizen_no (FK) | connection_type | pipe_size_inch | ...
+```
+
+Import order: **citizens → properties → water connections** (FK dependency).  
+Property import fetches `citizen_no → UUID` map after inserting citizens, then resolves `owner_citizen_no` → `owner_citizen_id` UUID.
+
+If a property row references a `citizen_no` that doesn't exist (neither in current import nor in existing DB), it's a per-row error: `owner_citizen_no X not found`.
+
+### New response shape
 ```ts
 {
   inserted: number
@@ -123,16 +148,18 @@ export const PIPE_SIZE_LABELS: Record<number, string> = {
 
 **FE behaviour:**
 - `inserted > 0 && errors.length === 0` → success toast "N records imported"
-- `inserted > 0 && errors.length > 0` → warning toast "N imported, M failed" + expandable error panel listing each failed row
+- `inserted > 0 && errors.length > 0` → warning toast "N imported, M failed" + expandable error panel
 - `inserted === 0 && errors.length > 0` → error toast "Import failed" + error panel
 
-**Implementation pattern:**
+### Implementation pattern (citizens)
 ```ts
 const errors: ImportError[] = []
 const toInsert: NewGpCitizen[] = []
 
+// pre-fetch existing citizen_nos to avoid N+1 uniqueness checks
+const existingNos = new Set(await fetchExistingCitizenNos(gpId))
+
 for (const [i, row] of parsed.data.entries()) {
-  // validate uniqueness against existing DB records (pre-fetch all citizen_nos)
   if (existingNos.has(row.citizen_no)) {
     errors.push({ row: i + 2, field: 'citizen_no', message: `citizen_no ${row.citizen_no} already exists` })
     continue
@@ -158,8 +185,10 @@ Pre-fetch approach (not try/catch per row) avoids partial transaction failures.
 GET    /:subdomain/masters/citizens              list (existing — add search param)
 GET    /:subdomain/masters/citizens/:id          get single — NEW
 POST   /:subdomain/masters/citizens              create single (auto citizen_no) — NEW
-PATCH  /:subdomain/masters/citizens/:id          update (citizen_no locked) — NEW
+PATCH  /:subdomain/masters/citizens/:id          update — NEW
 ```
+
+Route param `/:id` is always the UUID. `citizen_no` is never a route param or PATCH body field.
 
 **POST body:**
 ```json
@@ -173,9 +202,9 @@ PATCH  /:subdomain/masters/citizens/:id          update (citizen_no locked) — 
   "household_id": "H-005"
 }
 ```
-Backend auto-assigns `citizen_no` from `gp_master_sequences`. Returns full row including assigned `citizen_no`.
+Backend auto-assigns `citizen_no` from `gp_master_sequences`. Returns full row including `citizen_no` (display only).
 
-**PATCH body (all optional):** same fields minus `citizen_no` (locked, never in body).
+**PATCH body (all optional):** same fields. `citizen_no` is never accepted — ignored if sent.
 
 **List search:** Add `?q=` (name search), `?ward=` filter to existing endpoint.
 
@@ -185,8 +214,10 @@ Backend auto-assigns `citizen_no` from `gp_master_sequences`. Returns full row i
 GET    /:subdomain/masters/properties            list (existing — add search)
 GET    /:subdomain/masters/properties/:id        get single — NEW
 POST   /:subdomain/masters/properties            create single (auto property_no) — NEW
-PATCH  /:subdomain/masters/properties/:id        update (property_no locked) — NEW
+PATCH  /:subdomain/masters/properties/:id        update — NEW
 ```
+
+Route param `/:id` is always the UUID. `property_no` is never a route param or PATCH body field.
 
 **POST body:**
 ```json
@@ -205,9 +236,9 @@ PATCH  /:subdomain/masters/properties/:id        update (property_no locked) —
   "sanitation_tax_paise": null
 }
 ```
-Backend auto-assigns `property_no` from `gp_master_sequences` (e.g., "1", "2", "3").
+Backend auto-assigns `property_no` from `gp_master_sequences`. Returns full row including `property_no` (display only).
 
-**PATCH:** All editable fields. `property_no`, `owner_citizen_id` are locked (not accepted in body).
+**PATCH:** All editable fields. `property_no` and `owner_citizen_id` are never accepted in body.
 
 **List search:** Add `?q=` (property_no / owner name), `?ward=`, `?property_type=` to existing endpoint.
 
@@ -257,11 +288,10 @@ app/[tenant]/(admin)/admin/masters/
 ├── page.tsx                          ← redirect → /masters/citizens
 ├── citizens/
 │   ├── page.tsx                      ← list + search (server component)
+│   ├── new/
+│   │   └── page.tsx                  ← add form (client)
 │   └── [id]/
 │       └── page.tsx                  ← view + edit (client)
-├── citizens/
-│   └── new/
-│       └── page.tsx                  ← add form (client)
 ├── properties/
 │   ├── page.tsx                      ← list + search (server component)
 │   ├── new/
@@ -285,7 +315,7 @@ app/[tenant]/(admin)/admin/masters/
 ### Citizens List Page
 
 - Server component — fetches with `?q=` and `?ward=` from URL search params
-- Table: citizen_no | नाव (Marathi) | वार्ड | मोबाईल | पत्ता | Action
+- Table: क्र.नं (citizen_no) | नाव (Marathi) | वार्ड | मोबाईल | पत्ता | Action
 - Search bar (q), ward filter dropdown
 - "नवीन नागरिक" button → `/masters/citizens/new`
 - Row click → `/masters/citizens/[id]`
@@ -293,7 +323,7 @@ app/[tenant]/(admin)/admin/masters/
 ### Citizens Add/Edit Form
 
 **Locked (display-only in edit, hidden in add):**
-- `citizen_no` — assigned by system, shown in edit as badge
+- `citizen_no` — auto-assigned on single-add, user-provided on bulk. Shown in edit as badge. Never sent in PATCH body.
 
 **Editable fields:**
 | Field | Input | Validation |
@@ -301,7 +331,7 @@ app/[tenant]/(admin)/admin/masters/
 | नाव (मराठी) `name_mr` | text | required, min 2 |
 | नाव (इंग्रजी) `name_en` | text | optional |
 | मोबाईल `mobile` | tel | 10 digits |
-| वार्ड `ward_number` | text/select | required |
+| वार्ड `ward_number` | text | required, free text (GPs vary 5-17 wards; no central wards master) |
 | पत्ता `address_mr` | textarea | required |
 | आधार शेवटचे ४ `aadhaar_last4` | text | 4 digits, optional |
 | कुटुंब ID `household_id` | text | optional |
@@ -309,13 +339,13 @@ app/[tenant]/(admin)/admin/masters/
 ### Properties List Page
 
 - Server component — `?q=`, `?ward=`, `?property_type=`
-- Table: property_no | मालक | मालमत्ता प्रकार | क्षेत्रफळ | वार्ड | Action
+- Table: क्र.नं (property_no) | मालक | मालमत्ता प्रकार | क्षेत्रफळ | वार्ड | Action
 - "नवीन मालमत्ता" button
 
 ### Properties Add/Edit Form
 
 **Locked:**
-- `property_no` — shown in edit as badge
+- `property_no` — auto-assigned on single-add, user-provided on bulk. Shown in edit as badge. Never sent in PATCH body.
 - `owner_citizen_id` — locked after creation (citizen cannot be reassigned)
 
 **Editable fields:**
@@ -328,7 +358,7 @@ app/[tenant]/(admin)/admin/masters/
 | रुंदी (फूट) `width_ft` | number | positive |
 | सर्व्हे नं `survey_number` | text | optional |
 | गट/प्लॉट `plot_or_gat` | text | optional |
-| बांधकाम वर्ष `age_bracket` | dropdown | after_2000 / after_2010 etc. |
+| बांधकाम वर्ष `age_bracket` | dropdown | `before_2000` / `2000_to_2010` / `after_2010` |
 | ठराव संदर्भ `resolution_ref` | text | optional |
 | मूल्यांकन दिनांक `assessment_date` | date | optional |
 | दिवाबत्ती (override) `lighting_tax_paise` | rupee input | optional, overrides GP default |
@@ -349,7 +379,7 @@ app/[tenant]/(admin)/admin/masters/
 - `citizen_id` → searchable citizen select
 - `connection_type` → dropdown: सामान्य / विशेष
 - `pipe_size_inch` → dropdown: 1" / 1.5" / 2" / 2.5"
-- `consumer_no` → auto-generated by system (shown after save)
+- `consumer_no` → auto-generated by system via `gp_master_sequences` (entity = `'water_connection'`), shown after save
 - `connected_at` → date picker
 - `notes` → textarea
 
@@ -370,16 +400,16 @@ app/[tenant]/(admin)/admin/masters/
 
 ## Locked vs Editable Summary
 
-| Field | Locked after create? | Reason |
-|-------|---------------------|--------|
-| `citizen_no` | ✅ Yes | Printed on documents, FK in property/demand |
-| `citizen_id` on property | ✅ Yes | Owner transfer requires separate process |
-| `property_no` | ✅ Yes | Printed on N08/N09 registers |
-| `property_type` on rates | ✅ Yes | Exactly 5 types, no add/delete |
-| `connection_type` on water | ✅ Yes | Rate-key field |
-| `pipe_size_inch` on water | ✅ Yes | Rate-key field |
-| `consumer_no` | ✅ Yes (auto) | Printed on water demand |
-| `citizen_id` on water | ✅ Yes | Consumer identity |
+| Field | Locked after create? | Update key? | Reason |
+|-------|---------------------|-------------|--------|
+| `citizen_no` | ✅ Display only | ❌ Use UUID `id` | Printed on documents; bulk cross-link key; never used to identify record in API calls |
+| `property_no` | ✅ Display only | ❌ Use UUID `id` | Printed on N08/N09; bulk cross-link key; never used to identify record in API calls |
+| `owner_citizen_id` on property | ✅ Yes | — | Owner transfer requires separate process |
+| `property_type` on rates | ✅ Yes | — | Exactly 5 types, no add/delete |
+| `connection_type` on water | ✅ Yes | — | Rate-key field |
+| `pipe_size_inch` on water | ✅ Yes | — | Rate-key field |
+| `consumer_no` on water | ✅ Display only | ❌ Use UUID `id` | Printed on water demand; system-assigned via sequence |
+| `citizen_id` on water | ✅ Yes | — | Consumer identity |
 
 ---
 
@@ -393,11 +423,13 @@ POST /masters/citizens (single add)
 BEGIN TRANSACTION
   ↓
 INSERT INTO gp_master_sequences (gp_id, entity, next_no)
-  -- initialize from existing data if first time
   SELECT $gpId, 'citizen', COALESCE(MAX(citizen_no), 0) + 2
   FROM gp_citizens WHERE gp_id = $gpId
 ON CONFLICT (gp_id, entity)
-DO UPDATE SET next_no = gp_master_sequences.next_no + 1
+DO UPDATE SET next_no = GREATEST(
+  gp_master_sequences.next_no + 1,
+  excluded.next_no
+)
 RETURNING next_no - 1 AS allocated_no
   ↓
 INSERT INTO gp_citizens (..., citizen_no = allocated_no)
@@ -405,11 +437,9 @@ INSERT INTO gp_citizens (..., citizen_no = allocated_no)
 COMMIT
 ```
 
-Race condition: two concurrent inserts → unique ON CONFLICT guarantees each gets a different number. The unique constraint on `(gp_id, citizen_no)` is the final guard.
+`citizen_no` is for display/printing and Excel cross-linking only. Updates always use UUID `id` route param — `citizen_no` never accepted in PATCH body. Same pattern for properties (entity = `'property'`) and water connections (entity = `'water_connection'`).
 
-Same pattern for `property_no` with entity = `'property'`.
-
-**Bulk import** does NOT use `gp_master_sequences` — bulk assigns the `citizen_no`/`property_no` from the Excel file. Sequence is updated only on single-add. If bulk is used after single-add, user must ensure no overlap (validated at import, per-row error if conflict).
+**Bulk import** does NOT touch `gp_master_sequences`. User provides `citizen_no`/`property_no` in Excel. Per-row conflict check against existing DB. The next single-add self-corrects sequence via `GREATEST`.
 
 ---
 
@@ -431,7 +461,7 @@ Masters
 
 ## Implementation Order
 
-1. **Phase 1 — DB**: `gp_master_sequences` table + `pipe_size_mm → pipe_size_inch` migration. Update BE constants + DTO validation.
+1. **Phase 1 — DB**: Create `gp_master_sequences` table. Rename `pipe_size_mm → pipe_size_inch`. Update BE schema constants + DTO validation.
 2. **Phase 2 — Bulk import fix**: Per-row error collection for citizens + properties. Update FE import page error UI.
 3. **Phase 3 — Citizens CRUD**: BE `GET /:id`, `POST /`, `PATCH /:id` + FE list, add, edit pages.
 4. **Phase 4 — Properties CRUD**: Same pattern as citizens.
@@ -439,6 +469,17 @@ Masters
 6. **Phase 6 — Water connections FE**: List, add, edit pages (all API exists, Phase B).
 7. **Phase 7 — Water connection rates FE**: Rate grid page per FY (API exists, Phase C).
 8. **Phase 8 — Sidebar + navigation**: Wire all pages into sidebar nav.
+
+---
+
+## Known Issues / Deferred
+
+Issues found in PR review — deferred for later:
+
+| # | Severity | File | Issue |
+|---|----------|------|-------|
+| 1 | P3 | `water-demands.service.ts:329` | JS arithmetic on paise for totals accumulation. Values are `bigint` columns returned as JS `number` via Drizzle `mode: 'number'`. No overflow risk at GP scale (max ~10,000 ₹ = 1,000,000 paise, well within 2^53) but inconsistent with paise-as-integer contract elsewhere. Should switch to `BigInt` accumulation when refactoring this service. |
+| 2 | P3 | `masters-bulk-api.ts` / FE list pages | `MASTERS_LIST_MAX = 2000` cap on citizen/property list with no indicator when truncated. GPs with >2000 citizens/properties will see incomplete dropdowns in property form silently. Add a count check + warning UI before GP reaches scale. |
 
 ---
 

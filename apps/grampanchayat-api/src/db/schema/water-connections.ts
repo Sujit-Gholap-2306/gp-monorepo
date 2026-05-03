@@ -3,7 +3,7 @@ import {
   check,
   date,
   index,
-  integer,
+  numeric,
   pgTable,
   text,
   timestamp,
@@ -19,6 +19,9 @@ export type WaterConnectionType = (typeof WATER_CONNECTION_TYPES)[number]
 export const WATER_CONNECTION_STATUSES = ['active', 'disconnected'] as const
 export type WaterConnectionStatus = (typeof WATER_CONNECTION_STATUSES)[number]
 
+export const PIPE_SIZES_INCH = [1.0, 1.5, 2.0, 2.5] as const
+export type PipeSizeInch = (typeof PIPE_SIZES_INCH)[number]
+
 export const gpWaterConnections = pgTable(
   'gp_water_connections',
   {
@@ -31,7 +34,7 @@ export const gpWaterConnections = pgTable(
       .references(() => gpCitizens.id, { onDelete: 'restrict' }),
     consumerNo: text('consumer_no').notNull(),
     connectionType: text('connection_type').notNull(),
-    pipeSizeMm: integer('pipe_size_mm').notNull(),
+    pipeSizeInch: numeric('pipe_size_inch', { precision: 3, scale: 1 }).notNull(),
     status: text('status').notNull().default('active'),
     connectedAt: date('connected_at'),
     notes: text('notes'),
@@ -52,7 +55,7 @@ export const gpWaterConnections = pgTable(
     ),
     pipeSizeCheck: check(
       'gp_water_connections_pipe_size_check',
-      sql`${t.pipeSizeMm} > 0`
+      sql`${t.pipeSizeInch} IN (1.0, 1.5, 2.0, 2.5)`
     ),
   })
 )

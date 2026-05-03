@@ -13,3 +13,7 @@ export function stripUndefined<T extends Record<string, unknown>>(obj: T): Parti
     Object.entries(obj).filter(([, v]) => v !== undefined)
   ) as Partial<T>
 }
+
+export function isPostgresUniqueViolation(e: unknown): boolean {
+  return !!(e && typeof e === 'object' && 'code' in e && (e as { code: string }).code === '23505')
+}

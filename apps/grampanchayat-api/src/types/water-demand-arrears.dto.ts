@@ -1,8 +1,18 @@
 import { z } from 'zod'
-import { WATER_CONNECTION_TYPES as CONNECTION_TYPES } from '../db/schema/water-connections.ts'
+import { PIPE_SIZES_INCH, WATER_CONNECTION_TYPES as CONNECTION_TYPES } from '../db/schema/water-connections.ts'
 
 export type RowFieldError = { field: string; message: string }
 export type RowValidationError = { row: number; message: string; fields?: RowFieldError[] }
+
+const firstValue = (value: unknown): unknown => {
+  if (Array.isArray(value)) return value[0]
+  return value
+}
+
+const pipeSizeInchSchema = z.coerce.number().refine(
+  (value) => PIPE_SIZES_INCH.includes(value as (typeof PIPE_SIZES_INCH)[number]),
+  `pipe_size_inch must be one of ${PIPE_SIZES_INCH.join(', ')}`
+)
 
 export const WATER_DEMAND_ARREARS_TEMPLATE_COLUMNS = [
   {
@@ -26,9 +36,9 @@ export const WATER_DEMAND_ARREARS_TEMPLATE_COLUMNS = [
     hint: "Reference check only. One of: 'regular' | 'specialized'.",
   },
   {
-    key: 'pipe_size_mm',
+    key: 'pipe_size_inch',
     required: true,
-    hint: 'Reference check only. Positive integer.',
+    hint: 'Reference check only. One of 1.0, 1.5, 2.0, 2.5.',
   },
   {
     key: 'current_paise',
@@ -52,7 +62,7 @@ const openingRowSchema = z.object({
   citizen_no: z.coerce.number().int().positive('citizen_no must be a positive integer'),
   citizen_name: z.string().trim().min(1, 'citizen_name is required'),
   connection_type: z.enum(CONNECTION_TYPES),
-  pipe_size_mm: z.coerce.number().int().positive('pipe_size_mm must be >= 1'),
+  pipe_size_inch: z.preprocess(firstValue, pipeSizeInchSchema),
   previous_paise: z.preprocess(
     (v) => (v == null || String(v).trim() === '' ? undefined : v),
     z.coerce.number().int().min(0, 'previous_paise must be >= 0')
@@ -72,7 +82,7 @@ export type WaterDemandArrearsRow = {
   citizenNo: number
   citizenName: string
   connectionType: (typeof CONNECTION_TYPES)[number]
-  pipeSizeMm: number
+  pipeSizeInch: number
   previousPaise: number
 }
 
@@ -116,7 +126,7 @@ export function collectWaterDemandArrearsRowErrors(
       citizenNo: parsed.data.citizen_no,
       citizenName: parsed.data.citizen_name,
       connectionType: parsed.data.connection_type,
-      pipeSizeMm: parsed.data.pipe_size_mm,
+      pipeSizeInch: parsed.data.pipe_size_inch,
       previousPaise: parsed.data.previous_paise,
     })
     seenConsumerNos.add(parsed.data.consumer_no)

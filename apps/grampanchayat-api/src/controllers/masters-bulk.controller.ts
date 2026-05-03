@@ -3,6 +3,15 @@ import { assertBulkFile, memoryUploadSingle } from '../common/guards/bulk-upload
 import { BaseController } from '../common/base/base.controller.ts'
 import { mastersBulkService } from '../services/masters-bulk.service.ts'
 import { mastersBulkTemplateService } from '../services/masters-bulk-template.service.ts'
+import {
+  citizenListQuerySchema,
+  createCitizenSchema,
+  createPropertySchema,
+  masterRecordIdParamsSchema,
+  propertyListQuerySchema,
+  updateCitizenSchema,
+  updatePropertySchema,
+} from '../types/masters-crud.dto.ts'
 import { getMastersTemplateMetaPayload } from '../types/masters-bulk-template.meta.ts'
 import { ApiError } from '../common/exceptions/http.exception.ts'
 
@@ -56,7 +65,7 @@ export class MastersBulkController extends BaseController {
     if (!tenant) throw new ApiError(500, 'Tenant context missing')
     const f = req.file!
     const out = await mastersBulkService.importCitizensFile(tenant.id, f.buffer)
-    return this.created(res, out, 'Citizens imported successfully')
+    return this.ok(res, out, 'Citizens import processed')
   })
 
   importProperties = asyncHandler(async (req, res) => {
@@ -65,7 +74,7 @@ export class MastersBulkController extends BaseController {
     if (!tenant) throw new ApiError(500, 'Tenant context missing')
     const f = req.file!
     const out = await mastersBulkService.importPropertiesFile(tenant.id, f.buffer)
-    return this.created(res, out, 'Properties imported successfully')
+    return this.ok(res, out, 'Properties import processed')
   })
 
   importPropertyTypeRates = asyncHandler(async (req, res) => {
@@ -80,15 +89,77 @@ export class MastersBulkController extends BaseController {
   listCitizens = asyncHandler(async (req, res) => {
     const tenant = req.gpTenant
     if (!tenant) throw new ApiError(500, 'Tenant context missing')
-    const rows = await mastersBulkService.listCitizensForGp(tenant.id)
-    return this.ok(res, { items: rows }, 'Citizens list')
+    const parsed = citizenListQuerySchema.safeParse(req.query)
+    if (!parsed.success) throw new ApiError(422, 'Invalid query params', parsed.error.issues)
+    const data = await mastersBulkService.listCitizensForGp(tenant.id, parsed.data)
+    return this.ok(res, data, 'Citizens list')
+  })
+
+  getCitizenById = asyncHandler(async (req, res) => {
+    const tenant = req.gpTenant
+    if (!tenant) throw new ApiError(500, 'Tenant context missing')
+    const parsed = masterRecordIdParamsSchema.safeParse(req.params)
+    if (!parsed.success) throw new ApiError(422, 'Invalid params', parsed.error.issues)
+    const data = await mastersBulkService.getCitizenById(tenant.id, parsed.data.id)
+    return this.ok(res, data, 'Citizen retrieved')
+  })
+
+  createCitizen = asyncHandler(async (req, res) => {
+    const tenant = req.gpTenant
+    if (!tenant) throw new ApiError(500, 'Tenant context missing')
+    const parsed = createCitizenSchema.safeParse(req.body)
+    if (!parsed.success) throw new ApiError(422, 'Invalid request body', parsed.error.issues)
+    const data = await mastersBulkService.createCitizen(tenant.id, parsed.data)
+    return this.created(res, data, 'Citizen created')
+  })
+
+  updateCitizen = asyncHandler(async (req, res) => {
+    const tenant = req.gpTenant
+    if (!tenant) throw new ApiError(500, 'Tenant context missing')
+    const parsedParams = masterRecordIdParamsSchema.safeParse(req.params)
+    if (!parsedParams.success) throw new ApiError(422, 'Invalid params', parsedParams.error.issues)
+    const parsedBody = updateCitizenSchema.safeParse(req.body)
+    if (!parsedBody.success) throw new ApiError(422, 'Invalid request body', parsedBody.error.issues)
+    const data = await mastersBulkService.updateCitizen(tenant.id, parsedParams.data.id, parsedBody.data)
+    return this.ok(res, data, 'Citizen updated')
   })
 
   listProperties = asyncHandler(async (req, res) => {
     const tenant = req.gpTenant
     if (!tenant) throw new ApiError(500, 'Tenant context missing')
-    const rows = await mastersBulkService.listPropertiesForGp(tenant.id)
-    return this.ok(res, { items: rows }, 'Properties list')
+    const parsed = propertyListQuerySchema.safeParse(req.query)
+    if (!parsed.success) throw new ApiError(422, 'Invalid query params', parsed.error.issues)
+    const data = await mastersBulkService.listPropertiesForGp(tenant.id, parsed.data)
+    return this.ok(res, data, 'Properties list')
+  })
+
+  getPropertyById = asyncHandler(async (req, res) => {
+    const tenant = req.gpTenant
+    if (!tenant) throw new ApiError(500, 'Tenant context missing')
+    const parsed = masterRecordIdParamsSchema.safeParse(req.params)
+    if (!parsed.success) throw new ApiError(422, 'Invalid params', parsed.error.issues)
+    const data = await mastersBulkService.getPropertyById(tenant.id, parsed.data.id)
+    return this.ok(res, data, 'Property retrieved')
+  })
+
+  createProperty = asyncHandler(async (req, res) => {
+    const tenant = req.gpTenant
+    if (!tenant) throw new ApiError(500, 'Tenant context missing')
+    const parsed = createPropertySchema.safeParse(req.body)
+    if (!parsed.success) throw new ApiError(422, 'Invalid request body', parsed.error.issues)
+    const data = await mastersBulkService.createProperty(tenant.id, parsed.data)
+    return this.created(res, data, 'Property created')
+  })
+
+  updateProperty = asyncHandler(async (req, res) => {
+    const tenant = req.gpTenant
+    if (!tenant) throw new ApiError(500, 'Tenant context missing')
+    const parsedParams = masterRecordIdParamsSchema.safeParse(req.params)
+    if (!parsedParams.success) throw new ApiError(422, 'Invalid params', parsedParams.error.issues)
+    const parsedBody = updatePropertySchema.safeParse(req.body)
+    if (!parsedBody.success) throw new ApiError(422, 'Invalid request body', parsedBody.error.issues)
+    const data = await mastersBulkService.updateProperty(tenant.id, parsedParams.data.id, parsedBody.data)
+    return this.ok(res, data, 'Property updated')
   })
 }
 

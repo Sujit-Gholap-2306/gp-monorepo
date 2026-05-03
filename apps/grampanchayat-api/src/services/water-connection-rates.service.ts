@@ -1,4 +1,4 @@
-import { and, asc, eq, inArray, sql } from 'drizzle-orm'
+import { and, asc, eq, sql } from 'drizzle-orm'
 import { ApiError } from '../common/exceptions/http.exception.ts'
 import { db } from '../db/index.ts'
 import { gpWaterConnectionRates } from '../db/schema/index.ts'
@@ -16,30 +16,39 @@ export const waterConnectionRatesService = {
     }
 
     const items = await db
-      .select()
+      .select({
+        id: gpWaterConnectionRates.id,
+        gpId: gpWaterConnectionRates.gpId,
+        fiscalYear: gpWaterConnectionRates.fiscalYear,
+        connectionType: gpWaterConnectionRates.connectionType,
+        pipeSizeInch: sql<number>`${gpWaterConnectionRates.pipeSizeInch}::float8`,
+        annualPaise: gpWaterConnectionRates.annualPaise,
+        createdAt: gpWaterConnectionRates.createdAt,
+        updatedAt: gpWaterConnectionRates.updatedAt,
+      })
       .from(gpWaterConnectionRates)
       .where(and(...conditions))
       .orderBy(
         asc(gpWaterConnectionRates.fiscalYear),
         asc(gpWaterConnectionRates.connectionType),
-        asc(gpWaterConnectionRates.pipeSizeMm)
+        asc(gpWaterConnectionRates.pipeSizeInch)
       )
 
     return { items, count: items.length }
   },
 
   async upsertForGp(gpId: string, rows: WaterConnectionRateRow[]) {
-    const keys = rows.map((r) => `${r.fiscal_year}::${r.connection_type}::${String(r.pipe_size_mm)}`)
+    const keys = rows.map((r) => `${r.fiscal_year}::${r.connection_type}::${String(r.pipe_size_inch)}`)
     const seen = new Set(keys)
     if (seen.size !== keys.length) {
-      throw new ApiError(422, 'Duplicate (fiscal_year, connection_type, pipe_size_mm) entries in request')
+      throw new ApiError(422, 'Duplicate (fiscal_year, connection_type, pipe_size_inch) entries in request')
     }
 
     const values = rows.map((r) => ({
       gpId,
       fiscalYear: r.fiscal_year,
       connectionType: r.connection_type,
-      pipeSizeMm: r.pipe_size_mm,
+      pipeSizeInch: String(r.pipe_size_inch),
       annualPaise: r.annual_paise,
     }))
 
@@ -51,7 +60,7 @@ export const waterConnectionRatesService = {
           gpWaterConnectionRates.gpId,
           gpWaterConnectionRates.fiscalYear,
           gpWaterConnectionRates.connectionType,
-          gpWaterConnectionRates.pipeSizeMm,
+          gpWaterConnectionRates.pipeSizeInch,
         ],
         set: {
           annualPaise: sql`excluded.annual_paise`,

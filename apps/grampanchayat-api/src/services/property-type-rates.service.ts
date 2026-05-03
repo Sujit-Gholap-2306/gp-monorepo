@@ -1,4 +1,4 @@
-import { eq, asc, sql } from 'drizzle-orm'
+import { and, asc, eq, sql } from 'drizzle-orm'
 import { db } from '../db/index.ts'
 import { gpPropertyTypeRates, PROPERTY_TYPE_KEYS } from '../db/schema/property-type-rates.ts'
 import { ApiError } from '../common/exceptions/http.exception.ts'
@@ -66,6 +66,18 @@ export const propertyTypeRatesService = {
       .from(gpPropertyTypeRates)
       .where(eq(gpPropertyTypeRates.gpId, gpId))
       .orderBy(asc(gpPropertyTypeRates.propertyType))
+  },
+
+  async getForGpByPropertyType(gpId: string, propertyType: string) {
+    const [row] = await db
+      .select()
+      .from(gpPropertyTypeRates)
+      .where(and(eq(gpPropertyTypeRates.gpId, gpId), eq(gpPropertyTypeRates.propertyType, propertyType)))
+      .limit(1)
+    if (!row) {
+      throw new ApiError(404, 'Property type rate not found')
+    }
+    return row
   },
 
   async upsertForGp(gpId: string, rows: PropertyTypeRateRow[]) {

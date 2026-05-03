@@ -32,44 +32,94 @@ router.use('/:subdomain/namune', supabaseTenantAdminGuard, tenantNamuneRouter)
 router.get(
   '/:subdomain/masters/template-meta',
   supabaseTenantAdminGuard,
+  requireFeature('namune'),
   mastersBulkController.getTemplateMeta
 )
 router.get(
   '/:subdomain/masters/citizens/template',
   supabaseTenantAdminGuard,
+  requireFeature('namune'),
   mastersBulkController.downloadCitizensTemplate
 )
 router.get(
   '/:subdomain/masters/properties/template',
   supabaseTenantAdminGuard,
+  requireFeature('namune'),
   mastersBulkController.downloadPropertiesTemplate
 )
 router.get(
   '/:subdomain/masters/citizens',
   supabaseTenantAdminGuard,
+  requireFeature('namune'),
   mastersBulkController.listCitizens
+)
+router.post(
+  '/:subdomain/masters/citizens',
+  supabaseTenantAdminGuard,
+  requireFeature('namune'),
+  mastersBulkController.createCitizen
+)
+router.get(
+  '/:subdomain/masters/citizens/:id',
+  supabaseTenantAdminGuard,
+  requireFeature('namune'),
+  mastersBulkController.getCitizenById
+)
+router.patch(
+  '/:subdomain/masters/citizens/:id',
+  supabaseTenantAdminGuard,
+  requireFeature('namune'),
+  mastersBulkController.updateCitizen
 )
 router.get(
   '/:subdomain/masters/properties',
   supabaseTenantAdminGuard,
+  requireFeature('namune'),
   mastersBulkController.listProperties
+)
+router.post(
+  '/:subdomain/masters/properties',
+  supabaseTenantAdminGuard,
+  requireFeature('namune'),
+  mastersBulkController.createProperty
+)
+router.get(
+  '/:subdomain/masters/properties/:id',
+  supabaseTenantAdminGuard,
+  requireFeature('namune'),
+  mastersBulkController.getPropertyById
+)
+router.patch(
+  '/:subdomain/masters/properties/:id',
+  supabaseTenantAdminGuard,
+  requireFeature('namune'),
+  mastersBulkController.updateProperty
 )
 
 // Property type rates — template + bulk before collection routes
 router.get(
   '/:subdomain/masters/property-type-rates/template',
   supabaseTenantAdminGuard,
+  requireFeature('namune'),
   mastersBulkController.downloadPropertyTypeRatesTemplate
 )
 // Property type rates master (admin only)
 router.get(
   '/:subdomain/masters/property-type-rates',
   supabaseTenantAdminGuard,
+  requireFeature('namune'),
   propertyTypeRatesController.list
+)
+router.get(
+  '/:subdomain/masters/property-type-rates/:propertyType',
+  supabaseTenantAdminGuard,
+  requireFeature('namune'),
+  propertyTypeRatesController.getByPropertyType
 )
 router.put(
   '/:subdomain/masters/property-type-rates',
   supabaseTenantAdminGuard,
+  requireFeature('namune'),
   propertyTypeRatesController.upsert
 )
 router.get(
@@ -162,6 +212,7 @@ router.post(
   '/:subdomain/masters/citizens/bulk',
   bulkImportRateLimit,
   supabaseTenantAdminGuard,
+  requireFeature('tax'),
   mastersBulkUpload,
   mastersBulkController.importCitizens
 )
@@ -169,6 +220,7 @@ router.post(
   '/:subdomain/masters/properties/bulk',
   bulkImportRateLimit,
   supabaseTenantAdminGuard,
+  requireFeature('tax'),
   mastersBulkUpload,
   mastersBulkController.importProperties
 )
@@ -176,6 +228,7 @@ router.post(
   '/:subdomain/masters/property-type-rates/bulk',
   bulkImportRateLimit,
   supabaseTenantAdminGuard,
+  requireFeature('tax'),
   mastersBulkUpload,
   mastersBulkController.importPropertyTypeRates
 )

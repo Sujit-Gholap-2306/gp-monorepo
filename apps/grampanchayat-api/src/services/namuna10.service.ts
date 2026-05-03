@@ -47,7 +47,7 @@ type ReceiptHeaderRow = {
   owner_name_en: string | null
   consumer_no: string | null
   connection_type: string | null
-  pipe_size_mm: number | null
+  pipe_size_inch: number | null
   water_ward_number: string | null
   water_citizen_no: number | null
   water_name_mr: string | null
@@ -544,7 +544,7 @@ export const namuna10Service = {
         cp.name_en AS owner_name_en,
         wc.consumer_no,
         wc.connection_type,
-        wc.pipe_size_mm,
+        wc.pipe_size_inch,
         cw.ward_number AS water_ward_number,
         cw.citizen_no AS water_citizen_no,
         cw.name_mr AS water_name_mr,
@@ -610,7 +610,7 @@ export const namuna10Service = {
           id: header.water_connection_id,
           consumerNo: header.consumer_no,
           connectionType: header.connection_type,
-          pipeSizeMm: header.pipe_size_mm,
+          pipeSizeInch: header.pipe_size_inch,
           citizenNo: header.water_citizen_no,
           wardNumber: header.water_ward_number,
           nameMr: header.water_name_mr,

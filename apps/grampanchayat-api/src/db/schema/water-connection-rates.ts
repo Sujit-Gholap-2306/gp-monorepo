@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm'
 import {
   bigint,
   check,
-  integer,
+  numeric,
   pgTable,
   text,
   timestamp,
@@ -23,7 +23,7 @@ export const gpWaterConnectionRates = pgTable(
       .references(() => gpTenants.id, { onDelete: 'cascade' }),
     fiscalYear: text('fiscal_year').notNull(),
     connectionType: text('connection_type').notNull(),
-    pipeSizeMm: integer('pipe_size_mm').notNull(),
+    pipeSizeInch: numeric('pipe_size_inch', { precision: 3, scale: 1 }).notNull(),
     annualPaise: bigint('annual_paise', { mode: 'number' }).notNull(),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
@@ -33,7 +33,7 @@ export const gpWaterConnectionRates = pgTable(
       t.gpId,
       t.fiscalYear,
       t.connectionType,
-      t.pipeSizeMm
+      t.pipeSizeInch
     ),
     connectionTypeCheck: check(
       'gp_water_connection_rates_connection_type_check',
@@ -41,7 +41,7 @@ export const gpWaterConnectionRates = pgTable(
     ),
     pipeSizeCheck: check(
       'gp_water_connection_rates_pipe_size_check',
-      sql`${t.pipeSizeMm} > 0`
+      sql`${t.pipeSizeInch} IN (1.0, 1.5, 2.0, 2.5)`
     ),
     annualPaiseCheck: check(
       'gp_water_connection_rates_annual_paise_check',

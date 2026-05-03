@@ -44,7 +44,7 @@ export const waterDemandArrearsTemplateService = {
         citizenNameMr: gpCitizens.nameMr,
         citizenNameEn: gpCitizens.nameEn,
         connectionType: gpWaterConnections.connectionType,
-        pipeSizeMm: gpWaterConnections.pipeSizeMm,
+        pipeSizeInch: gpWaterConnections.pipeSizeInch,
         currentPaise: gpWaterConnectionDemandLines.currentPaise,
         previousPaise: gpWaterConnectionDemandLines.previousPaise,
         totalDuePaise: gpWaterConnectionDemandLines.totalDuePaise,
@@ -91,7 +91,7 @@ export const waterDemandArrearsTemplateService = {
         String(row.citizenNo),
         displayCitizenName(row.citizenNameMr, row.citizenNameEn),
         row.connectionType,
-        String(row.pipeSizeMm),
+        String(row.pipeSizeInch),
         String(row.currentPaise),
         String(row.previousPaise),
         String(row.totalDuePaise ?? row.previousPaise + row.currentPaise),
@@ -115,7 +115,7 @@ export const waterDemandArrearsTemplateService = {
     guide.addRow([
       'Identity checks',
       '',
-      'consumer_no must exist and citizen_no/citizen_name/connection_type/pipe_size_mm must match.',
+      'consumer_no must exist and citizen_no/citizen_name/connection_type/pipe_size_inch must match.',
     ])
     guide.addRow([
       'Payment note',

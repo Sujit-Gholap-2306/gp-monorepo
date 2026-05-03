@@ -31,6 +31,17 @@ class PropertyTypeRatesController extends BaseController {
     return this.ok(res, data, 'Property type rates')
   })
 
+  getByPropertyType = asyncHandler(async (req, res) => {
+    const tenant = req.gpTenant
+    if (!tenant) throw new ApiError(500, 'Tenant context missing')
+    const propertyType = String(req.params.propertyType ?? '')
+    if (!PROPERTY_TYPE_KEYS.includes(propertyType as (typeof PROPERTY_TYPE_KEYS)[number])) {
+      throw new ApiError(422, 'Invalid propertyType')
+    }
+    const data = await propertyTypeRatesService.getForGpByPropertyType(tenant.id, propertyType)
+    return this.ok(res, data, 'Property type rate')
+  })
+
   upsert = asyncHandler(async (req, res) => {
     const tenant = req.gpTenant
     if (!tenant) throw new ApiError(500, 'Tenant context missing')

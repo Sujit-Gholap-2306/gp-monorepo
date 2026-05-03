@@ -1,4 +1,4 @@
-import { and, asc, eq, ilike, inArray, or } from 'drizzle-orm'
+import { and, asc, eq, ilike, inArray, or, sql } from 'drizzle-orm'
 import { ApiError } from '../common/exceptions/http.exception.ts'
 import { db } from '../db/index.ts'
 import {
@@ -14,7 +14,7 @@ import type { WaterDemandListQuery } from '../types/water-demands.dto.ts'
 
 type ActiveConnectionCombo = {
   connection_type: string
-  pipe_size_mm: number
+  pipe_size_inch: number
 }
 
 type WaterDemandRow = {
@@ -24,7 +24,7 @@ type WaterDemandRow = {
   generatedAt: Date
   consumerNo: string
   connectionType: string
-  pipeSizeMm: number
+  pipeSizeInch: number
   citizenId: string
   citizenNo: number
   citizenNameMr: string
@@ -38,8 +38,8 @@ type WaterDemandRow = {
   status: string | null
 }
 
-function keyForCombo(connectionType: string, pipeSizeMm: number): string {
-  return `${connectionType}::${String(pipeSizeMm)}`
+function keyForCombo(connectionType: string, pipeSizeInch: number): string {
+  return `${connectionType}::${String(pipeSizeInch)}`
 }
 
 function previousFiscalYear(fiscalYear: string): string {
@@ -60,7 +60,7 @@ async function activeConnectionCombos(
   const rows = await db
     .selectDistinct({
       connection_type: gpWaterConnections.connectionType,
-      pipe_size_mm: gpWaterConnections.pipeSizeMm,
+      pipe_size_inch: sql<number>`${gpWaterConnections.pipeSizeInch}::float8`,
     })
     .from(gpWaterConnections)
     .where(and(eq(gpWaterConnections.gpId, gpId), eq(gpWaterConnections.status, 'active')))
@@ -84,7 +84,7 @@ export const waterDemandsService = {
     const rates = await db
       .select({
         connectionType: gpWaterConnectionRates.connectionType,
-        pipeSizeMm: gpWaterConnectionRates.pipeSizeMm,
+        pipeSizeInch: sql<number>`${gpWaterConnectionRates.pipeSizeInch}::float8`,
       })
       .from(gpWaterConnectionRates)
       .where(
@@ -94,13 +94,13 @@ export const waterDemandsService = {
         )
       )
 
-    const rateSet = new Set(rates.map((r) => keyForCombo(r.connectionType, r.pipeSizeMm)))
+    const rateSet = new Set(rates.map((r) => keyForCombo(r.connectionType, r.pipeSizeInch)))
     const missingCombinations = combos
-      .filter((combo) => !rateSet.has(keyForCombo(combo.connection_type, combo.pipe_size_mm)))
+      .filter((combo) => !rateSet.has(keyForCombo(combo.connection_type, combo.pipe_size_inch)))
       .sort(
         (a, b) =>
           a.connection_type.localeCompare(b.connection_type) ||
-          a.pipe_size_mm - b.pipe_size_mm
+          a.pipe_size_inch - b.pipe_size_inch
       )
 
     return {
@@ -126,7 +126,7 @@ export const waterDemandsService = {
         .select({
           id: gpWaterConnections.id,
           connectionType: gpWaterConnections.connectionType,
-          pipeSizeMm: gpWaterConnections.pipeSizeMm,
+          pipeSizeInch: sql<number>`${gpWaterConnections.pipeSizeInch}::float8`,
         })
         .from(gpWaterConnections)
         .where(and(eq(gpWaterConnections.gpId, gpId), eq(gpWaterConnections.status, 'active')))
@@ -160,7 +160,7 @@ export const waterDemandsService = {
       const rates = await tx
         .select({
           connectionType: gpWaterConnectionRates.connectionType,
-          pipeSizeMm: gpWaterConnectionRates.pipeSizeMm,
+          pipeSizeInch: sql<number>`${gpWaterConnectionRates.pipeSizeInch}::float8`,
           annualPaise: gpWaterConnectionRates.annualPaise,
         })
         .from(gpWaterConnectionRates)
@@ -172,7 +172,7 @@ export const waterDemandsService = {
         )
 
       const rateByCombo = new Map(
-        rates.map((r) => [keyForCombo(r.connectionType, r.pipeSizeMm), r.annualPaise])
+        rates.map((r) => [keyForCombo(r.connectionType, r.pipeSizeInch), r.annualPaise])
       )
 
       const priorFiscalYear = previousFiscalYear(targetFiscalYear)
@@ -234,11 +234,11 @@ export const waterDemandsService = {
           throw new ApiError(500, 'Connection not found for generated demand header')
         }
 
-        const rate = rateByCombo.get(keyForCombo(connection.connectionType, connection.pipeSizeMm))
+        const rate = rateByCombo.get(keyForCombo(connection.connectionType, connection.pipeSizeInch))
         if (rate == null) {
           throw new ApiError(
             422,
-            `Missing water rate for combination ${connection.connectionType}/${connection.pipeSizeMm}`
+            `Missing water rate for combination ${connection.connectionType}/${connection.pipeSizeInch}`
           )
         }
 
@@ -297,7 +297,7 @@ export const waterDemandsService = {
         generatedAt: gpWaterConnectionDemands.generatedAt,
         consumerNo: gpWaterConnections.consumerNo,
         connectionType: gpWaterConnections.connectionType,
-        pipeSizeMm: gpWaterConnections.pipeSizeMm,
+        pipeSizeInch: sql<number>`${gpWaterConnections.pipeSizeInch}::float8`,
         citizenId: gpCitizens.id,
         citizenNo: gpCitizens.citizenNo,
         citizenNameMr: gpCitizens.nameMr,
@@ -341,7 +341,7 @@ export const waterDemandsService = {
           id: row.waterConnectionId,
           consumerNo: row.consumerNo,
           connectionType: row.connectionType,
-          pipeSizeMm: row.pipeSizeMm,
+          pipeSizeInch: row.pipeSizeInch,
         },
         citizen: {
           id: row.citizenId,

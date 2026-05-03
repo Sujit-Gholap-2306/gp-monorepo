@@ -467,7 +467,7 @@ export const namuna9Service = {
       waterConnectionId: item.waterConnection.id,
       consumerNo: item.waterConnection.consumerNo,
       connectionType: item.waterConnection.connectionType,
-      pipeSizeMm: item.waterConnection.pipeSizeMm,
+      pipeSizeInch: item.waterConnection.pipeSizeInch,
       citizen: item.citizen,
       line: item.line,
       status: item.status,
